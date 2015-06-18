@@ -84,7 +84,7 @@
                 <input type="text" id='ticker' value='INDEX_VIX'/>
                 Yield
                 <input type="checkbox" id="yield" value="true" autocomplete="on"/>
-                
+                <a href='javascript:void(0)' id='submit'>Pull</a>
         </div>
         <hr />
         <div>
@@ -97,10 +97,6 @@
                 Start <input type="date" id='startDate' disabled='true'/>
                 End <input type="date" id='endDate' disabled='true'/>
         </div>
-        <hr />
-        <p>
-                <a href='javascript:void(0)' id='submit'>Submit</a>
-        </p>
         <hr />
         <div id = 'plot'></div>
         
@@ -134,38 +130,29 @@
                 }
                 
                 //*****************************************************
-                
-                
-                
-                
-                
-                
-                
-                //*****************************************************
-                
-                
+                //get data, process, draw etc
                 document.getElementById('submit')
                         .addEventListener("click", 
                                 function(){
                                         //remove svg
                                         d3.select("svg").remove();
+                                        
+                                        //pull
                                         var d = getData(document.getElementById('source').value,document.getElementById('ticker').value);
+                                        
+                                        //process
                                         var e = d.processData();
+                                        
+                                        //draw
                                         getScatterPlot(e.pss, e.result);
                                         
+                                        //enable
                                         document.getElementById('startDate').disabled = false;
                                         document.getElementById('endDate').disabled = false;
                                         
                                         //seperate, so that refreshes whenever new data is coming in...
-                                        document.getElementById('startDate').value === "" ? 
-                                                document.getElementById('startDate').value = formatDate(e.pss[0][e.pss[0].length-1].date)
-                                                : 
-                                                null;
-                                        
-                                        document.getElementById('endDate').value === "" ? 
-                                                document.getElementById('endDate').value = formatDate(e.pss[0][0].date)
-                                                : 
-                                                null;
+                                        document.getElementById('startDate').value = formatDate(e.pss[0][e.pss[0].length-1].date);
+                                        document.getElementById('endDate').value = formatDate(e.pss[0][0].date);
                                         }
                                 );
 
@@ -188,7 +175,8 @@
                                 );
                 
                 //*****************************************************
-
+                //process global data
+                //draw
                 function setStartDateListener(){
                         startDate = new Date(document.getElementById('startDate').value);
                         }
@@ -203,7 +191,8 @@
                                 
                 
                 //*****************************************************
-
+                //process global data
+                //draw
                 function setEndDateListener(){
                         endDate = new Date(document.getElementById('endDate').value);
                         }
