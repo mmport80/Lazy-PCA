@@ -130,9 +130,7 @@
                 }
                 
                 //*****************************************************
-<<<<<<< HEAD
                 //get data, process, draw etc
-=======
                 
                 var globalData = null;
                 
@@ -142,15 +140,12 @@
                 
                 
                 //*****************************************************
-                
-                
->>>>>>> FETCH_HEAD
                 document.getElementById('submit')
                         .addEventListener("click", 
                                 function(){
                                         //remove svg
                                         d3.select("svg").remove();
-<<<<<<< HEAD
+
                                         
                                         //pull
                                         var d = getData(document.getElementById('source').value,document.getElementById('ticker').value);
@@ -159,11 +154,11 @@
                                         var e = d.processData();
                                         
                                         //draw
-=======
+
                                         var globalData = getData(document.getElementById('source').value,document.getElementById('ticker').value);
                                         
                                         var e = globalData.processData();
->>>>>>> FETCH_HEAD
+
                                         getScatterPlot(e.pss, e.result);
                                         
                                         //enable
