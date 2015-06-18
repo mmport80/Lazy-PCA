@@ -39,12 +39,32 @@
                         stroke: #000;
                         shape-rendering: crispEdges;
                         }
-
-                .dot {
+                .dot{
+                        fill: green;
+                        fill-opacity:0.25;
+                        stroke: none;
+                        }
+                .ellipse {
                         stroke: #000;
+                        stroke-opacity:0.5;
+                        stroke-width: 1em;
+                        fill: none;
                         }
                 #title{
                         font-size: 6em;
+                        }
+                g{
+                        text-anchor: end;
+                        }
+                polyline{
+                        fill:none;
+                        stroke:black; 
+                        stroke-width:2;
+                        }
+                .line{
+                        fill:none; 
+                        stroke:black;
+                        stroke-width:0.5em;
                         }
 
         </style>
@@ -87,6 +107,9 @@
                 <a href='javascript:void(0)' id='submit'>Pull</a>
         </div>
         <hr />
+        <div id = 'plot'></div>
+        
+        <hr />
         <div>
                 <p>Optional: filter by date</p>
                 <!--
@@ -97,9 +120,6 @@
                 Start <input type="date" id='startDate' disabled='true'/>
                 End <input type="date" id='endDate' disabled='true'/>
         </div>
-        <hr />
-        <div id = 'plot'></div>
-        
         <hr />
         <p>Optional: input a Quandl key for unlimited & free data</p>
         <div>                
@@ -113,8 +133,6 @@
         <script>
                 "use strict"
 
-                var sampling = +document.getElementById('horizon').value;
-        
                 //*****************************************************
                 
                 function formatDate(date) {
@@ -129,96 +147,98 @@
                     return [year, month, day].join('-');
                 }
                 
-                //*****************************************************
-                //get data, process, draw etc
-                
-                var globalData = null;
-                
-                
-                
-                
-                
                 
                 //*****************************************************
+                //process, remove, draw
+                function processRemoveDraw(g){
+                        //process
+                        var e = g.processData();
+                        //remove
+                        d3.select("svg").remove();
+                        //draw
+                        getScatterPlot(e.pss, e.result);
+                        }
+                
+                //*****************************************************
+                //the guts
                 document.getElementById('submit')
                         .addEventListener("click", 
                                 function(){
-                                        //remove svg
-                                        d3.select("svg").remove();
-
-                                        
                                         //pull
-                                        var d = getData(document.getElementById('source').value,document.getElementById('ticker').value);
-                                        
-                                        //process
-                                        var e = d.processData();
-                                        
-                                        //draw
-
                                         var globalData = getData(document.getElementById('source').value,document.getElementById('ticker').value);
-                                        
-                                        var e = globalData.processData();
-
-                                        getScatterPlot(e.pss, e.result);
                                         
                                         //enable
                                         document.getElementById('startDate').disabled = false;
                                         document.getElementById('endDate').disabled = false;
                                         
-                                        //seperate, so that refreshes whenever new data is coming in...
-                                        document.getElementById('startDate').value = formatDate(e.pss[0][e.pss[0].length-1].date);
-                                        document.getElementById('endDate').value = formatDate(e.pss[0][0].date);
+                                        //set dates
+                                        document.getElementById('startDate').value = formatDate(globalData[globalData.length-1].date);
+                                        document.getElementById('endDate').value = formatDate(globalData[0].date);
+                                        
+                                        //process
+                                        var e = globalData.processData();
+                                        
+                                        //remove svg
+                                        d3.select("svg").remove();
+                                        
+                                        //draw
+                                        getScatterPlot(e.pss, e.result);
+                                        
+                                        //set listenrs
+                                        setListeners(globalData);
+                                        
                                         }
                                 );
 
                 //*****************************************************
+                function setListeners(g){
+                        
+                        document.getElementById('startDate')
+                                .addEventListener("change", 
+                                        function(){ 
+                                                setStartDateListener(g);
+                                                }
+                                        );
+         
+                        document.getElementById('endDate')
+                                .addEventListener("change", 
+                                        function(){ 
+                                                setEndDateListener(g);
+                                                }
+                                        );
+                                        
+                        document.getElementById('horizon')
+                                .addEventListener("change", 
+                                        function(){ 
+                                                setHorizonListener(g);
+                                                }
+                                        );
+                        };
+                
+                
 
-
-                function setHorizonListener(){
-                        sampling = +document.getElementById('horizon').value;
+                //*****************************************************
+                //once data is available, then update etc.
+                function setHorizonListener(g){
+                        processRemoveDraw(g);
                         }
 
-
-                //after pushing 'calc' button
-                //changehorizon, means changing clean data also - if not []
-                document
-                        .getElementById('horizon')
-                        .addEventListener("change", 
-                                function(){ 
-                                        setHorizonListener();
-                                        }
-                                );
-                
                 //*****************************************************
                 //process global data
                 //draw
-                function setStartDateListener(){
-                        startDate = new Date(document.getElementById('startDate').value);
+                function setStartDateListener(g){
+                        processRemoveDraw(g);
                         }
 
-                document
-                        .getElementById('startDate')
-                        .addEventListener("change", 
-                                function(){ 
-                                        setStartDateListener();
-                                        }
-                                );
                                 
-                
                 //*****************************************************
                 //process global data
                 //draw
-                function setEndDateListener(){
-                        endDate = new Date(document.getElementById('endDate').value);
+                function setEndDateListener(g){
+                        processRemoveDraw(g);
                         }
 
-                document
-                        .getElementById('endDate')
-                        .addEventListener("change", 
-                                function(){ 
-                                        setEndDateListener();
-                                        }
-                                );
+                
                                 
                 //*****************************************************
                 //get data
@@ -241,11 +261,14 @@
                                         );
                         }
                  
-                //*****************************************************
-                var startDate = new Date('1912-06-01');
-                var endDate = new Date('2125-05-15');
 
+                //*****************************************************
+                //calc pca
                 var processData = function(){
+                        var sampling = +document.getElementById('horizon').value;
+                        var startDate = new Date(document.getElementById('startDate').value);
+                        var endDate = new Date(document.getElementById('endDate').value);
+        
 
                         var d = this.filter(
                                 function(i,j){
@@ -315,8 +338,6 @@
 
                         var color = d3.scale.category10();
 
-
-
                         var xAxis = d3.svg.axis()
                             .scale(x)
                             .orient("bottom");
@@ -328,10 +349,8 @@
                         x.domain(d3.extent(data, function(d) { return d.before + mean[0]; })).nice();
                         y.domain(d3.extent(data, function(d) { return d.after + mean[1]; })).nice();
 
-
-                        
-                        x.domain()[1].print();
-                        y.domain()[1].print();
+                        //x.domain()[1].print();
+                        //y.domain()[1].print();
                         
                         var formatXLabel = function(d){
 		                if (d.toLocaleString() === x.domain()[1].toLocaleString() ){
@@ -367,7 +386,6 @@
                                 .attr("class", "label")
                                 .attr("x", width)
                                 .attr("y", -6)
-                                .style("text-anchor", "end")
                                 .text("Before");
 
                         svg.append("g")
@@ -378,33 +396,26 @@
                                 .attr("transform", "rotate(-90)")
                                 .attr("y", 6)
                                 .attr("dy", ".71em")
-                                .style("text-anchor", "end")
                                 .text("After");
-
 
                         svg.selectAll(".dot")
                                 .data(data)
                                 .enter().append("circle")
                                 .attr("class", "dot")
-                                .attr("r", 12)
                                 .attr("cx", function(d) { return x( d.before+mean[0]  ); })
                                 .attr("cy", function(d) { return y( d.after+mean[1]  ); })
-                                .style("fill", "green")
-                                .style("fill-opacity", 0.25)
-                                .style("stroke", "none")
+                                .attr("r", 12)
                                 .append("title")
-                                .text(function(d) { return "Date: "+d.date+"; period before: "+(100*d.before).toLocaleString()+"%; after: "+(100*d.after).toLocaleString()+"%"; });
+                                .text(function(d) { return "Date: "+d.date+"; Period Before: "+(100*d.before).toLocaleString()+"%; After: "+(100*d.after).toLocaleString()+"%"; });
                         
                         var rotateBy = Math.atan2( svdResult.E.x[0][0], svdResult.E.x[0][1] ) * 180 / Math.PI;
-                        
-                        rotateBy.print();
                         
                         var radiiLabels = [];
                         
                         rotateBy > -46 ? radiiLabels = ["Momentum","Mean Reversion"] : radiiLabels = ["Mean Reversion","Momentum"];
                         
                         svg     .append("ellipse")
-                                .attr("class", "dot")
+                                .attr("class", "ellipse")
                                 .attr("cx",function(d) { return x( mean[0] ); })
                                 .attr("cy",function(d) { return y( mean[1] ); })
                                 .attr("rx",function(d) {
@@ -413,10 +424,6 @@
                                 .attr("ry",function(d) { 
                                                         return y( y.domain()[1]-Math.sqrt( svdResult.lambda.x[1] ) );
                                                         })
-                                .style("stroke", "black")
-                                .style("stroke-opacity", 0.50)
-                                .style("stroke-width","8px")
-                                .style("fill", "none")
                                 .attr("transform", "rotate("+rotateBy+", "+x( mean[0] )+", "+y( mean[1] )+")")
                                 .append("title")
                                 .text(function(d) { return      "Mean "+ (100*mean[0]).toLocaleString() + "%; " +
@@ -424,38 +431,51 @@
                                                                 radiiLabels[1]+": "    + Math.abs(100*-Math.sqrt( svdResult.lambda.x[1] )).toLocaleString() + "% "
                                                                 ; });
 
-                        var legend = svg.selectAll(".legend")
-                                .data(color.domain())
-                                .enter().append("g")
-                                .attr("class", "legend")
-                                .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
+                        
+                        svg
+                                .append('svg:defs')
+                                .append('svg:marker')
+                                .attr('id', 'Triangle')
+                                .attr('markerHeight', 3)
+                                .attr('markerWidth', 3)
+                                .attr('orient', 'auto')
+                                .attr('refX', 9)
+                                .attr('refY', 5)
+                                .attr('viewBox', '0 0 10 10')
+                                .append('svg:path')
+                                .attr('d', 'M 0 0 L 10 5 L 0 10 z');
 
-                        legend.append("rect")
-                                .attr("x", width - 18)
-                                .attr("width", 18)
-                                .attr("height", 18)
-                                .style("fill", color);
-
-                        legend.append("text")
-                                .attr("x", width - 24)
-                                .attr("y", 9)
-                                .attr("dy", ".35em")
-                                .style("text-anchor", "end")
-                                .text(function(d) { return d; });
-
+                        svg     .append("line")
+                                .attr("class", "line")
+                                .attr("x1",function(d) { return x( mean[0] ); })
+                                .attr("y1",function(d) { return y( mean[1] ); })
                                 
+                                .attr("x2",function(d) { return x( Math.sqrt( svdResult.lambda.x[0] )); })
+                                .attr("y2",y( mean[1] ))
+                                .attr("transform", "rotate("+rotateBy+", "+x( mean[0] )+", "+y( mean[1] )+")")
+                                .attr("marker-end","url(#Triangle)")
+                                .append("title")
+                                .text(function(d) { return radiiLabels[0]; });
+                                
+                        svg     .append("line")
+                                .attr("class", "line")
+                                .attr("x1",function(d) { return x( mean[0] ); })
+                                .attr("y1",function(d) { return y( mean[1] ); })
+                                .attr("x2",x( mean[0] ))
+                                .attr("y2",function(d) { return y( Math.sqrt( svdResult.lambda.x[1] )); })
+                                .attr("transform", "rotate("+rotateBy+", "+x( mean[0] )+", "+y( mean[1] )+")")
+                                .attr("marker-end","url(#Triangle)")
+                                .append("title")
+                                .text(function(d) { return radiiLabels[1]; });
+  
                         }              
                 
                 //*****************************************************
                 
-                //auto play
-                var d = getData(document.getElementById('source').value,document.getElementById('ticker').value);
-                var e = d.processData();
-                getScatterPlot(e.pss, e.result);
                 
         </script>
 
-
+        
 
 
 
