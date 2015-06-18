@@ -135,6 +135,7 @@
                 
                 //*****************************************************
                 
+                var globalData = null;
                 
                 
                 
@@ -149,8 +150,9 @@
                                 function(){
                                         //remove svg
                                         d3.select("svg").remove();
-                                        var d = getData(document.getElementById('source').value,document.getElementById('ticker').value);
-                                        var e = d.processData();
+                                        var globalData = getData(document.getElementById('source').value,document.getElementById('ticker').value);
+                                        
+                                        var e = globalData.processData();
                                         getScatterPlot(e.pss, e.result);
                                         
                                         document.getElementById('startDate').disabled = false;
