@@ -38,7 +38,9 @@ function getQuandlCall(source, ticker, key){
         else if (source == "CBOE") {
                 var column = 1;
                 }
-
+        else if (source == "SPDJ") {
+                var column = 1;
+                }
         return {
                 url:'https://www.quandl.com/api/v1/datasets/'+source+'/'+ticker+'.json?column='+column+'&auth_token='+key,
                 ticker:ticker
