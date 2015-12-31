@@ -1,7 +1,7 @@
 /*
 
     (c)2015 John Orford
-    
+
     This file is part of Lazy PCA.
 
     Lazy PCA is free software: you can redistribute it and/or modify
@@ -21,13 +21,13 @@
 
 
 //*****************************************************
-        
+
 print = function(){
         console.log(this);
         }
 
 Object.defineProperty(
-        Object.prototype, 
+        Object.prototype,
         'print',
         {
                 value: print,
@@ -36,7 +36,7 @@ Object.defineProperty(
                 enumerable: false
                 }
         );
-                        
+
 //*****************************************************
 
 Array.prototype.returns = function(){
@@ -48,7 +48,7 @@ Array.prototype.returns = function(){
                                         }
                                 else{
                                         return  {
-                                                result: acc.result.concat( { date: cur.date, datum: Math.log(acc.prev.datum/cur.datum) } ), 
+                                                result: acc.result.concat( { date: cur.date, datum: Math.log(acc.prev.datum/cur.datum) } ),
                                                 prev: cur
                                                 };
                                         }
@@ -65,12 +65,15 @@ Array.prototype.deMean = function(){
         var m = jStat(xs).mean();
         return numeric.addVS(xs,-m);
         }
-          
+        
 //*****************************************************
 
 Number.prototype.yieldToDsft = function(){
         return Math.exp(-this/100);
         }
-        
+
 //*****************************************************
 
+Number.prototype.roundTwo = function() {
+        return Math.round(this*100) / 100;
+        }

@@ -2,7 +2,7 @@
 /*
 
     (c)2015 John Orford
-    
+
     This file is part of Lazy PCA.
 
     Lazy PCA is free software: you can redistribute it and/or modify
@@ -46,20 +46,19 @@ function getQuandlCall(source, ticker, key){
                 ticker:ticker
                 };
         }
-        
-        
-       
+
 //*****************************************************
 //make api call
 xhr = function(){
         var xmlhttp = new XMLHttpRequest();
         xmlhttp.open("GET", this.url, false);
         xmlhttp.send();
+
         return JSON.parse(xmlhttp.responseText);
         }
-        
+
 Object.defineProperty(
-        Object.prototype, 
+        Object.prototype,
         'xhr',
         {
                 value: xhr,
@@ -68,13 +67,13 @@ Object.defineProperty(
                 enumerable: false
                 }
         );
-                
+
 var getQuandlData = function(source,ticker){
         return Lazy.generate(
                 function(){
                         return function(){
-                                var key = document.getElementById('key').value;
-                                
+                                const key = "Fp6cFhibc5xvL2pN3dnu";//document.getElementById('key').value;
+
                                 return getQuandlCall(source,ticker,key).xhr().data;
                                 }
                                 ;
