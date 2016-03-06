@@ -10,7 +10,7 @@ import Task exposing (toMaybe)
 
 import Effects exposing (Effects, Never)
 
-import Json.Decode as Json
+import Json.Decode as Json exposing (at, string)
 
 import Signal exposing (Address)
 
@@ -19,6 +19,18 @@ import Ticker exposing (view, update)
 import Yield exposing (view, update)
 
 import Debug exposing (log)
+
+
+{--
+orig code expected a string/url returned
+
+will now aim to grab an array of data
+
+no need to save url anymore
+
+need to save a list
+--}
+
 
 -- MODEL
 type alias Model = {
@@ -64,7 +76,7 @@ update action model =
       , Effects.none
       )
     Request ->
-      ( model, getRandomGif model)
+      ( model, getData model)
     NewData maybeUrl ->
       (
       { model | quandlUrl = (Maybe.withDefault model.quandlUrl maybeUrl) }
@@ -90,18 +102,16 @@ view address model =
 
 quandlUrl : Model -> String
 quandlUrl model =
-  let
-    l = log "Log" model.quandlUrl
-  in
-    Http.url ("https://www.quandl.com/api/v3/datasets/"++model.source++"/"++model.ticker++".json")
-      [ "auth_token" => "Fp6cFhibc5xvL2pN3dnu" ]
+  Http.url ("https://www.quandl.com/api/v3/datasets/"++model.source++"/"++model.ticker++".json")
+    [ "auth_token" => "Fp6cFhibc5xvL2pN3dnu" ]
 
+--change name to something like 'decodeList'
 decodeUrl : Json.Decoder String
 decodeUrl =
   Json.at ["dataset", "frequency"] Json.string
 
-getRandomGif : Model -> Effects Action
-getRandomGif model =
+getData : Model -> Effects Action
+getData model =
   Http.get decodeUrl (quandlUrl model)
     |> Task.toMaybe
     |> Task.map NewData

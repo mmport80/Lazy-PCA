@@ -1,12 +1,10 @@
 module Yield where
 
-import Html exposing (..)
-import Html.Attributes exposing (..)
+import Html exposing (Html, input)
+import Html.Attributes exposing (type')
 import Html.Events exposing (targetChecked, on)
 
 import Signal exposing (Address)
-
-import Debug exposing (..)
 
 -- MODEL
 type alias Model = Bool

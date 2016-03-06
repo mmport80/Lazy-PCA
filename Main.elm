@@ -12,7 +12,7 @@ import Task
 
 app =
   StartApp.start
-    { init = init "Yahoo" "INDEX_VIX" True
+    { init = init "Yahoo" "INDEX_VIX" False
     , update = update
     , view = view
     , inputs = []
