@@ -6,7 +6,7 @@ import Html.Events exposing (targetChecked, on, onClick)
 
 import Http exposing (get, url)
 
-import Task exposing (toMaybe)
+import Task exposing (toMaybe, andThen)
 
 import Effects exposing (Effects, Never)
 
@@ -37,6 +37,7 @@ init source ticker yield =
       { source = Source.init source
       , ticker = Ticker.init ticker
       , yield = Yield.init yield
+      --start with default data?
       , newData = [("",0,0,0,0,0,0)]
       }
     , Effects.none
@@ -50,6 +51,7 @@ type Action
     | UpdateYield Bool
     | Request
     | NewData ( Maybe (List Row) )
+    | NoOp
 
 update : Action -> Model -> (Model, Effects Action)
 update action model =
@@ -68,10 +70,12 @@ update action model =
       )
     Request ->
       ( model, getData model )
+    NoOp ->
+      ( model, getData model )
     NewData maybeList ->
-      ( { model | newData = (Maybe.withDefault model.newData maybeList) }
-      , Effects.none
-      )
+        ( { model | newData = (Maybe.withDefault model.newData maybeList) }
+        , Effects.none
+        )
 
 
 -- VIEW
@@ -87,16 +91,22 @@ view address model =
       , Yield.view (Signal.forwardTo address UpdateYield) model.yield
       , text "Yield"
       , a [ href "#", onClick address Request ] [ text "Pull" ]
+      --, a [ href "#", onClick testMailBox.address NoOp ] [ text "Test" ]
       ]
 
 
 -- EFFECTS
 type alias Row = (String, Float, Float, Float, Float, Float, Float)
 
+--only take what's needed?
+--i.e. date and closing price
+--convert date into Date type
 row : Json.Decoder Row
 row = Json.tuple7 (,,,,,,)
   Json.string Json.float Json.float Json.float Json.float Json.float Json.float
 
+--remove?
+--don't like new operators that much
 (=>) = (,)
 
 quandlUrl : Model -> String

@@ -1,5 +1,5 @@
 import Effects exposing (Never)
-import RequestForm exposing (init, update, view)
+import RequestForm exposing (init, update, view) --, testMailBox
 
 import StartApp
 
@@ -25,3 +25,6 @@ main =
 
 port tasks : Signal (Task.Task Never ())
 port tasks = app.tasks
+
+port requestUser : Signal String
+port requestUser = Signal.constant("1")
