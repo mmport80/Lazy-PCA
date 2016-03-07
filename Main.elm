@@ -5,8 +5,8 @@ import StartApp
 
 import Task
 
---put all components together
---'pull' requests from Quandl
+--once have data, draw d3 chart
+--
 
 
 

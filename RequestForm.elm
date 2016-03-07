@@ -20,16 +20,7 @@ import Yield exposing (view, update)
 
 import Debug exposing (log)
 
-
-{--
-orig code expected a string/url returned
-
-will now aim to grab an array of data
-
-no need to save url anymore
-
-need to save a list
---}
+import List
 
 
 -- MODEL
@@ -37,7 +28,7 @@ type alias Model = {
       source : Source.Model
     , ticker : Ticker.Model
     , yield : Yield.Model
-    , quandlUrl : String
+    , newData : List Row
     }
 
 init : String -> String -> Bool -> (Model, Effects Action)
@@ -46,7 +37,7 @@ init source ticker yield =
       { source = Source.init source
       , ticker = Ticker.init ticker
       , yield = Yield.init yield
-      , quandlUrl = ""
+      , newData = [("",0,0,0,0,0,0)]
       }
     , Effects.none
     )
@@ -58,7 +49,7 @@ type Action
     | UpdateTicker String
     | UpdateYield Bool
     | Request
-    | NewData (Maybe String)
+    | NewData ( Maybe (List Row) )
 
 update : Action -> Model -> (Model, Effects Action)
 update action model =
@@ -76,10 +67,9 @@ update action model =
       , Effects.none
       )
     Request ->
-      ( model, getData model)
-    NewData maybeUrl ->
-      (
-      { model | quandlUrl = (Maybe.withDefault model.quandlUrl maybeUrl) }
+      ( model, getData model )
+    NewData maybeList ->
+      ( { model | newData = (Maybe.withDefault model.newData maybeList) }
       , Effects.none
       )
 
@@ -87,17 +77,26 @@ update action model =
 -- VIEW
 view : Signal.Address Action -> Model -> Html
 view address model =
-  div []
-    [
-      Source.view (Signal.forwardTo address UpdateSource) model.source
-    , Ticker.view (Signal.forwardTo address UpdateTicker) model.ticker
-    , Yield.view (Signal.forwardTo address UpdateYield) model.yield
-    , a [ href "#", onClick address Request ] [ text "Pull" ]
-    , text model.quandlUrl
-    ]
+  let l =
+    Debug.log "array" model.newData
+  in
+    div []
+      [
+        Source.view (Signal.forwardTo address UpdateSource) model.source
+      , Ticker.view (Signal.forwardTo address UpdateTicker) model.ticker
+      , Yield.view (Signal.forwardTo address UpdateYield) model.yield
+      , text "Yield"
+      , a [ href "#", onClick address Request ] [ text "Pull" ]
+      ]
 
 
 -- EFFECTS
+type alias Row = (String, Float, Float, Float, Float, Float, Float)
+
+row : Json.Decoder Row
+row = Json.tuple7 (,,,,,,)
+  Json.string Json.float Json.float Json.float Json.float Json.float Json.float
+
 (=>) = (,)
 
 quandlUrl : Model -> String
@@ -106,13 +105,12 @@ quandlUrl model =
     [ "auth_token" => "Fp6cFhibc5xvL2pN3dnu" ]
 
 --change name to something like 'decodeList'
-decodeUrl : Json.Decoder String
-decodeUrl =
-  Json.at ["dataset", "frequency"] Json.string
+decodeData : Json.Decoder (List Row)
+decodeData = Json.at ["dataset", "data"] (Json.list row)
 
 getData : Model -> Effects Action
 getData model =
-  Http.get decodeUrl (quandlUrl model)
+  Http.get decodeData (quandlUrl model)
     |> Task.toMaybe
     |> Task.map NewData
     |> Effects.task
