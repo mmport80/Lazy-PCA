@@ -1,19 +1,36 @@
 <html>
   <head>
     <script type="text/javascript" src="elm.js"></script>
+    <script type="text/javascript" src="scatterPlot.js"></script>
+    <script type="text/javascript" src="libs/immutable.min.js"></script>
+    <script type="text/javascript" src="libs/numeric-1.2.6.min.js"></script>
+    <script type="text/javascript" src="libs/lodash.js"></script>
+    <script type="text/javascript" src="node_modules/jstat/dist/jstat.min.js"></script>
+    <script type="text/javascript" src="libs/lazy.min.js"></script>
+
+
+
+
   </head>
   <body>
-    <script>
+    <div id="stamper"></div>
 
+    <div id="plot"></div>
+
+    <script>
     </script>
     <script type="text/javascript">
       //send data to any function
       //work from there
-
       function testPortCallback(val) {
-        console.log(val);
+        elmProcessData(val);
+        //console.log( elmProcessData(val) );
         }
-      var app = Elm.fullscreen(Elm.Main);
+
+      const div = document.getElementById('stamper');
+
+      const app = Elm.embed(Elm.Main, div);
+
       app.ports.requestUser.subscribe(testPortCallback);
 
     </script>

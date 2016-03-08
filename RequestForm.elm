@@ -1,6 +1,6 @@
 module RequestForm where
 
-import Html exposing (a, text, Html, div)
+import Html exposing (a, text, Html, div, button)
 import Html.Attributes exposing (href)
 import Html.Events exposing (targetChecked, on, onClick)
 
@@ -72,6 +72,8 @@ update action model =
       ( model, getData model )
     NoOp ->
       ( model, getData model )
+    --update
+    --and also send to port
     NewData maybeList ->
         ( { model | newData = (Maybe.withDefault model.newData maybeList) }
         , Effects.none
@@ -91,7 +93,7 @@ view address model =
       , Yield.view (Signal.forwardTo address UpdateYield) model.yield
       , text "Yield"
       , a [ href "#", onClick address Request ] [ text "Pull" ]
-      --, a [ href "#", onClick testMailBox.address NoOp ] [ text "Test" ]
+      , button [ onClick testMailBox.address model.newData ] [ text "-" ]
       ]
 
 
@@ -124,3 +126,9 @@ getData model =
     |> Task.toMaybe
     |> Task.map NewData
     |> Effects.task
+
+testMailBox :
+  { address : Signal.Address (List Row)
+  , signal : Signal (List Row)
+  }
+testMailBox = Signal.mailbox [("",0,0,0,0,0,0)]

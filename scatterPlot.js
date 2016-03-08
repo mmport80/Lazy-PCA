@@ -1,11 +1,50 @@
 "use strict"
 
 //*****************************************************
+//process data here
+//expect data to be correct frequency, date ranges etc
+//calc returns + analytics
+//display chart
 
-//change var to const
+const getLaggedVectors = d =>
+  {
+  const closePrices =
+    _.chain(d)
+      .map(x => x[6]);
+  const before = closePrices.tail().value();
+  const after = closePrices.initial().value();
+  return [before, after];
+  }
+
+const getReturns = d => {
+  var [before, after] = getLaggedVectors(d);
+  const returns = numeric.log(
+    numeric['/'](after, before)
+    );
+  return returns;
+  }
+
+const elmProcessData = d =>
+  {
+  const returns = getReturns(d);
+  const mean = jStat.mean(returns);
+  const demeanedReturns = numeric['-'](returns, mean);
+  const lVectors = getLaggedVectors(demeanedReturns)
+  const vcv = numeric.dot(lVectors, numeric.transpose(lVectors));
+  const vcv_normed = numeric.mul(vcv, 1/(lVectors[0].length-1));
+  const result = numeric.eig(vcv_normed);
+
+  getScatterPlot( getLaggedVectors(returns), result );
+
+  //expected date / datum
+  //submit returns with dates
+  //zip returns with dates
+  return {pss:lVectors, result:result};
+  }
+
+//****************************************************
 //change function to fat arrow
 //change if to ? : ternary operaters
-
 function formatDate(date) {
         const   dated = new Date(date),
                 year = dated.getFullYear();

@@ -1,14 +1,14 @@
 import Effects exposing (Never)
-import RequestForm exposing (init, update, view) --, testMailBox
+import RequestForm exposing (init, update, view, testMailBox)
 
 import StartApp
 
 import Task
 
+import Mouse exposing (..)
+
 --once have data, draw d3 chart
 --
-
-
 
 app =
   StartApp.start
@@ -18,13 +18,11 @@ app =
     , inputs = []
     }
 
-
 main =
   app.html
-
 
 port tasks : Signal (Task.Task Never ())
 port tasks = app.tasks
 
-port requestUser : Signal String
-port requestUser = Signal.constant("1")
+port requestUser : Signal (List RequestForm.Row)
+port requestUser = testMailBox.signal
