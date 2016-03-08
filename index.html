@@ -1,0 +1,21 @@
+<html>
+  <head>
+    <script type="text/javascript" src="elm.js"></script>
+  </head>
+  <body>
+    <script>
+
+    </script>
+    <script type="text/javascript">
+      //send data to any function
+      //work from there
+
+      function testPortCallback(val) {
+        console.log(val);
+        }
+      var app = Elm.fullscreen(Elm.Main);
+      app.ports.requestUser.subscribe(testPortCallback);
+
+    </script>
+  </body>
+</html>
