@@ -8,11 +8,8 @@
 
 const getLaggedVectors = d =>
   {
-  const closePrices =
-    _.chain(d)
-      .map(x => x[6]);
-  const before = closePrices.tail().value();
-  const after = closePrices.initial().value();
+  const before = _.chain(d).tail().value();
+  const after = _.chain(d).initial().value();
   return [before, after];
   }
 
@@ -26,7 +23,12 @@ const getReturns = d => {
 
 const elmProcessData = d =>
   {
-  const returns = getReturns(d);
+  const closePrices =
+    _.chain(d)
+      .map(x => x[6])
+      .value();
+
+  const returns = getReturns(closePrices);
   const mean = jStat.mean(returns);
   const demeanedReturns = numeric['-'](returns, mean);
   const lVectors = getLaggedVectors(demeanedReturns)
@@ -34,12 +36,22 @@ const elmProcessData = d =>
   const vcv_normed = numeric.mul(vcv, 1/(lVectors[0].length-1));
   const result = numeric.eig(vcv_normed);
 
-  getScatterPlot( getLaggedVectors(returns), result );
+  const dates = _.chain(d)
+    .map(x => x[0])
+    .value();
 
   //expected date / datum
-  //submit returns with dates
-  //zip returns with dates
-  return {pss:lVectors, result:result};
+  const datesAndReturns = _.chain(returns)
+    .zip(dates)
+    .initial()
+    .map(
+      x => ({datum: x[0], date: x[1]})
+      )
+    .value();
+
+  console.log(datesAndReturns);
+
+  return {pss:getLaggedVectors(datesAndReturns), result:result};
   }
 
 //****************************************************
@@ -67,209 +79,15 @@ function formatDate(date) {
         }
 
 //*****************************************************
-//process, remove, draw
-function processRemoveDraw(g){
-        //process
-        //move this outside, so that it's processed beforehand
-        const e = g.processData();
-        //remove
-        d3.select("svg").remove();
-        //draw
-        getScatterPlot(e.pss, e.result);
-        }
-
-//*****************************************************
-//the guts
-document.getElementById('submit')
-        .addEventListener("click",
-                function(){
-                        //pull
-                        const globalData = getData(document.getElementById('source').value,document.getElementById('ticker').value);
-
-                        //enable
-                        document.getElementById('startDate').disabled = false;
-                        document.getElementById('endDate').disabled = false;
-
-                        //set dates
-                        document.getElementById('startDate').value = formatDate(globalData[globalData.length-1].date);
-                        document.getElementById('endDate').value = formatDate(globalData[0].date);
-
-                        //process
-                        const e = globalData.processData();
-
-                        //remove svg
-                        d3.select("svg").remove();
-
-                        //draw
-                        getScatterPlot(e.pss, e.result);
-
-                        //set listenrs
-                        setListeners(globalData);
-                        }
-                );
-
-//*****************************************************
-function setListeners(g){
-        document.getElementById('startDate')
-                .addEventListener("change",
-                        function(){
-                                (new Date(document.getElementById('startDate').value)).getFullYear() > 1000 &&
-                                (new Date(document.getElementById('startDate').value)).getFullYear() < 9999
-                                        ?
-                                        setStartDateListener(g)
-                                        :
-                                        null;
-                                }
-                        );
-
-        document.getElementById('endDate')
-                .addEventListener("change",
-                        function(){
-                                (new Date(document.getElementById('endDate').value)).getFullYear() > 1000 &&
-                                (new Date(document.getElementById('endDate').value)).getFullYear() < 9999
-                                        ?
-                                        setEndDateListener(g)
-                                        :
-                                        null;
-                                }
-                        );
-
-        document.getElementById('horizon')
-                .addEventListener("change",
-                        function(){
-                                setHorizonListener(g);
-                                }
-                        );
-        };
-
-//*****************************************************
-//once data is available, then update etc.
-function setHorizonListener(g){
-        processRemoveDraw(g);
-        }
-
-//*****************************************************
-//process global data
-//draw
-function setStartDateListener(g){
-        processRemoveDraw(g);
-        }
-
-//*****************************************************
-//process global data
-//draw
-function setEndDateListener(g){
-        processRemoveDraw(g);
-        }
-
-//*****************************************************
-//get data
-//process data
-//draw chart
-
-function getData(source,ticker){
-        return getQuandlData(source,ticker)
-                .take(1)
-                //necessary to value() here?
-                .value()
-                [0]
-                .map(
-                        function(i){
-                                return document.getElementById('yield').checked == true ?
-                                        {date: new Date(i[0]), datum:i[1].yieldToDsft()}
-                                        :
-                                        {date: new Date(i[0]), datum:i[1]};
-                                }
-                        );
-        }
-
-//*****************************************************
-//calc pca
-
-//clean
-//if price is 0 - as good as nothing - filter out
-//ensure returns are calc'ed from contiguous days
-//contiguous is 22nd - 23rd... etc
-//or Fri - Mon
-
-//what counts as contiguous days for other periods?
-//a week - 5 contiguous days/weekends
-//a month - 21 contiguous days/weekends
-//a quarter - 63 contiguous days/weekends
-
-var processData = function(){
-        const sampling = +document.getElementById('horizon').value;
-        const startDate = new Date(document.getElementById('startDate').value);
-        const endDate = new Date(document.getElementById('endDate').value);
-
-        const y = this
-          .reduce(
-            (a, c) => a + c.datum
-            , 0
-            )
-
-        const d = this.filter(
-                function(i,j){
-                        return j % sampling === 0 &&
-                          (i.date >= startDate) &&
-                          (i.date <= endDate);
-                        }
-                );
-
-        //filter by monthly, etc. returns
-        //create another vector or arrays, zip up at the end...?
-        //[before, after]
-
-        //descending date
-
-        //value() here, when data is needed for jstat
-        //keep everything lazy beforehand
-
-        const pss = [Lazy(d).last(d.length-1).toArray(), Lazy(d).take(d.length-1).toArray()]
-                .map(
-                        function(i){
-                                return i
-                                  .returns()
-                                  //
-                                  //assume zero returns are duds
-                                  .filter( x => x.datum != 0 );
-                                }
-                        );
-
-        const pss_demeaned = pss
-                .map(
-                        function(i){
-                                return i.deMean();
-                                }
-                        );
-
-        const vcv = numeric.dot(pss_demeaned,numeric.transpose(pss_demeaned));
-
-        const vcv_normed = numeric.mul(vcv,1/(pss_demeaned[0].length-1));
-
-        const result = numeric.eig(vcv_normed);
-
-        return {pss:pss,result:result};
-        }
-
-Object.defineProperty(
-        Object.prototype,
-        'processData',
-        {
-                value: processData,
-                writable: true,
-                configurable: true,
-                enumerable: false
-                }
-        );
-
-//*****************************************************
 
 function getScatterPlot(data, svdResult){
+        console.log("data");
+        console.log(data);
 
         const mean = data.map(function(i){return jStat( Lazy(i).pluck('datum').toArray() ).mean();});
 
-        data = Lazy(data[0]).zip(data[1]).map(function(i){return {date:i[1].date.toLocaleDateString(), before:i[0].datum,after:i[1].datum};}).toArray();
+        //.toLocaleDateString()
+        data = Lazy(data[0]).zip(data[1]).map(function(i){return {date:i[1].date, before:i[0].datum,after:i[1].datum};}).toArray();
 
         const margin = {top: 20, right: 20, bottom: 50, left: 50},
             width = window.innerHeight*0.75 - margin.left - margin.right,

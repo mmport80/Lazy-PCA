@@ -71,20 +71,29 @@ update action model =
     Request ->
       ( model, getData model )
     NoOp ->
-      ( model, getData model )
+      ( model, Effects.none )
     --update
     --and also send to port
     NewData maybeList ->
-        ( { model | newData = (Maybe.withDefault model.newData maybeList) }
-        , Effects.none
+      let
+        data = (Maybe.withDefault model.newData maybeList)
+      in
+        (
+          { model | newData = data }
+          , sendData data
         )
+
+
+
+
+
 
 
 -- VIEW
 view : Signal.Address Action -> Model -> Html
 view address model =
   let l =
-    Debug.log "array" model.newData
+    "x" --Debug.log "array" model.newData
   in
     div []
       [
@@ -93,7 +102,6 @@ view address model =
       , Yield.view (Signal.forwardTo address UpdateYield) model.yield
       , text "Yield"
       , a [ href "#", onClick address Request ] [ text "Pull" ]
-      , button [ onClick testMailBox.address model.newData ] [ text "-" ]
       ]
 
 
@@ -126,6 +134,15 @@ getData model =
     |> Task.toMaybe
     |> Task.map NewData
     |> Effects.task
+
+
+--Send data to JS
+
+sendData : List Row -> Effects Action
+sendData data =
+  Signal.send testMailBox.address data
+    `Task.andThen` (\_ -> Task.succeed NoOp)
+  |> Effects.task
 
 testMailBox :
   { address : Signal.Address (List Row)
