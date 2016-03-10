@@ -12509,7 +12509,8 @@ channel.join().receive("ok", function (resp) {
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //push up to server
 function testPortCallback(val) {
-  channel.push("new_msg", { body: "xoxo" });
+  var exampleUser = { name: "johno", username: "johnorford2", password: "xoxoxoxo" };
+  channel.push("new_msg", { body: exampleUser });
 }
 
 var div = document.getElementById('stamper');

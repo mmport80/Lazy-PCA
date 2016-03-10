@@ -68,7 +68,8 @@ channel.join()
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //push up to server
 function testPortCallback(val) {
-  channel.push("new_msg", {body: "xoxo"})
+  const exampleUser = {name: "johno", username: "johnorford2", password: "xoxoxoxo"}
+  channel.push("new_msg", {body: exampleUser})
   }
 
 const div = document.getElementById('stamper');
