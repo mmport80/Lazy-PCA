@@ -1,0 +1,24 @@
+Elm.Source = Elm.Source || {};
+Elm.Source.make = function (_elm) {
+   "use strict";
+   _elm.Source = _elm.Source || {};
+   if (_elm.Source.values) return _elm.Source.values;
+   var _U = Elm.Native.Utils.make(_elm),
+   $Basics = Elm.Basics.make(_elm),
+   $Debug = Elm.Debug.make(_elm),
+   $Html = Elm.Html.make(_elm),
+   $Html$Events = Elm.Html.Events.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm);
+   var _op = {};
+   var dataProviders = _U.list(["Yahoo","Google","CBOE","SPDJ"]);
+   var options = function (s) {    return A2($Html.option,_U.list([]),_U.list([$Html.text(s)]));};
+   var view = F2(function (address,model) {
+      return A2($Html.select,_U.list([A3($Html$Events.on,"change",$Html$Events.targetValue,$Signal.message(address))]),A2($List.map,options,dataProviders));
+   });
+   var update = F2(function (newSource,model) {    return newSource;});
+   var init = function (source) {    return source;};
+   return _elm.Source.values = {_op: _op,init: init,update: update,view: view};
+};

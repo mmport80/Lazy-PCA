@@ -1,0 +1,10 @@
+v2.
+{<<"/home/john/Git/Lazy-PCA/backend/_build/dev/lib/connection/ebin/Elixir.Connection.beam">>,
+ 'Elixir.Connection',module,<<"lib/connection.ex">>,
+ [erlang,'Elixir.Behaviour','Elixir.Keyword','Elixir.Module',
+  'Elixir.Kernel.Typespec','Elixir.GenServer','Elixir.List',
+  'Elixir.String.Chars','Elixir.Protocol','Elixir.Kernel',
+  'Elixir.Kernel.Utils','Elixir.ArgumentError'],
+ ['Elixir.Code',error_logger,'Elixir.System','Elixir.Process',gen,global,code,
+  gen_server,proc_lib],
+ [],nil}.
