@@ -1,7 +1,4 @@
-
-
 defmodule Backend.RoomChannel do
-
 
   alias Backend.User
   alias Backend.Repo
@@ -15,62 +12,72 @@ defmodule Backend.RoomChannel do
   def join("rooms:lobby", _message, socket) do
     {:ok, socket}
   end
+
   def join("rooms:" <> _private_room_id, _params, _socket) do
     {:error, %{reason: "unauthorized"}}
   end
 
 
+  defmodule Response do
+    defstruct response_text: "", token: ""
+  end
 
-  def login_by_username_and_pass(username, given_pass, opts) do
-    repo = Keyword.fetch!(opts, :repo)
-    user = repo.get_by(Backend.User, username: username)
+
+  def login_by_username_and_pass(socket, username, given_pass) do
+    #repo = Keyword.fetch!(opts, :repo)
+    user = Repo.get_by(Backend.User, username: username)
 
     cond do
       user && checkpw(given_pass, user.password_hash) ->
-        "OK"
+        token = Phoenix.Token.sign(socket, "user", user.id)
+        response = %Response{response_text: "OK", token: token}
       user ->
-        "not OK"
+        response = %Response{response_text: "Not OK", token: ""}
       true ->
+        #?? take up time between tries?
         dummy_checkpw()
-        "not found"
+        response = %Response{response_text: "Not Found", token: ""}
     end
   end
 
-  def create(username, password) do
-     case login_by_username_and_pass(username, password, repo: Repo) do
-       "OK" ->
-         IO.puts "Logd in"
-       _ ->
-         IO.puts "Not Logd in"
-     end
-   end
+  def handle_in("new_msg", %{"body" => params}, socket) do
 
-  def handle_in("new_msg", %{"body" => user_params}, socket) do
-    %{"name" => name, "username" => username, "password" => password} = user_params
+    %{"action" => action, "data" => data} = params
 
-    broadcast! socket, "new_msg", %{body: name}
-
-    #register user
-    changeset = User.registration_changeset(%User{},user_params)
-    case Repo.insert(changeset) do
-        {:ok, user} ->
-          IO.puts "regd"
-        {:error, changeset} ->
-          IO.puts "not regd"
+    case action do
+      "login" ->
+        %{"name" => name, "username" => username, "password" => password} = data
+        response = login_by_username_and_pass(socket, username, password)
+      "register" ->
+        #register user
+        %{"name" => name, "username" => username, "password" => password} = data
+        changeset = User.registration_changeset(%User{},data)
+        case Repo.insert(changeset) do
+          {:ok, user} ->
+            result =  "regd"
+          {:error, changeset} ->
+            result = "not regd"
+        end
+        response = %Response{response_text: result, token: ""}
     end
+
+
 
     #login user
     #
     #send back the token
+    #send back response
     #send down all the data
+    #
     #go into user room "user:john"
     #receive updates
-    create(username, password)
 
-    user_id = 1
-    token = Phoenix.Token.sign(socket, "user", user_id)
-    IO.puts "verify"
-    IO.inspect Phoenix.Token.verify(socket, "user", token)
+
+
+    #user_id = 1
+    #token = Phoenix.Token.sign(socket, "user", user_id)
+    #IO.puts "verified"
+    #IO.inspect Phoenix.Token.verify(socket, "user", token)
 
     #logout user
     #flush all data - set to initial state
@@ -78,8 +85,8 @@ defmodule Backend.RoomChannel do
     #
 
 
-
-
+    #response
+    broadcast! socket, "new_msg", %{body: response}
 
     #usersx = Repo.all User, name: "johno"
 

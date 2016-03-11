@@ -18,14 +18,14 @@ import Source exposing (view, update)
 import Ticker exposing (view, update)
 import Yield exposing (view, update)
 
-import Debug exposing (log)
-
 import List
 
 
 --********************************************************************************
 --********************************************************************************
 -- MODEL
+type alias Row = (String, Float, Float, Float, Float, Float, Float)
+
 type alias Model = {
       source : Source.Model
     , ticker : Ticker.Model
@@ -92,9 +92,6 @@ update action model =
 -- VIEW
 view : Signal.Address Action -> Model -> Html
 view address model =
-  let l =
-    "x" --Debug.log "array" model.newData
-  in
     div []
       [
         Source.view (Signal.forwardTo address UpdateSource) model.source
@@ -109,7 +106,6 @@ view address model =
 --********************************************************************************
 --********************************************************************************
 -- EFFECTS
-type alias Row = (String, Float, Float, Float, Float, Float, Float)
 
 --only take what's needed?
 --i.e. date and closing price

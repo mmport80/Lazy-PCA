@@ -9460,63 +9460,6 @@ Elm.Json.Decode.make = function (_elm) {
                                     ,value: value
                                     ,customDecoder: customDecoder};
 };
-Elm.Native = Elm.Native || {};
-Elm.Native.Mouse = {};
-Elm.Native.Mouse.make = function(localRuntime) {
-	localRuntime.Native = localRuntime.Native || {};
-	localRuntime.Native.Mouse = localRuntime.Native.Mouse || {};
-	if (localRuntime.Native.Mouse.values)
-	{
-		return localRuntime.Native.Mouse.values;
-	}
-
-	var NS = Elm.Native.Signal.make(localRuntime);
-	var Utils = Elm.Native.Utils.make(localRuntime);
-
-	var position = NS.input('Mouse.position', Utils.Tuple2(0, 0));
-
-	var isDown = NS.input('Mouse.isDown', false);
-
-	var clicks = NS.input('Mouse.clicks', Utils.Tuple0);
-
-	var node = localRuntime.isFullscreen()
-		? document
-		: localRuntime.node;
-
-	localRuntime.addListener([clicks.id], node, 'click', function click() {
-		localRuntime.notify(clicks.id, Utils.Tuple0);
-	});
-	localRuntime.addListener([isDown.id], node, 'mousedown', function down() {
-		localRuntime.notify(isDown.id, true);
-	});
-	localRuntime.addListener([isDown.id], node, 'mouseup', function up() {
-		localRuntime.notify(isDown.id, false);
-	});
-	localRuntime.addListener([position.id], node, 'mousemove', function move(e) {
-		localRuntime.notify(position.id, Utils.getXY(e));
-	});
-
-	return localRuntime.Native.Mouse.values = {
-		position: position,
-		isDown: isDown,
-		clicks: clicks
-	};
-};
-
-Elm.Mouse = Elm.Mouse || {};
-Elm.Mouse.make = function (_elm) {
-   "use strict";
-   _elm.Mouse = _elm.Mouse || {};
-   if (_elm.Mouse.values) return _elm.Mouse.values;
-   var _U = Elm.Native.Utils.make(_elm),$Basics = Elm.Basics.make(_elm),$Native$Mouse = Elm.Native.Mouse.make(_elm),$Signal = Elm.Signal.make(_elm);
-   var _op = {};
-   var clicks = $Native$Mouse.clicks;
-   var isDown = $Native$Mouse.isDown;
-   var position = $Native$Mouse.position;
-   var x = A2($Signal.map,$Basics.fst,position);
-   var y = A2($Signal.map,$Basics.snd,position);
-   return _elm.Mouse.values = {_op: _op,position: position,x: x,y: y,isDown: isDown,clicks: clicks};
-};
 Elm.Native.Effects = {};
 Elm.Native.Effects.make = function(localRuntime) {
 
@@ -12214,58 +12157,11 @@ Elm.StartApp.make = function (_elm) {
    var Config = F4(function (a,b,c,d) {    return {init: a,update: b,view: c,inputs: d};});
    return _elm.StartApp.values = {_op: _op,start: start,Config: Config,App: App};
 };
-Elm.Source = Elm.Source || {};
-Elm.Source.make = function (_elm) {
+Elm.Username = Elm.Username || {};
+Elm.Username.make = function (_elm) {
    "use strict";
-   _elm.Source = _elm.Source || {};
-   if (_elm.Source.values) return _elm.Source.values;
-   var _U = Elm.Native.Utils.make(_elm),
-   $Basics = Elm.Basics.make(_elm),
-   $Debug = Elm.Debug.make(_elm),
-   $Html = Elm.Html.make(_elm),
-   $Html$Events = Elm.Html.Events.make(_elm),
-   $List = Elm.List.make(_elm),
-   $Maybe = Elm.Maybe.make(_elm),
-   $Result = Elm.Result.make(_elm),
-   $Signal = Elm.Signal.make(_elm);
-   var _op = {};
-   var dataProviders = _U.list(["Yahoo","Google","CBOE","SPDJ"]);
-   var options = function (s) {    return A2($Html.option,_U.list([]),_U.list([$Html.text(s)]));};
-   var view = F2(function (address,model) {
-      return A2($Html.select,_U.list([A3($Html$Events.on,"change",$Html$Events.targetValue,$Signal.message(address))]),A2($List.map,options,dataProviders));
-   });
-   var update = F2(function (newSource,model) {    return newSource;});
-   var init = function (source) {    return source;};
-   return _elm.Source.values = {_op: _op,init: init,update: update,view: view};
-};
-Elm.Ticker = Elm.Ticker || {};
-Elm.Ticker.make = function (_elm) {
-   "use strict";
-   _elm.Ticker = _elm.Ticker || {};
-   if (_elm.Ticker.values) return _elm.Ticker.values;
-   var _U = Elm.Native.Utils.make(_elm),
-   $Basics = Elm.Basics.make(_elm),
-   $Debug = Elm.Debug.make(_elm),
-   $Html = Elm.Html.make(_elm),
-   $Html$Attributes = Elm.Html.Attributes.make(_elm),
-   $Html$Events = Elm.Html.Events.make(_elm),
-   $List = Elm.List.make(_elm),
-   $Maybe = Elm.Maybe.make(_elm),
-   $Result = Elm.Result.make(_elm),
-   $Signal = Elm.Signal.make(_elm);
-   var _op = {};
-   var view = F2(function (address,model) {
-      return A2($Html.input,_U.list([$Html$Attributes.value(model),A3($Html$Events.on,"input",$Html$Events.targetValue,$Signal.message(address))]),_U.list([]));
-   });
-   var update = F2(function (newTicker,model) {    return newTicker;});
-   var init = function (ticker) {    return ticker;};
-   return _elm.Ticker.values = {_op: _op,init: init,update: update,view: view};
-};
-Elm.Yield = Elm.Yield || {};
-Elm.Yield.make = function (_elm) {
-   "use strict";
-   _elm.Yield = _elm.Yield || {};
-   if (_elm.Yield.values) return _elm.Yield.values;
+   _elm.Username = _elm.Username || {};
+   if (_elm.Username.values) return _elm.Username.values;
    var _U = Elm.Native.Utils.make(_elm),
    $Basics = Elm.Basics.make(_elm),
    $Debug = Elm.Debug.make(_elm),
@@ -12279,18 +12175,48 @@ Elm.Yield.make = function (_elm) {
    var _op = {};
    var view = F2(function (address,model) {
       return A2($Html.input,
-      _U.list([$Html$Attributes.type$("checkbox"),A3($Html$Events.on,"change",$Html$Events.targetChecked,$Signal.message(address))]),
+      _U.list([$Html$Attributes.value(model)
+              ,A3($Html$Events.on,"input",$Html$Events.targetValue,$Signal.message(address))
+              ,$Html$Attributes.placeholder("Username")]),
       _U.list([]));
    });
-   var update = F2(function (newYield,model) {    return newYield;});
-   var init = function ($yield) {    return $yield;};
-   return _elm.Yield.values = {_op: _op,init: init,update: update,view: view};
+   var update = F2(function (username,model) {    return username;});
+   var init = function (user) {    return user;};
+   return _elm.Username.values = {_op: _op,init: init,update: update,view: view};
 };
-Elm.RequestForm = Elm.RequestForm || {};
-Elm.RequestForm.make = function (_elm) {
+Elm.Password = Elm.Password || {};
+Elm.Password.make = function (_elm) {
    "use strict";
-   _elm.RequestForm = _elm.RequestForm || {};
-   if (_elm.RequestForm.values) return _elm.RequestForm.values;
+   _elm.Password = _elm.Password || {};
+   if (_elm.Password.values) return _elm.Password.values;
+   var _U = Elm.Native.Utils.make(_elm),
+   $Basics = Elm.Basics.make(_elm),
+   $Debug = Elm.Debug.make(_elm),
+   $Html = Elm.Html.make(_elm),
+   $Html$Attributes = Elm.Html.Attributes.make(_elm),
+   $Html$Events = Elm.Html.Events.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm);
+   var _op = {};
+   var view = F2(function (address,model) {
+      return A2($Html.input,
+      _U.list([$Html$Attributes.value(model)
+              ,A3($Html$Events.on,"input",$Html$Events.targetValue,$Signal.message(address))
+              ,$Html$Attributes.type$("password")
+              ,$Html$Attributes.placeholder("Password")]),
+      _U.list([]));
+   });
+   var update = F2(function (password,model) {    return password;});
+   var init = function (password) {    return password;};
+   return _elm.Password.values = {_op: _op,init: init,update: update,view: view};
+};
+Elm.LoginForm = Elm.LoginForm || {};
+Elm.LoginForm.make = function (_elm) {
+   "use strict";
+   _elm.LoginForm = _elm.LoginForm || {};
+   if (_elm.LoginForm.values) return _elm.LoginForm.values;
    var _U = Elm.Native.Utils.make(_elm),
    $Basics = Elm.Basics.make(_elm),
    $Debug = Elm.Debug.make(_elm),
@@ -12298,93 +12224,56 @@ Elm.RequestForm.make = function (_elm) {
    $Html = Elm.Html.make(_elm),
    $Html$Attributes = Elm.Html.Attributes.make(_elm),
    $Html$Events = Elm.Html.Events.make(_elm),
-   $Http = Elm.Http.make(_elm),
-   $Json$Decode = Elm.Json.Decode.make(_elm),
    $List = Elm.List.make(_elm),
    $Maybe = Elm.Maybe.make(_elm),
+   $Password = Elm.Password.make(_elm),
    $Result = Elm.Result.make(_elm),
    $Signal = Elm.Signal.make(_elm),
-   $Source = Elm.Source.make(_elm),
    $Task = Elm.Task.make(_elm),
-   $Ticker = Elm.Ticker.make(_elm),
-   $Yield = Elm.Yield.make(_elm);
+   $Username = Elm.Username.make(_elm);
    var _op = {};
-   var testMailBox = $Signal.mailbox(_U.list([{ctor: "_Tuple7",_0: "",_1: 0,_2: 0,_3: 0,_4: 0,_5: 0,_6: 0}]));
-   _op["=>"] = F2(function (v0,v1) {    return {ctor: "_Tuple2",_0: v0,_1: v1};});
-   var quandlUrl = function (model) {
-      return A2($Http.url,
-      A2($Basics._op["++"],
-      "https://www.quandl.com/api/v3/datasets/",
-      A2($Basics._op["++"],model.source,A2($Basics._op["++"],"/",A2($Basics._op["++"],model.ticker,".json")))),
-      _U.list([A2(_op["=>"],"auth_token","Fp6cFhibc5xvL2pN3dnu")]));
-   };
-   var row = A8($Json$Decode.tuple7,
-   F7(function (v0,v1,v2,v3,v4,v5,v6) {    return {ctor: "_Tuple7",_0: v0,_1: v1,_2: v2,_3: v3,_4: v4,_5: v5,_6: v6};}),
-   $Json$Decode.string,
-   $Json$Decode.$float,
-   $Json$Decode.$float,
-   $Json$Decode.$float,
-   $Json$Decode.$float,
-   $Json$Decode.$float,
-   $Json$Decode.$float);
-   var decodeData = A2($Json$Decode.at,_U.list(["dataset","data"]),$Json$Decode.list(row));
+   var loginRequestMailBox = $Signal.mailbox({username: "",password: "",response: ""});
    var NoOp = {ctor: "NoOp"};
    var sendData = function (data) {
-      return $Effects.task(A2($Task.andThen,A2($Signal.send,testMailBox.address,data),function (_p0) {    return $Task.succeed(NoOp);}));
+      return $Effects.task(A2($Task.andThen,A2($Signal.send,loginRequestMailBox.address,data),function (_p0) {    return $Task.succeed(NoOp);}));
    };
-   var NewData = function (a) {    return {ctor: "NewData",_0: a};};
-   var getData = function (model) {    return $Effects.task(A2($Task.map,NewData,$Task.toMaybe(A2($Http.get,decodeData,quandlUrl(model)))));};
    var update = F2(function (action,model) {
       var _p1 = action;
       switch (_p1.ctor)
-      {case "UpdateSource": return {ctor: "_Tuple2",_0: _U.update(model,{source: A2($Source.update,_p1._0,model.source)}),_1: $Effects.none};
-         case "UpdateTicker": return {ctor: "_Tuple2",_0: _U.update(model,{ticker: A2($Ticker.update,_p1._0,model.ticker)}),_1: $Effects.none};
-         case "UpdateYield": return {ctor: "_Tuple2",_0: _U.update(model,{$yield: A2($Yield.update,_p1._0,model.$yield)}),_1: $Effects.none};
-         case "Request": return {ctor: "_Tuple2",_0: model,_1: getData(model)};
+      {case "UpdateUsername": return {ctor: "_Tuple2",_0: _U.update(model,{username: A2($Username.update,_p1._0,model.username)}),_1: $Effects.none};
+         case "UpdatePassword": return {ctor: "_Tuple2",_0: _U.update(model,{password: A2($Password.update,_p1._0,model.password)}),_1: $Effects.none};
          case "NoOp": return {ctor: "_Tuple2",_0: model,_1: $Effects.none};
-         default: var data = A2($Maybe.withDefault,model.newData,_p1._0);
-           return {ctor: "_Tuple2",_0: _U.update(model,{newData: data}),_1: sendData(data)};}
+         case "Request": return {ctor: "_Tuple2",_0: model,_1: sendData(model)};
+         default: return {ctor: "_Tuple2",_0: _U.update(model,{password: A2($Password.update,"",model.password),response: _p1._0}),_1: $Effects.none};}
    });
+   var Response = function (a) {    return {ctor: "Response",_0: a};};
    var Request = {ctor: "Request"};
-   var UpdateYield = function (a) {    return {ctor: "UpdateYield",_0: a};};
-   var UpdateTicker = function (a) {    return {ctor: "UpdateTicker",_0: a};};
-   var UpdateSource = function (a) {    return {ctor: "UpdateSource",_0: a};};
+   var UpdatePassword = function (a) {    return {ctor: "UpdatePassword",_0: a};};
+   var UpdateUsername = function (a) {    return {ctor: "UpdateUsername",_0: a};};
    var view = F2(function (address,model) {
-      var l = "x";
       return A2($Html.div,
       _U.list([]),
-      _U.list([A2($Source.view,A2($Signal.forwardTo,address,UpdateSource),model.source)
-              ,A2($Ticker.view,A2($Signal.forwardTo,address,UpdateTicker),model.ticker)
-              ,A2($Yield.view,A2($Signal.forwardTo,address,UpdateYield),model.$yield)
-              ,$Html.text("Yield")
-              ,A2($Html.a,_U.list([$Html$Attributes.href("#"),A2($Html$Events.onClick,address,Request)]),_U.list([$Html.text("Pull")]))]));
+      _U.list([A2($Username.view,A2($Signal.forwardTo,address,UpdateUsername),model.username)
+              ,A2($Password.view,A2($Signal.forwardTo,address,UpdatePassword),model.password)
+              ,A2($Html.a,_U.list([$Html$Attributes.href("#"),A2($Html$Events.onClick,address,Request)]),_U.list([$Html.text("Login")]))
+              ,$Html.text(model.response)]));
    });
-   var init = F3(function (source,ticker,$yield) {
-      return {ctor: "_Tuple2"
-             ,_0: {source: $Source.init(source)
-                  ,ticker: $Ticker.init(ticker)
-                  ,$yield: $Yield.init($yield)
-                  ,newData: _U.list([{ctor: "_Tuple7",_0: "",_1: 0,_2: 0,_3: 0,_4: 0,_5: 0,_6: 0}])}
-             ,_1: $Effects.none};
+   var init = F3(function (username,password,response) {
+      return {ctor: "_Tuple2",_0: {username: $Username.init(username),password: $Password.init(password),response: response},_1: $Effects.none};
    });
-   var Model = F4(function (a,b,c,d) {    return {source: a,ticker: b,$yield: c,newData: d};});
-   return _elm.RequestForm.values = {_op: _op
-                                    ,Model: Model
-                                    ,init: init
-                                    ,UpdateSource: UpdateSource
-                                    ,UpdateTicker: UpdateTicker
-                                    ,UpdateYield: UpdateYield
-                                    ,Request: Request
-                                    ,NewData: NewData
-                                    ,NoOp: NoOp
-                                    ,update: update
-                                    ,view: view
-                                    ,row: row
-                                    ,quandlUrl: quandlUrl
-                                    ,decodeData: decodeData
-                                    ,getData: getData
-                                    ,sendData: sendData
-                                    ,testMailBox: testMailBox};
+   var Model = F3(function (a,b,c) {    return {username: a,password: b,response: c};});
+   return _elm.LoginForm.values = {_op: _op
+                                  ,Model: Model
+                                  ,init: init
+                                  ,UpdateUsername: UpdateUsername
+                                  ,UpdatePassword: UpdatePassword
+                                  ,Request: Request
+                                  ,Response: Response
+                                  ,NoOp: NoOp
+                                  ,update: update
+                                  ,view: view
+                                  ,sendData: sendData
+                                  ,loginRequestMailBox: loginRequestMailBox};
 };
 Elm.Main = Elm.Main || {};
 Elm.Main.make = function (_elm) {
@@ -12396,22 +12285,28 @@ Elm.Main.make = function (_elm) {
    $Debug = Elm.Debug.make(_elm),
    $Effects = Elm.Effects.make(_elm),
    $List = Elm.List.make(_elm),
+   $LoginForm = Elm.LoginForm.make(_elm),
    $Maybe = Elm.Maybe.make(_elm),
-   $RequestForm = Elm.RequestForm.make(_elm),
    $Result = Elm.Result.make(_elm),
    $Signal = Elm.Signal.make(_elm),
    $StartApp = Elm.StartApp.make(_elm),
    $Task = Elm.Task.make(_elm);
    var _op = {};
-   var requestUser = Elm.Native.Port.make(_elm).outboundSignal("requestUser",
+   var loginResponse = Elm.Native.Port.make(_elm).inboundSignal("loginResponse",
+   "String",
    function (v) {
-      return Elm.Native.List.make(_elm).toArray(v).map(function (v) {    return [v._0,v._1,v._2,v._3,v._4,v._5,v._6];});
+      return typeof v === "string" || typeof v === "object" && v instanceof String ? v : _U.badPort("a string",v);
+   });
+   var incomingActions = A2($Signal.map,$LoginForm.Response,loginResponse);
+   var loginRequest = Elm.Native.Port.make(_elm).outboundSignal("loginRequest",
+   function (v) {
+      return {username: v.username,password: v.password,response: v.response};
    },
-   $RequestForm.testMailBox.signal);
-   var app = $StartApp.start({init: A3($RequestForm.init,"Yahoo","INDEX_VIX",false),update: $RequestForm.update,view: $RequestForm.view,inputs: _U.list([])});
+   $LoginForm.loginRequestMailBox.signal);
+   var app = $StartApp.start({init: A3($LoginForm.init,"","",""),update: $LoginForm.update,view: $LoginForm.view,inputs: _U.list([incomingActions])});
    var main = app.html;
    var tasks = Elm.Native.Task.make(_elm).performSignal("tasks",app.tasks);
-   return _elm.Main.values = {_op: _op,app: app,main: main};
+   return _elm.Main.values = {_op: _op,app: app,main: main,incomingActions: incomingActions};
 };
 
 require.register("web/elm/Main", function(exports, require, module) {
@@ -12439,57 +12334,12 @@ Object.defineProperty(exports, "__esModule", {
 
 var _phoenix = require("phoenix");
 
-var socket = new _phoenix.Socket("/socket", { params: { token: window.userToken } });
-
-// When you connect, you'll often need to authenticate the client.
-// For example, imagine you have an authentication plug, `MyAuth`,
-// which authenticates the session and assigns a `:current_user`.
-// If the current user exists you can assign the user's token in
-// the connection for use in the layout.
-//
-// In your "web/router.ex":
-//
-//     pipeline :browser do
-//       ...
-//       plug MyAuth
-//       plug :put_user_token
-//     end
-//
-//     defp put_user_token(conn, _) do
-//       if current_user = conn.assigns[:current_user] do
-//         token = Phoenix.Token.sign(conn, "user socket", current_user.id)
-//         assign(conn, :user_token, token)
-//       else
-//         conn
-//       end
-//     end
-//
-// Now you need to pass this token to JavaScript. You can do so
-// inside a script tag in "web/templates/layout/app.html.eex":
-//
-//     <script>window.userToken = "<%= assigns[:user_token] %>";</script>
-//
-// You will need to verify the user token in the "connect/2" function
-// in "web/channels/user_socket.ex":
-//
-//     def connect(%{"token" => token}, socket) do
-//       # max_age: 1209600 is equivalent to two weeks in seconds
-//       case Phoenix.Token.verify(socket, "user socket", token, max_age: 1209600) do
-//         {:ok, user_id} ->
-//           {:ok, assign(socket, :user, user_id)}
-//         {:error, reason} ->
-//           :error
-//       end
-//     end
-//
-// Finally, pass the token on connect as below. Or remove it
-// from connect if you don't care about authentication.
-
-// NOTE: The contents of this file will only be executed if
+var socket = new _phoenix.Socket("/socket", { params: { token: window.userToken } }); // NOTE: The contents of this file will only be executed if
 // you uncomment its entry in "web/static/js/app.js".
 
 // To use Phoenix channels, the first step is to import Socket
 // and connect at the socket path in "lib/my_app/endpoint.ex":
+
 socket.connect();
 
 // Now that you are connected, you can join channels with a topic:
@@ -12497,7 +12347,9 @@ var channel = socket.channel("rooms:lobby", {});
 var messagesContainer = $("#messages");
 
 channel.on("new_msg", function (payload) {
-  messagesContainer.append("<br/>[" + Date() + "] " + payload.body);
+  //messagesContainer.append(`<br/>[${Date()}] ${payload.body}`)
+  console.log(payload.body);
+  app.ports.loginResponse.send("111111111111111111111");
 });
 
 channel.join().receive("ok", function (resp) {
@@ -12509,14 +12361,23 @@ channel.join().receive("ok", function (resp) {
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //push up to server
 function testPortCallback(val) {
-  var exampleUser = { name: "johno", username: "johnorford2", password: "xoxoxoxo" };
+  var u = val.username;
+  var p = val.password;
+  var _ = val.response;
+
+
+  var exampleUser = { action: "login", data: { username: u, password: p, name: "john" } };
   channel.push("new_msg", { body: exampleUser });
 }
 
 var div = document.getElementById('stamper');
-var app = Elm.embed(Elm.Main, div);
+var app = Elm.embed(Elm.Main, div, { loginResponse: "" });
 
-app.ports.requestUser.subscribe(testPortCallback);
+//one port for each action
+//Login
+//Registration
+
+app.ports.loginRequest.subscribe(testPortCallback);
 
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
