@@ -11100,6 +11100,232 @@ Elm.LoginForm.make = function (_elm) {
                                   ,sendData: sendData
                                   ,loginRequestMailBox: loginRequestMailBox};
 };
+Elm.Source = Elm.Source || {};
+Elm.Source.make = function (_elm) {
+   "use strict";
+   _elm.Source = _elm.Source || {};
+   if (_elm.Source.values) return _elm.Source.values;
+   var _U = Elm.Native.Utils.make(_elm),
+   $Basics = Elm.Basics.make(_elm),
+   $Debug = Elm.Debug.make(_elm),
+   $Html = Elm.Html.make(_elm),
+   $Html$Events = Elm.Html.Events.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm);
+   var _op = {};
+   var dataProviders = _U.list(["Yahoo","Google","CBOE","SPDJ"]);
+   var options = function (s) {    return A2($Html.option,_U.list([]),_U.list([$Html.text(s)]));};
+   var view = F2(function (address,model) {
+      return A2($Html.select,_U.list([A3($Html$Events.on,"change",$Html$Events.targetValue,$Signal.message(address))]),A2($List.map,options,dataProviders));
+   });
+   var update = F2(function (newSource,model) {    return newSource;});
+   var init = function (source) {    return source;};
+   return _elm.Source.values = {_op: _op,init: init,update: update,view: view};
+};
+Elm.Ticker = Elm.Ticker || {};
+Elm.Ticker.make = function (_elm) {
+   "use strict";
+   _elm.Ticker = _elm.Ticker || {};
+   if (_elm.Ticker.values) return _elm.Ticker.values;
+   var _U = Elm.Native.Utils.make(_elm),
+   $Basics = Elm.Basics.make(_elm),
+   $Debug = Elm.Debug.make(_elm),
+   $Html = Elm.Html.make(_elm),
+   $Html$Attributes = Elm.Html.Attributes.make(_elm),
+   $Html$Events = Elm.Html.Events.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm);
+   var _op = {};
+   var view = F2(function (address,model) {
+      return A2($Html.input,_U.list([$Html$Attributes.value(model),A3($Html$Events.on,"input",$Html$Events.targetValue,$Signal.message(address))]),_U.list([]));
+   });
+   var update = F2(function (newTicker,model) {    return newTicker;});
+   var init = function (ticker) {    return ticker;};
+   return _elm.Ticker.values = {_op: _op,init: init,update: update,view: view};
+};
+Elm.Yield = Elm.Yield || {};
+Elm.Yield.make = function (_elm) {
+   "use strict";
+   _elm.Yield = _elm.Yield || {};
+   if (_elm.Yield.values) return _elm.Yield.values;
+   var _U = Elm.Native.Utils.make(_elm),
+   $Basics = Elm.Basics.make(_elm),
+   $Debug = Elm.Debug.make(_elm),
+   $Html = Elm.Html.make(_elm),
+   $Html$Attributes = Elm.Html.Attributes.make(_elm),
+   $Html$Events = Elm.Html.Events.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm);
+   var _op = {};
+   var view = F2(function (address,model) {
+      return A2($Html.input,
+      _U.list([$Html$Attributes.type$("checkbox"),A3($Html$Events.on,"change",$Html$Events.targetChecked,$Signal.message(address))]),
+      _U.list([]));
+   });
+   var update = F2(function (newYield,model) {    return newYield;});
+   var init = function ($yield) {    return $yield;};
+   return _elm.Yield.values = {_op: _op,init: init,update: update,view: view};
+};
+Elm.RequestForm = Elm.RequestForm || {};
+Elm.RequestForm.make = function (_elm) {
+   "use strict";
+   _elm.RequestForm = _elm.RequestForm || {};
+   if (_elm.RequestForm.values) return _elm.RequestForm.values;
+   var _U = Elm.Native.Utils.make(_elm),
+   $Basics = Elm.Basics.make(_elm),
+   $Debug = Elm.Debug.make(_elm),
+   $Effects = Elm.Effects.make(_elm),
+   $Html = Elm.Html.make(_elm),
+   $Html$Attributes = Elm.Html.Attributes.make(_elm),
+   $Html$Events = Elm.Html.Events.make(_elm),
+   $Http = Elm.Http.make(_elm),
+   $Json$Decode = Elm.Json.Decode.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm),
+   $Source = Elm.Source.make(_elm),
+   $Task = Elm.Task.make(_elm),
+   $Ticker = Elm.Ticker.make(_elm),
+   $Yield = Elm.Yield.make(_elm);
+   var _op = {};
+   var testMailBox = $Signal.mailbox(_U.list([{ctor: "_Tuple7",_0: "",_1: 0,_2: 0,_3: 0,_4: 0,_5: 0,_6: 0}]));
+   _op["=>"] = F2(function (v0,v1) {    return {ctor: "_Tuple2",_0: v0,_1: v1};});
+   var quandlUrl = function (model) {
+      return A2($Http.url,
+      A2($Basics._op["++"],
+      "https://www.quandl.com/api/v3/datasets/",
+      A2($Basics._op["++"],model.source,A2($Basics._op["++"],"/",A2($Basics._op["++"],model.ticker,".json")))),
+      _U.list([A2(_op["=>"],"auth_token","Fp6cFhibc5xvL2pN3dnu")]));
+   };
+   var row = A8($Json$Decode.tuple7,
+   F7(function (v0,v1,v2,v3,v4,v5,v6) {    return {ctor: "_Tuple7",_0: v0,_1: v1,_2: v2,_3: v3,_4: v4,_5: v5,_6: v6};}),
+   $Json$Decode.string,
+   $Json$Decode.$float,
+   $Json$Decode.$float,
+   $Json$Decode.$float,
+   $Json$Decode.$float,
+   $Json$Decode.$float,
+   $Json$Decode.$float);
+   var decodeData = A2($Json$Decode.at,_U.list(["dataset","data"]),$Json$Decode.list(row));
+   var NoOp = {ctor: "NoOp"};
+   var sendData = function (data) {
+      return $Effects.task(A2($Task.andThen,A2($Signal.send,testMailBox.address,data),function (_p0) {    return $Task.succeed(NoOp);}));
+   };
+   var NewData = function (a) {    return {ctor: "NewData",_0: a};};
+   var getData = function (model) {    return $Effects.task(A2($Task.map,NewData,$Task.toMaybe(A2($Http.get,decodeData,quandlUrl(model)))));};
+   var update = F2(function (action,model) {
+      var _p1 = action;
+      switch (_p1.ctor)
+      {case "UpdateSource": return {ctor: "_Tuple2",_0: _U.update(model,{source: A2($Source.update,_p1._0,model.source)}),_1: $Effects.none};
+         case "UpdateTicker": return {ctor: "_Tuple2",_0: _U.update(model,{ticker: A2($Ticker.update,_p1._0,model.ticker)}),_1: $Effects.none};
+         case "UpdateYield": return {ctor: "_Tuple2",_0: _U.update(model,{$yield: A2($Yield.update,_p1._0,model.$yield)}),_1: $Effects.none};
+         case "Request": return {ctor: "_Tuple2",_0: model,_1: getData(model)};
+         case "NoOp": return {ctor: "_Tuple2",_0: model,_1: $Effects.none};
+         default: var data = A2($Maybe.withDefault,model.newData,_p1._0);
+           return {ctor: "_Tuple2",_0: _U.update(model,{newData: data}),_1: sendData(data)};}
+   });
+   var Request = {ctor: "Request"};
+   var UpdateYield = function (a) {    return {ctor: "UpdateYield",_0: a};};
+   var UpdateTicker = function (a) {    return {ctor: "UpdateTicker",_0: a};};
+   var UpdateSource = function (a) {    return {ctor: "UpdateSource",_0: a};};
+   var view = F2(function (address,model) {
+      return A2($Html.div,
+      _U.list([]),
+      _U.list([A2($Source.view,A2($Signal.forwardTo,address,UpdateSource),model.source)
+              ,A2($Ticker.view,A2($Signal.forwardTo,address,UpdateTicker),model.ticker)
+              ,A2($Yield.view,A2($Signal.forwardTo,address,UpdateYield),model.$yield)
+              ,$Html.text("Yield")
+              ,A2($Html.a,_U.list([$Html$Attributes.href("#"),A2($Html$Events.onClick,address,Request)]),_U.list([$Html.text("Pull")]))]));
+   });
+   var init = F3(function (source,ticker,$yield) {
+      return {ctor: "_Tuple2"
+             ,_0: {source: $Source.init(source)
+                  ,ticker: $Ticker.init(ticker)
+                  ,$yield: $Yield.init($yield)
+                  ,newData: _U.list([{ctor: "_Tuple7",_0: "",_1: 0,_2: 0,_3: 0,_4: 0,_5: 0,_6: 0}])}
+             ,_1: $Effects.none};
+   });
+   var Model = F4(function (a,b,c,d) {    return {source: a,ticker: b,$yield: c,newData: d};});
+   return _elm.RequestForm.values = {_op: _op
+                                    ,Model: Model
+                                    ,init: init
+                                    ,UpdateSource: UpdateSource
+                                    ,UpdateTicker: UpdateTicker
+                                    ,UpdateYield: UpdateYield
+                                    ,Request: Request
+                                    ,NewData: NewData
+                                    ,NoOp: NoOp
+                                    ,update: update
+                                    ,view: view
+                                    ,row: row
+                                    ,quandlUrl: quandlUrl
+                                    ,decodeData: decodeData
+                                    ,getData: getData
+                                    ,sendData: sendData
+                                    ,testMailBox: testMailBox};
+};
+Elm.Router = Elm.Router || {};
+Elm.Router.make = function (_elm) {
+   "use strict";
+   _elm.Router = _elm.Router || {};
+   if (_elm.Router.values) return _elm.Router.values;
+   var _U = Elm.Native.Utils.make(_elm),
+   $Basics = Elm.Basics.make(_elm),
+   $Debug = Elm.Debug.make(_elm),
+   $Effects = Elm.Effects.make(_elm),
+   $Html = Elm.Html.make(_elm),
+   $List = Elm.List.make(_elm),
+   $LoginForm = Elm.LoginForm.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $RequestForm = Elm.RequestForm.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm);
+   var _op = {};
+   var Request = function (a) {    return {ctor: "Request",_0: a};};
+   var Login = function (a) {    return {ctor: "Login",_0: a};};
+   var update = F2(function (action,model) {
+      var _p0 = action;
+      if (_p0.ctor === "Request") {
+            var _p1 = A2($RequestForm.update,_p0._0,model.data);
+            var newData = _p1._0;
+            var fx = _p1._1;
+            return {ctor: "_Tuple2",_0: _U.update(model,{data: newData}),_1: A2($Effects.map,Request,fx)};
+         } else {
+            var _p2 = A2($LoginForm.update,_p0._0,model.user);
+            var newUser = _p2._0;
+            var fx = _p2._1;
+            return {ctor: "_Tuple2",_0: _U.update(model,{user: newUser}),_1: A2($Effects.map,Login,fx)};
+         }
+   });
+   var view = F2(function (address,model) {
+      var _p3 = model.location;
+      if (_p3 === "request") {
+            return A2($Html.div,_U.list([]),_U.list([A2($RequestForm.view,A2($Signal.forwardTo,address,Request),model.data)]));
+         } else {
+            return A2($Html.div,_U.list([]),_U.list([A2($LoginForm.view,A2($Signal.forwardTo,address,Login),model.user)]));
+         }
+   });
+   var Model = F3(function (a,b,c) {    return {data: a,user: b,location: c};});
+   var init = function () {
+      var _p4 = A3($LoginForm.init,"","","");
+      var login = _p4._0;
+      var loginFx = _p4._1;
+      var _p5 = A3($RequestForm.init,"Yahoo","INDEX_VIX",false);
+      var request = _p5._0;
+      var requestFx = _p5._1;
+      return {ctor: "_Tuple2"
+             ,_0: A3(Model,request,login,"login")
+             ,_1: $Effects.batch(_U.list([A2($Effects.map,Login,loginFx),A2($Effects.map,Request,requestFx)]))};
+   }();
+   return _elm.Router.values = {_op: _op,Model: Model,init: init,Login: Login,Request: Request,update: update,view: view};
+};
 Elm.Main = Elm.Main || {};
 Elm.Main.make = function (_elm) {
    "use strict";
@@ -11113,6 +11339,7 @@ Elm.Main.make = function (_elm) {
    $LoginForm = Elm.LoginForm.make(_elm),
    $Maybe = Elm.Maybe.make(_elm),
    $Result = Elm.Result.make(_elm),
+   $Router = Elm.Router.make(_elm),
    $Signal = Elm.Signal.make(_elm),
    $StartApp = Elm.StartApp.make(_elm),
    $Task = Elm.Task.make(_elm);
@@ -11122,13 +11349,13 @@ Elm.Main.make = function (_elm) {
    function (v) {
       return typeof v === "string" || typeof v === "object" && v instanceof String ? v : _U.badPort("a string",v);
    });
-   var incomingActions = A2($Signal.map,$LoginForm.Response,loginResponse);
+   var incomingActions = A2($Signal.map,$Router.Login,A2($Signal.map,$LoginForm.Response,loginResponse));
    var loginRequest = Elm.Native.Port.make(_elm).outboundSignal("loginRequest",
    function (v) {
       return {username: v.username,password: v.password,response: v.response};
    },
    $LoginForm.loginRequestMailBox.signal);
-   var app = $StartApp.start({init: A3($LoginForm.init,"","",""),update: $LoginForm.update,view: $LoginForm.view,inputs: _U.list([incomingActions])});
+   var app = $StartApp.start({init: $Router.init,update: $Router.update,view: $Router.view,inputs: _U.list([incomingActions])});
    var main = app.html;
    var tasks = Elm.Native.Task.make(_elm).performSignal("tasks",app.tasks);
    return _elm.Main.values = {_op: _op,app: app,main: main,incomingActions: incomingActions};

@@ -30,7 +30,7 @@ function testPortCallback(val) {
   const {username: u, password: p, response: _} = val;
 
 
-  const exampleUser = {action:"login",data:{username: u, password: p, name: "john"}}
+  const exampleUser = {action:"register",data:{username: u, password: p, name: "john"}}
   channel.push("new_msg", {body: exampleUser})
   }
 

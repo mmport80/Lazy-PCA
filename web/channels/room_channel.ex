@@ -32,16 +32,17 @@ defmodule Backend.RoomChannel do
         token = Phoenix.Token.sign(socket, "user", user.id)
         response = %Response{response_text: "OK", token: token}
       user ->
-        response = %Response{response_text: "Not OK", token: ""}
+        response = %Response{response_text: "Password Not OK", token: ""}
       true ->
         #?? take up time between tries?
         dummy_checkpw()
-        response = %Response{response_text: "Not Found", token: ""}
+        response = %Response{response_text: "User Not Found", token: ""}
     end
   end
 
   def handle_in("new_msg", %{"body" => params}, socket) do
 
+    #break into action and payload components
     %{"action" => action, "data" => data} = params
 
     case action do
@@ -52,13 +53,18 @@ defmodule Backend.RoomChannel do
         #register user
         %{"name" => name, "username" => username, "password" => password} = data
         changeset = User.registration_changeset(%User{},data)
+        #*reasons for problem
         case Repo.insert(changeset) do
           {:ok, user} ->
-            result =  "regd"
+            #regd means logged in
+            #no user data to send, fresh account
+            response = login_by_username_and_pass(socket, username, password)
           {:error, changeset} ->
-            result = "not regd"
+            #*-name already taken
+            #*-inputs blank or too small --client side
+            response = %Response{response_text: "Username already taken", token: ""}
         end
-        response = %Response{response_text: result, token: ""}
+
     end
 
 
@@ -71,13 +77,6 @@ defmodule Backend.RoomChannel do
     #
     #go into user room "user:john"
     #receive updates
-
-
-
-    #user_id = 1
-    #token = Phoenix.Token.sign(socket, "user", user_id)
-    #IO.puts "verified"
-    #IO.inspect Phoenix.Token.verify(socket, "user", token)
 
     #logout user
     #flush all data - set to initial state

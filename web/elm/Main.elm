@@ -1,6 +1,8 @@
 import Effects exposing (Never)
 --import RequestForm exposing (init, update, view, testMailBox)
-import LoginForm exposing (init, update, view, loginRequestMailBox, Action(Response))
+import Router exposing (init, update, view)
+
+import LoginForm exposing (Action(Response), loginRequestMailBox)
 
 import StartApp
 import Task
@@ -44,10 +46,12 @@ port requestUser = testMailBox.signal
 
 --^^^^^^^^^^^^^^^^^^^°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 
+
+{--
 --start app architecture boilerplate
 app =
   StartApp.start
-    { init = init "" "" ""
+    { init = LoginForm.init "" "" ""
     , update = update
     , view = view
     --actions get forwards to correct update function
@@ -70,3 +74,39 @@ port loginResponse : Signal String
 
 incomingActions : Signal (Action)
 incomingActions = Signal.map Response loginResponse
+
+--}
+
+
+
+
+
+
+
+
+
+app =
+  StartApp.start
+    { init = Router.init
+    , update = update
+    , view = view
+    --actions get forwards to correct update function
+    , inputs = [ incomingActions ]
+    }
+
+main = app.html
+
+port tasks : Signal (Task.Task Never ())
+port tasks = app.tasks
+
+
+--outgoing login requests to server
+port loginRequest : Signal LoginForm.Model
+port loginRequest = loginRequestMailBox.signal
+
+
+--incoming login responses
+port loginResponse : Signal String
+
+incomingActions : Signal (Router.Action)
+incomingActions = Signal.map Router.Login (Signal.map LoginForm.Response loginResponse)
