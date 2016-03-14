@@ -78,49 +78,5 @@ form.link, form.button {
   }
 }
 
-body {
-        font: 1em;
-        }
-.axis path,
-.axis line {
-        fill: none;
-        stroke: #000;
-        shape-rendering: crispEdges;
-        }
-.dot{
-        fill: green;
-        stroke: green;
-        stroke-width: 0.05em;
-        stroke-opacity:1;
-        fill-opacity:0.01;
-        }
-.black{
-        fill: black;
-        stroke: black;
-        fill-opacity:1;
-        }
-.ellipse {
-        stroke: #000;
-        stroke-opacity:0.5;
-        stroke-width: 1em;
-        fill: none;
-        }
-#title{
-        font-size: 6em;
-        }
-g{
-        text-anchor: end;
-        }
-polyline{
-        fill:none;
-        stroke:black;
-        stroke-width:2;
-        }
-.line{
-        fill:none;
-        stroke:black;
-        stroke-width:0.5em;
-        }
-
 
 /*# sourceMappingURL=app.css.map*/
