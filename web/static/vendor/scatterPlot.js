@@ -50,11 +50,6 @@ const elmProcessData = d =>
 
   const data = getLaggedVectors(datesAndReturns);
 
-
-
-  console.log('1');
-  console.log(data);
-
   return {data:data, result:result};
   }
 
