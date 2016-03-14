@@ -1,21 +1,19 @@
 module RequestForm where
 
-import Html exposing (a, text, Html, div, button)
-import Html.Attributes exposing (href)
+import Html exposing (a, text, Html, div)
+import Html.Attributes exposing (href, id)
 import Html.Events exposing (targetChecked, on, onClick)
 
 import Http exposing (get, url)
 
 import Task exposing (toMaybe, andThen)
-
 import Effects exposing (Effects, Never)
+import Signal exposing (Address)
 
 import Json.Decode as Json exposing (at, string)
 
-import Signal exposing (Address)
-
 import Source exposing (view, update)
-import Ticker exposing (view, update)
+import TextInputField exposing (view, update)
 import Yield exposing (view, update)
 
 import List
@@ -24,11 +22,13 @@ import List
 --********************************************************************************
 --********************************************************************************
 -- MODEL
+--a row of the data file
+--how to approach with files from different sources?
 type alias Row = (String, Float, Float, Float, Float, Float, Float)
 
 type alias Model = {
       source : Source.Model
-    , ticker : Ticker.Model
+    , ticker : TextInputField.Model
     , yield : Yield.Model
     , newData : List Row
     }
@@ -37,9 +37,9 @@ init : String -> String -> Bool -> (Model, Effects Action)
 init source ticker yield =
     (
       { source = Source.init source
-      , ticker = Ticker.init ticker
+      , ticker = TextInputField.init ticker "Ticker" "text"
       , yield = Yield.init yield
-      --start with default data?
+      --start with useful default data? instead of useless default data
       , newData = [("",0,0,0,0,0,0)]
       }
     , Effects.none
@@ -64,7 +64,7 @@ update action model =
       , Effects.none
       )
     UpdateTicker input ->
-      ( { model | ticker = Ticker.update input model.ticker }
+      ( { model | ticker = TextInputField.update input model.ticker }
       , Effects.none
       )
     UpdateYield input ->
@@ -92,15 +92,16 @@ update action model =
 -- VIEW
 view : Signal.Address Action -> Model -> Html
 view address model =
-    div []
-      [
-        Source.view (Signal.forwardTo address UpdateSource) model.source
-      , Ticker.view (Signal.forwardTo address UpdateTicker) model.ticker
-      , Yield.view (Signal.forwardTo address UpdateYield) model.yield
-      , text "Yield"
-      , a [ href "#", onClick address Request ] [ text "Pull" ]
-      ]
-
+  div[][
+      div []
+        [
+          Source.view (Signal.forwardTo address UpdateSource) model.source
+        , TextInputField.view (Signal.forwardTo address UpdateTicker) model.ticker
+        , Yield.view (Signal.forwardTo address UpdateYield) model.yield
+        , text "Yield"
+        , a [ href "#", onClick address Request ] [ text "Pull" ]
+        ]
+  ]
 
 
 --********************************************************************************
@@ -120,7 +121,7 @@ row = Json.tuple7 (,,,,,,)
 
 quandlUrl : Model -> String
 quandlUrl model =
-  Http.url ("https://www.quandl.com/api/v3/datasets/"++model.source++"/"++model.ticker++".json")
+  Http.url ("https://www.quandl.com/api/v3/datasets/"++model.source++"/"++model.ticker.value++".json")
     [ "auth_token" => "Fp6cFhibc5xvL2pN3dnu" ]
 
 --change name to something like 'decodeList'
@@ -136,7 +137,6 @@ getData model =
 
 
 --Send data to JS
-
 sendData : List Row -> Effects Action
 sendData data =
   Signal.send testMailBox.address data

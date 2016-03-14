@@ -3,95 +3,23 @@ import Effects exposing (Never)
 import Router exposing (init, update, view)
 
 import LoginForm exposing (Action(Response), loginRequestMailBox)
+import RegisterForm exposing (Action(Response), registerRequestMailBox)
+import RequestForm exposing (Row, testMailBox)
 
 import StartApp
 import Task
 
-
-
-
---hook up login with db js
---send and receive responses
---send login deets
---receive response + token
---add token to login model
---use username and token to pull down data
-
---registration
---send details
---get back response + token
-
---top level model, switches to different views
---updating model as we go
-
-
-{--
-app =
-  StartApp.start
-    { init = init "Yahoo" "INDEX_VIX" False
-    , update = update
-    , view = view
-    , inputs = []
-    }
-
-main = app.html
-
-port tasks : Signal (Task.Task Never ())
-port tasks = app.tasks
-
-port requestUser : Signal (List RequestForm.Row)
-port requestUser = testMailBox.signal
-
---}
+port quandlRequest : Signal (List RequestForm.Row)
+port quandlRequest = testMailBox.signal
 
 --^^^^^^^^^^^^^^^^^^^°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
-
-
-{--
---start app architecture boilerplate
-app =
-  StartApp.start
-    { init = LoginForm.init "" "" ""
-    , update = update
-    , view = view
-    --actions get forwards to correct update function
-    , inputs = [ incomingActions ]
-    }
-
-main = app.html
-
-port tasks : Signal (Task.Task Never ())
-port tasks = app.tasks
-
-
---outgoing login requests to server
-port loginRequest : Signal LoginForm.Model
-port loginRequest = loginRequestMailBox.signal
-
-
---incoming login responses
-port loginResponse : Signal String
-
-incomingActions : Signal (Action)
-incomingActions = Signal.map Response loginResponse
-
---}
-
-
-
-
-
-
-
-
-
 app =
   StartApp.start
     { init = Router.init
     , update = update
     , view = view
     --actions get forwards to correct update function
-    , inputs = [ incomingActions ]
+    , inputs = [ incomingLoginActions, incomingRegisterActions ]
     }
 
 main = app.html
@@ -100,13 +28,27 @@ port tasks : Signal (Task.Task Never ())
 port tasks = app.tasks
 
 
+--*****************************************************
+--LOGIN
 --outgoing login requests to server
-port loginRequest : Signal LoginForm.Model
+port loginRequest : Signal LoginForm.LoginRequest
 port loginRequest = loginRequestMailBox.signal
 
+--incoming login responses
+port loginResponse : Signal LoginForm.ResponseMessage
+
+incomingLoginActions : Signal (Router.Action)
+incomingLoginActions = Signal.map Router.Login (Signal.map LoginForm.Response loginResponse)
+
+
+--*****************************************************
+--Register
+--outgoing login requests to server
+port registerRequest : Signal RegisterForm.RegisterRequest
+port registerRequest = registerRequestMailBox.signal
 
 --incoming login responses
-port loginResponse : Signal String
+port registerResponse : Signal RegisterForm.ResponseMessage
 
-incomingActions : Signal (Router.Action)
-incomingActions = Signal.map Router.Login (Signal.map LoginForm.Response loginResponse)
+incomingRegisterActions : Signal (Router.Action)
+incomingRegisterActions = Signal.map Router.Register (Signal.map RegisterForm.Response registerResponse)

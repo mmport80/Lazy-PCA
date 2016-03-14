@@ -1,65 +1,67 @@
 module LoginForm where
 
-import Html exposing (a, text, Html, div, button, span)
+import Html exposing (a, text, Html, div)
 import Html.Attributes exposing (href)
 import Html.Events exposing (targetChecked, on, onClick)
 
 import Http exposing (get, url)
 
 import Task exposing (toMaybe, andThen)
-
+import Signal exposing (Address)
 import Effects exposing (Effects, Never)
 
 import Json.Decode as Json exposing (at, string)
 
-import Signal exposing (Address)
-
-import Username exposing (view, update)
-import Password exposing (view, update)
-
-import Debug exposing (log)
+import TextInputField exposing (view, update)
 
 import List
-
 
 --********************************************************************************
 --********************************************************************************
 -- MODEL
+--UI state
 type alias Model = {
-      username : Username.Model
-    , password : Password.Model
+      username : TextInputField.Model
+    , password : TextInputField.Model
     , response : String
+    , token : String
     }
 
-init : String -> String -> String -> (Model, Effects Action)
-init username password response =
+
+init : String -> String -> (Model, Effects Action)
+init username password =
     (
-      { username = Username.init username
-      , password = Password.init password
-      , response = response
+      { username = TextInputField.init username "Username" "text"
+      , password = TextInputField.init password "Password" "password"
+      , response = ""
+      , token = ""
       }
     , Effects.none
     )
 
+
 --********************************************************************************
 --********************************************************************************
 -- UPDATE
+
 type Action
     = UpdateUsername String
     | UpdatePassword String
     | Request
-    | Response String
+    | Response ResponseMessage
     | NoOp
+
+type alias ResponseMessage = {response: String, token: String}
 
 update : Action -> Model -> (Model, Effects Action)
 update action model =
   case action of
     UpdateUsername input ->
-      ( { model | username = Username.update input model.username }
+      ( { model | username = TextInputField.update input model.username }
       , Effects.none
       )
     UpdatePassword input ->
-      ( { model | password = Password.update input model.password }
+      ( { model | password = TextInputField.update input model.password }
       , Effects.none
       )
     NoOp ->
@@ -69,10 +71,14 @@ update action model =
     --update
     --and also send to port
     Request ->
-      ( model, sendData model )
+      ( model, sendData {username = model.username.value, password = model.password.value} )
     Response input ->
       --remove pw & set response
-      ( { model | password = Password.update "" model.password, response = input}
+      ( { model |
+          password = TextInputField.update "" model.password
+        , response = input.response
+        , token = input.token
+        }
       , Effects.none
       )
 
@@ -84,32 +90,29 @@ view : Signal.Address Action -> Model -> Html
 view address model =
     div []
       [
-        Username.view (Signal.forwardTo address UpdateUsername) model.username
-      , Password.view (Signal.forwardTo address UpdatePassword) model.password
+        TextInputField.view (Signal.forwardTo address UpdateUsername) model.username
+      , TextInputField.view (Signal.forwardTo address UpdatePassword) model.password
       , a [ href "#", onClick address Request ] [ text "Login" ]
       , text model.response
       ]
 
 
-
 --********************************************************************************
 --********************************************************************************
 -- EFFECTS
+type alias LoginRequest = {
+      username : String
+    , password : String
+    }
 
---send data to phoenix
---mail box
---port
-
---Send data to JS
-
-sendData : Model -> Effects Action
+sendData : LoginRequest -> Effects Action
 sendData data =
   Signal.send loginRequestMailBox.address data
     `Task.andThen` (\_ -> Task.succeed NoOp)
   |> Effects.task
 
 loginRequestMailBox :
-  { address : Signal.Address Model
-  , signal : Signal Model
+  { address : Signal.Address LoginRequest
+  , signal : Signal LoginRequest
   }
-loginRequestMailBox = Signal.mailbox { username = "", password = "", response = "" }
+loginRequestMailBox = Signal.mailbox (LoginRequest "" "")

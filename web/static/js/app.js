@@ -19,5 +19,5 @@ import "phoenix_html"
 // paths "./socket" or full ones "web/static/js/socket".
 
 import socket from "./socket"
-//import socket from "web/static/js/socket"
-//import Elm from "./web/static/vendor/main.js"
+//import elmProcessData from "web/static/js/scatterPlot"
+//import Elm from "web/static/vendor/main.js"

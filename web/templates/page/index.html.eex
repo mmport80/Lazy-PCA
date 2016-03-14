@@ -1,5 +1,3 @@
-<div id="messages"></div>
-<input id="chat-input" type="text"></input>
 
-<div id="stamper"></div>
-<div>dodododododo</div>
+<div id="elm"></div>
+<div id="plot"></div>

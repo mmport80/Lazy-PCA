@@ -1,49 +1,83 @@
-// NOTE: The contents of this file will only be executed if
-// you uncomment its entry in "web/static/js/app.js".
+"use strict"
 
-// To use Phoenix channels, the first step is to import Socket
-// and connect at the socket path in "lib/my_app/endpoint.ex":
+
 import {Socket} from "phoenix"
 
-let socket = new Socket("/socket", {params: {token: window.userToken}})
 
+//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//setup
+let socket = new Socket("/socket", {params: {token: window.userToken}})
 
 socket.connect()
 
-// Now that you are connected, you can join channels with a topic:
 let channel = socket.channel("rooms:lobby", {})
-let messagesContainer = $("#messages")
 
-channel.on("new_msg", payload => {
-  //messagesContainer.append(`<br/>[${Date()}] ${payload.body}`)
-  console.log(payload.body);
-  app.ports.loginResponse.send("111111111111111111111")
-})
+channel.on("new_msg",
+  payload => {
+    const {token: token, response_text: response_text, action: action} = payload.body;
+    const message = {token: token, response: response_text};
+
+    action === "login" ?
+      app.ports.loginResponse.send(message)
+    : (action === "register" ?
+        app.ports.registerResponse.send(message)
+      :
+        null)
+    }
+  )
 
 channel.join()
   .receive("ok", resp => { console.log("Joined successfully", resp) })
   .receive("error", resp => { console.log("Unable to join", resp) })
 
+const initMesssage = {token: "", response: ""}
+
+const div = document.getElementById('elm');
+const app = Elm.embed(
+    Elm.Main
+  , div
+  , {
+      loginResponse: initMesssage
+    , registerResponse: initMesssage
+    }
+  );
+
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //push up to server
-function testPortCallback(val) {
-  const {username: u, password: p, response: _} = val;
 
-
-  const exampleUser = {action:"register",data:{username: u, password: p, name: "john"}}
-  channel.push("new_msg", {body: exampleUser})
+const registerCallback = msg => {
+  //change fields, so that clientside and serverside match up
+  const {username: u, password: p, fullname: f} = msg;
+  const request = { action:"register", data: {username: u, password: p, name: f} }
+  channel.push("new_msg", {body: request})
   }
 
-const div = document.getElementById('stamper');
-const app = Elm.embed(Elm.Main, div, {loginResponse: ""});
+app.ports.registerRequest.subscribe(registerCallback);
 
-//one port for each action
-//Login
-//Registration
+//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-app.ports.loginRequest.subscribe(testPortCallback);
+const loginCallback = msg => {
+  const request = { action: "login", data:msg }
+  channel.push("new_msg", {body: request})
+  }
+
+app.ports.loginRequest.subscribe(loginCallback);
+
+//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+const x = z =>
+  {
+  const {data:data,result:result} = elmProcessData(z);
+
+  getScatterPlot(data,result);
+
+  return null;
+  };
+
+app.ports.quandlRequest.subscribe(x);
 
 
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 
 export default socket
