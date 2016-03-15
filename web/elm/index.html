@@ -1,5 +1,5 @@
 <!DOCTYPE HTML>
-<html><head><meta charset="UTF-8"><title>Main</title><style>html,head,body { padding:0; margin:0; }
+<html><head><meta charset="UTF-8"><title>Router</title><style>html,head,body { padding:0; margin:0; }
 body { font-family: calibri, helvetica, arial, sans-serif; }</style><script type="text/javascript">var Elm = Elm || { Native: {} };Elm.Native.Array = {};
 Elm.Native.Array.make = function(localRuntime) {
 
@@ -10898,44 +10898,6 @@ Elm.Http.make = function (_elm) {
                              ,BadResponse: BadResponse
                              ,RawTimeout: RawTimeout
                              ,RawNetworkError: RawNetworkError};
-};Elm.StartApp = Elm.StartApp || {};
-Elm.StartApp.make = function (_elm) {
-   "use strict";
-   _elm.StartApp = _elm.StartApp || {};
-   if (_elm.StartApp.values) return _elm.StartApp.values;
-   var _U = Elm.Native.Utils.make(_elm),
-   $Basics = Elm.Basics.make(_elm),
-   $Debug = Elm.Debug.make(_elm),
-   $Effects = Elm.Effects.make(_elm),
-   $Html = Elm.Html.make(_elm),
-   $List = Elm.List.make(_elm),
-   $Maybe = Elm.Maybe.make(_elm),
-   $Result = Elm.Result.make(_elm),
-   $Signal = Elm.Signal.make(_elm),
-   $Task = Elm.Task.make(_elm);
-   var _op = {};
-   var start = function (config) {
-      var updateStep = F2(function (action,_p0) {
-         var _p1 = _p0;
-         var _p2 = A2(config.update,action,_p1._0);
-         var newModel = _p2._0;
-         var additionalEffects = _p2._1;
-         return {ctor: "_Tuple2",_0: newModel,_1: $Effects.batch(_U.list([_p1._1,additionalEffects]))};
-      });
-      var update = F2(function (actions,_p3) {    var _p4 = _p3;return A3($List.foldl,updateStep,{ctor: "_Tuple2",_0: _p4._0,_1: $Effects.none},actions);});
-      var messages = $Signal.mailbox(_U.list([]));
-      var singleton = function (action) {    return _U.list([action]);};
-      var address = A2($Signal.forwardTo,messages.address,singleton);
-      var inputs = $Signal.mergeMany(A2($List._op["::"],messages.signal,A2($List.map,$Signal.map(singleton),config.inputs)));
-      var effectsAndModel = A3($Signal.foldp,update,config.init,inputs);
-      var model = A2($Signal.map,$Basics.fst,effectsAndModel);
-      return {html: A2($Signal.map,config.view(address),model)
-             ,model: model
-             ,tasks: A2($Signal.map,function (_p5) {    return A2($Effects.toTask,messages.address,$Basics.snd(_p5));},effectsAndModel)};
-   };
-   var App = F3(function (a,b,c) {    return {html: a,model: b,tasks: c};});
-   var Config = F4(function (a,b,c,d) {    return {init: a,update: b,view: c,inputs: d};});
-   return _elm.StartApp.values = {_op: _op,start: start,Config: Config,App: App};
 };Elm.SelectInput = Elm.SelectInput || {};
 Elm.SelectInput.make = function (_elm) {
    "use strict";
@@ -10957,17 +10919,35 @@ Elm.SelectInput.make = function (_elm) {
       _U.list([$Html$Attributes.value(o.value),$Html$Attributes.selected(true)]),
       _U.list([$Html.text(o.text)])) : A2($Html.option,_U.list([$Html$Attributes.value(o.value)]),_U.list([$Html.text(o.text)]));
    });
+   var update = F2(function (action,model) {
+      var _p0 = action;
+      switch (_p0.ctor)
+      {case "Update": return _U.update(model,{value: _p0._0});
+         case "Enable": return _U.update(model,{disabled: false});
+         default: return _U.update(model,{disabled: true});}
+   });
+   var Disable = {ctor: "Disable"};
+   var Update = function (a) {    return {ctor: "Update",_0: a};};
    var view = F2(function (address,model) {
       var optionsWDefault = options(model.value);
       return A2($Html.select,
-      _U.list([A3($Html$Events.on,"change",$Html$Events.targetValue,$Signal.message(address))]),
+      _U.list([A3($Html$Events.on,"change",$Html$Events.targetValue,function (_p1) {    return A2($Signal.message,address,Update(_p1));})]),
       A2($List.map,optionsWDefault,model.optionValues));
    });
-   var update = F2(function (newValue,model) {    return _U.update(model,{value: newValue});});
-   var init = F2(function (value,optionValues) {    return {value: value,optionValues: optionValues};});
+   var Enable = {ctor: "Enable"};
    var Option = F2(function (a,b) {    return {text: a,value: b};});
-   var Model = F2(function (a,b) {    return {value: a,optionValues: b};});
-   return _elm.SelectInput.values = {_op: _op,init: init,update: update,view: view,Model: Model};
+   var Model = F3(function (a,b,c) {    return {value: a,optionValues: b,disabled: c};});
+   var init = F3(function (value,optionValues,disabled) {    return A3(Model,value,optionValues,disabled);});
+   return _elm.SelectInput.values = {_op: _op
+                                    ,Model: Model
+                                    ,Option: Option
+                                    ,init: init
+                                    ,Enable: Enable
+                                    ,Update: Update
+                                    ,Disable: Disable
+                                    ,update: update
+                                    ,view: view
+                                    ,options: options};
 };Elm.InputField = Elm.InputField || {};
 Elm.InputField.make = function (_elm) {
    "use strict";
@@ -11085,17 +11065,15 @@ Elm.AnalysisForm.make = function (_elm) {
    var Request = {ctor: "Request"};
    var UpdateEndDate = function (a) {    return {ctor: "UpdateEndDate",_0: a};};
    var UpdateStartDate = function (a) {    return {ctor: "UpdateStartDate",_0: a};};
-   var UpdateFrequency = function (a) {    return {ctor: "UpdateFrequency",_0: a};};
    var UpdateYield = function (a) {    return {ctor: "UpdateYield",_0: a};};
    var UpdateTicker = function (a) {    return {ctor: "UpdateTicker",_0: a};};
-   var UpdateSource = function (a) {    return {ctor: "UpdateSource",_0: a};};
+   var UpdateFrequency = function (a) {    return {ctor: "UpdateFrequency",_0: a};};
    var view = F2(function (address,model) {
       return A2($Html.div,
       _U.list([]),
       _U.list([A2($Html.div,
               _U.list([]),
-              _U.list([A2($SelectInput.view,A2($Signal.forwardTo,address,UpdateSource),model.source)
-                      ,A2($InputField.view,A2($Signal.forwardTo,address,UpdateTicker),model.ticker)
+              _U.list([A2($InputField.view,A2($Signal.forwardTo,address,UpdateTicker),model.ticker)
                       ,A2($Yield.view,A2($Signal.forwardTo,address,UpdateYield),model.$yield)
                       ,$Html.text("Yield")
                       ,A2($Html.a,_U.list([$Html$Attributes.href("#"),A2($Html$Events.onClick,address,Request)]),_U.list([$Html.text("Pull")]))]))
@@ -11109,6 +11087,7 @@ Elm.AnalysisForm.make = function (_elm) {
               _U.list([A2($InputField.view,A2($Signal.forwardTo,address,UpdateStartDate),model.startDate)
                       ,A2($InputField.view,A2($Signal.forwardTo,address,UpdateEndDate),model.endDate)]))]));
    });
+   var UpdateSource = function (a) {    return {ctor: "UpdateSource",_0: a};};
    var init = function () {
       var frequencyOptions = _U.list([{value: "1",text: "Daily"},{value: "5",text: "Weekly"},{value: "21",text: "Monthly"},{value: "63",text: "Quarterly"}]);
       var sourceOptions = _U.list([{value: "YHOO",text: "Yahoo"},{value: "GOOG",text: "Google"},{value: "CBOE",text: "CBOE"},{value: "SPDJ",text: "SPDJ"}]);
@@ -11118,8 +11097,8 @@ Elm.AnalysisForm.make = function (_elm) {
                   ,ticker: A3($InputField.init,"INDEX_VIX","Ticker","text")
                   ,$yield: $Yield.init(false)
                   ,newData: _U.list([{ctor: "_Tuple7",_0: "",_1: 0,_2: 0,_3: 0,_4: 0,_5: 0,_6: 0}])
-                  ,source: A2($SelectInput.init,"Yahoo",sourceOptions)
-                  ,frequency: A2($SelectInput.init,"Monthly",frequencyOptions)}
+                  ,source: A3($SelectInput.init,"Yahoo",sourceOptions,true)
+                  ,frequency: A3($SelectInput.init,"Monthly",frequencyOptions,true)}
              ,_1: $Effects.none};
    }();
    var Model = F7(function (a,b,c,d,e,f,g) {    return {source: a,ticker: b,$yield: c,newData: d,frequency: e,startDate: f,endDate: g};});
@@ -11127,9 +11106,9 @@ Elm.AnalysisForm.make = function (_elm) {
                                      ,Model: Model
                                      ,init: init
                                      ,UpdateSource: UpdateSource
+                                     ,UpdateFrequency: UpdateFrequency
                                      ,UpdateTicker: UpdateTicker
                                      ,UpdateYield: UpdateYield
-                                     ,UpdateFrequency: UpdateFrequency
                                      ,UpdateStartDate: UpdateStartDate
                                      ,UpdateEndDate: UpdateEndDate
                                      ,Request: Request
@@ -11455,63 +11434,4 @@ Elm.Router.make = function (_elm) {
                                ,update: update
                                ,forwardOnLogin: forwardOnLogin
                                ,view: view};
-};Elm.Main = Elm.Main || {};
-Elm.Main.make = function (_elm) {
-   "use strict";
-   _elm.Main = _elm.Main || {};
-   if (_elm.Main.values) return _elm.Main.values;
-   var _U = Elm.Native.Utils.make(_elm),
-   $AnalysisForm = Elm.AnalysisForm.make(_elm),
-   $Basics = Elm.Basics.make(_elm),
-   $Debug = Elm.Debug.make(_elm),
-   $Effects = Elm.Effects.make(_elm),
-   $List = Elm.List.make(_elm),
-   $LoginForm = Elm.LoginForm.make(_elm),
-   $Maybe = Elm.Maybe.make(_elm),
-   $RegisterForm = Elm.RegisterForm.make(_elm),
-   $Result = Elm.Result.make(_elm),
-   $Router = Elm.Router.make(_elm),
-   $Signal = Elm.Signal.make(_elm),
-   $StartApp = Elm.StartApp.make(_elm),
-   $Task = Elm.Task.make(_elm);
-   var _op = {};
-   var quandlRequest = Elm.Native.Port.make(_elm).outboundSignal("quandlRequest",
-   function (v) {
-      return Elm.Native.List.make(_elm).toArray(v).map(function (v) {    return [v._0,v._1,v._2,v._3,v._4,v._5,v._6];});
-   },
-   $AnalysisForm.quandlMailBox.signal);
-   var registerResponse = Elm.Native.Port.make(_elm).inboundSignal("registerResponse",
-   "RegisterForm.ResponseMessage",
-   function (v) {
-      return typeof v === "object" && "response" in v && "token" in v ? {_: {}
-                                                                        ,response: typeof v.response === "string" || typeof v.response === "object" && v.response instanceof String ? v.response : _U.badPort("a string",
-                                                                        v.response)
-                                                                        ,token: typeof v.token === "string" || typeof v.token === "object" && v.token instanceof String ? v.token : _U.badPort("a string",
-                                                                        v.token)} : _U.badPort("an object with fields `response`, `token`",v);
-   });
-   var incomingRegisterActions = A2($Signal.map,$Router.Register,A2($Signal.map,$RegisterForm.Response,registerResponse));
-   var registerRequest = Elm.Native.Port.make(_elm).outboundSignal("registerRequest",
-   function (v) {
-      return {username: v.username,fullname: v.fullname,password: v.password};
-   },
-   $RegisterForm.registerRequestMailBox.signal);
-   var loginResponse = Elm.Native.Port.make(_elm).inboundSignal("loginResponse",
-   "LoginForm.ResponseMessage",
-   function (v) {
-      return typeof v === "object" && "response" in v && "token" in v ? {_: {}
-                                                                        ,response: typeof v.response === "string" || typeof v.response === "object" && v.response instanceof String ? v.response : _U.badPort("a string",
-                                                                        v.response)
-                                                                        ,token: typeof v.token === "string" || typeof v.token === "object" && v.token instanceof String ? v.token : _U.badPort("a string",
-                                                                        v.token)} : _U.badPort("an object with fields `response`, `token`",v);
-   });
-   var incomingLoginActions = A2($Signal.map,$Router.Login,A2($Signal.map,$LoginForm.Response,loginResponse));
-   var loginRequest = Elm.Native.Port.make(_elm).outboundSignal("loginRequest",
-   function (v) {
-      return {username: v.username,password: v.password};
-   },
-   $LoginForm.loginRequestMailBox.signal);
-   var app = $StartApp.start({init: $Router.init,update: $Router.update,view: $Router.view,inputs: _U.list([incomingLoginActions,incomingRegisterActions])});
-   var main = app.html;
-   var tasks = Elm.Native.Task.make(_elm).performSignal("tasks",app.tasks);
-   return _elm.Main.values = {_op: _op,app: app,main: main,incomingLoginActions: incomingLoginActions,incomingRegisterActions: incomingRegisterActions};
-};</script></head><body><script type="text/javascript">Elm.fullscreen(Elm.Main)</script></body></html>
+};</script></head><body><script type="text/javascript">Elm.fullscreen(Elm.Router)</script></body></html>

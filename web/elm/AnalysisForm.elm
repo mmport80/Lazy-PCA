@@ -12,7 +12,7 @@ import Signal exposing (Address)
 
 import Json.Decode as Json exposing (at, string)
 
-import SelectInput exposing (view, update)
+import SelectInput exposing (init, view, update, Action)
 import InputField exposing (view, update)
 import Yield exposing (view, update)
 
@@ -54,8 +54,8 @@ init =
       --start with useful default data? instead of useless default data
       , newData = [("",0,0,0,0,0,0)]
       --option names and values
-      , source = SelectInput.init "Yahoo" sourceOptions
-      , frequency = SelectInput.init "Monthly" frequencyOptions
+      , source = SelectInput.init "Yahoo" sourceOptions True
+      , frequency = SelectInput.init "Monthly" frequencyOptions True
       }
     , Effects.none
     )
@@ -64,10 +64,10 @@ init =
 --********************************************************************************
 -- UPDATE
 type Action
-    = UpdateSource String
+    = UpdateSource SelectInput.Action
+    | UpdateFrequency SelectInput.Action
     | UpdateTicker String
     | UpdateYield Bool
-    | UpdateFrequency String
     | UpdateStartDate String
     | UpdateEndDate String
     | Request
@@ -125,8 +125,8 @@ view address model =
   div [] [
       div []
         [
-          SelectInput.view (Signal.forwardTo address UpdateSource) model.source
-        , InputField.view (Signal.forwardTo address UpdateTicker) model.ticker
+          --SelectInput.view (Signal.forwardTo address UpdateSource) model.source.value
+          InputField.view (Signal.forwardTo address UpdateTicker) model.ticker
         , Yield.view (Signal.forwardTo address UpdateYield) model.yield
         , text "Yield"
         , a [ href "#", onClick address Request ] [ text "Pull" ]

@@ -4,6 +4,8 @@ import LoginForm exposing (init, update, view, loginRequestMailBox, Action)
 import RegisterForm exposing (init, update, view, registerRequestMailBox, Action)
 import AnalysisForm exposing (init, update, view, quandlMailBox, Action)
 
+import SelectInput exposing (init, view, update, Action)
+
 import LocationLinks exposing (init, update, view, Action)
 
 import Html exposing (a, text, Html, div, button, span)

@@ -1,8 +1,8 @@
-module SelectInput (Model, init, update, view) where
+module SelectInput where
 
 import Html exposing (Html, option, select, text)
 import Html.Events exposing (targetValue, on)
-import Html.Attributes exposing (selected, value)
+import Html.Attributes exposing (selected, value, disabled)
 
 import Signal exposing (Address)
 
@@ -10,27 +10,34 @@ import Signal exposing (Address)
 type alias Model = {
     value : String
   , optionValues : List Option
+  , disabled : Bool
   }
 
 type alias Option = {text: String, value: String}
 
-init : String -> List Option -> Model
-init value optionValues = {
-    value = value
-  , optionValues = optionValues
-  }
+init : String -> List Option -> Bool -> Model
+init value optionValues disabled = Model value optionValues disabled
 
 -- UPDATE
-update : String -> Model -> Model
-update newValue model = { model | value = newValue }
+type Action = Enable | Update String | Disable
+
+update : Action -> Model -> Model
+update action model =
+  case action of
+    Update input ->
+      { model | value = input }
+    Enable ->
+      { model | disabled = False }
+    Disable ->
+      { model | disabled = True }
 
 -- VIEW
-view : Signal.Address String -> Model -> Html
+view : Signal.Address Action -> Model -> Html
 view address model =
   let
     optionsWDefault = options model.value
   in
-    select [ on "change" targetValue (Signal.message address) ]
+    select [ on "change" targetValue (Update >> Signal.message address) ]
       ( List.map optionsWDefault model.optionValues )
 
 options : String -> Option -> Html
