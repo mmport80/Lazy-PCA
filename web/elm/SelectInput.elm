@@ -37,7 +37,10 @@ view address model =
   let
     optionsWDefault = options model.value
   in
-    select [ on "change" targetValue (Update >> Signal.message address) ]
+    select [
+        on "change" targetValue (Update >> Signal.message address)
+      , disabled model.disabled
+      ]
       ( List.map optionsWDefault model.optionValues )
 
 options : String -> Option -> Html

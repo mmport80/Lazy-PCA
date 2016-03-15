@@ -54,7 +54,7 @@ init =
       --start with useful default data? instead of useless default data
       , newData = [("",0,0,0,0,0,0)]
       --option names and values
-      , source = SelectInput.init "Yahoo" sourceOptions True
+      , source = SelectInput.init "Yahoo" sourceOptions False
       , frequency = SelectInput.init "Monthly" frequencyOptions True
       }
     , Effects.none
@@ -125,8 +125,8 @@ view address model =
   div [] [
       div []
         [
-          --SelectInput.view (Signal.forwardTo address UpdateSource) model.source.value
-          InputField.view (Signal.forwardTo address UpdateTicker) model.ticker
+          SelectInput.view (Signal.forwardTo address UpdateSource) model.source
+        , InputField.view (Signal.forwardTo address UpdateTicker) model.ticker
         , Yield.view (Signal.forwardTo address UpdateYield) model.yield
         , text "Yield"
         , a [ href "#", onClick address Request ] [ text "Pull" ]

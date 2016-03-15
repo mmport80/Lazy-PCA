@@ -11015,7 +11015,8 @@ Elm.SelectInput.make = function (_elm) {
    var view = F2(function (address,model) {
       var optionsWDefault = options(model.value);
       return A2($Html.select,
-      _U.list([A3($Html$Events.on,"change",$Html$Events.targetValue,function (_p1) {    return A2($Signal.message,address,Update(_p1));})]),
+      _U.list([A3($Html$Events.on,"change",$Html$Events.targetValue,function (_p1) {    return A2($Signal.message,address,Update(_p1));})
+              ,$Html$Attributes.disabled(model.disabled)]),
       A2($List.map,optionsWDefault,model.optionValues));
    });
    var Enable = {ctor: "Enable"};
@@ -11155,12 +11156,14 @@ Elm.AnalysisForm.make = function (_elm) {
    var UpdateYield = function (a) {    return {ctor: "UpdateYield",_0: a};};
    var UpdateTicker = function (a) {    return {ctor: "UpdateTicker",_0: a};};
    var UpdateFrequency = function (a) {    return {ctor: "UpdateFrequency",_0: a};};
+   var UpdateSource = function (a) {    return {ctor: "UpdateSource",_0: a};};
    var view = F2(function (address,model) {
       return A2($Html.div,
       _U.list([]),
       _U.list([A2($Html.div,
               _U.list([]),
-              _U.list([A2($InputField.view,A2($Signal.forwardTo,address,UpdateTicker),model.ticker)
+              _U.list([A2($SelectInput.view,A2($Signal.forwardTo,address,UpdateSource),model.source)
+                      ,A2($InputField.view,A2($Signal.forwardTo,address,UpdateTicker),model.ticker)
                       ,A2($Yield.view,A2($Signal.forwardTo,address,UpdateYield),model.$yield)
                       ,$Html.text("Yield")
                       ,A2($Html.a,_U.list([$Html$Attributes.href("#"),A2($Html$Events.onClick,address,Request)]),_U.list([$Html.text("Pull")]))]))
@@ -11174,7 +11177,6 @@ Elm.AnalysisForm.make = function (_elm) {
               _U.list([A2($InputField.view,A2($Signal.forwardTo,address,UpdateStartDate),model.startDate)
                       ,A2($InputField.view,A2($Signal.forwardTo,address,UpdateEndDate),model.endDate)]))]));
    });
-   var UpdateSource = function (a) {    return {ctor: "UpdateSource",_0: a};};
    var init = function () {
       var frequencyOptions = _U.list([{value: "1",text: "Daily"},{value: "5",text: "Weekly"},{value: "21",text: "Monthly"},{value: "63",text: "Quarterly"}]);
       var sourceOptions = _U.list([{value: "YHOO",text: "Yahoo"},{value: "GOOG",text: "Google"},{value: "CBOE",text: "CBOE"},{value: "SPDJ",text: "SPDJ"}]);
@@ -11184,7 +11186,7 @@ Elm.AnalysisForm.make = function (_elm) {
                   ,ticker: A3($InputField.init,"INDEX_VIX","Ticker","text")
                   ,$yield: $Yield.init(false)
                   ,newData: _U.list([{ctor: "_Tuple7",_0: "",_1: 0,_2: 0,_3: 0,_4: 0,_5: 0,_6: 0}])
-                  ,source: A3($SelectInput.init,"Yahoo",sourceOptions,true)
+                  ,source: A3($SelectInput.init,"Yahoo",sourceOptions,false)
                   ,frequency: A3($SelectInput.init,"Monthly",frequencyOptions,true)}
              ,_1: $Effects.none};
    }();
