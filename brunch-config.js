@@ -40,8 +40,8 @@ exports.config = {
     // Dependencies and current project directories to watch
     watched: [
       	"web/static",
- 	"test/static",
-	"web/elm/Main.elm"
+       	"test/static",
+      	"web/elm/Main.elm"
     ],
 
     // Where to compile files to

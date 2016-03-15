@@ -12,7 +12,7 @@ import Effects exposing (Effects, Never)
 
 import Json.Decode as Json exposing (at, string)
 
-import TextInputField exposing (view, update)
+import InputField exposing (view, update)
 
 import List
 
@@ -21,8 +21,8 @@ import List
 -- MODEL
 --UI state
 type alias Model = {
-      username : TextInputField.Model
-    , password : TextInputField.Model
+      username : InputField.Model
+    , password : InputField.Model
     , response : String
     , token : String
     }
@@ -31,8 +31,8 @@ type alias Model = {
 init : String -> String -> (Model, Effects Action)
 init username password =
     (
-      { username = TextInputField.init username "Username" "text"
-      , password = TextInputField.init password "Password" "password"
+      { username = InputField.init username "Username" "text"
+      , password = InputField.init password "Password" "password"
       , response = ""
       , token = ""
       }
@@ -57,11 +57,11 @@ update : Action -> Model -> (Model, Effects Action)
 update action model =
   case action of
     UpdateUsername input ->
-      ( { model | username = TextInputField.update input model.username }
+      ( { model | username = InputField.update input model.username }
       , Effects.none
       )
     UpdatePassword input ->
-      ( { model | password = TextInputField.update input model.password }
+      ( { model | password = InputField.update input model.password }
       , Effects.none
       )
     NoOp ->
@@ -75,7 +75,7 @@ update action model =
     Response input ->
       --remove pw & set response
       ( { model |
-          password = TextInputField.update "" model.password
+          password = InputField.update "" model.password
         , response = input.response
         , token = input.token
         }
@@ -90,8 +90,8 @@ view : Signal.Address Action -> Model -> Html
 view address model =
     div []
       [
-        TextInputField.view (Signal.forwardTo address UpdateUsername) model.username
-      , TextInputField.view (Signal.forwardTo address UpdatePassword) model.password
+        InputField.view (Signal.forwardTo address UpdateUsername) model.username
+      , InputField.view (Signal.forwardTo address UpdatePassword) model.password
       , a [ href "#", onClick address Request ] [ text "Login" ]
       , text model.response
       ]

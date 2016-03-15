@@ -13,13 +13,13 @@ init : String -> Model
 init location = location
 
 -- UPDATE
-type Action = Request | Login | Register | Logout
+type Action = Analysis | Login | Register | Logout
 
 update : Action -> Model
 update action =
   case action of
-    Request ->
-      "request"
+    Analysis ->
+      "analysis"
     --once logged in go directly to request
     Login ->
       "login"
@@ -40,7 +40,7 @@ view address model =
     "login" ->
         a [ href "#", onClick address Register ] [ text "Register" ]
     --request location show logout link
-    "request" ->
+    "analysis" ->
         a [ href "#", onClick address Logout ] [ text "Logout" ]
     --logout/default location show both register and login
     _ ->

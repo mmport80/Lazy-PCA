@@ -2,7 +2,7 @@ module Router where
 
 import LoginForm exposing (init, update, view, loginRequestMailBox, Action)
 import RegisterForm exposing (init, update, view, registerRequestMailBox, Action)
-import RequestForm exposing (init, update, view, testMailBox, Action)
+import AnalysisForm exposing (init, update, view, quandlMailBox, Action)
 
 import LocationLinks exposing (init, update, view, Action)
 
@@ -27,7 +27,7 @@ import List
 -- MODEL
 type alias Model =
     {
-      data : RequestForm.Model
+      data : AnalysisForm.Model
     , userLogin : LoginForm.Model
     , userRegister : RegisterForm.Model
     , location: LocationLinks.Model
@@ -36,15 +36,16 @@ type alias Model =
 init : (Model, Effects Action)
 init =
   let
-    (request, requestFx) = RequestForm.init "Yahoo" "INDEX_VIX" False
+    (analysis, analysisFx) = AnalysisForm.init "Yahoo" "INDEX_VIX" False ["Yahoo","Google","CBOE","SPDJ"]
     (login, loginFx) = LoginForm.init "" ""
     (register, registerFx) = RegisterForm.init "" "" ""
     locationLinks = LocationLinks.init ""
   in
-    ( Model request login register locationLinks
+    ( Model analysis login register locationLinks
     , Effects.batch
         [ Effects.map Login loginFx
-        , Effects.map Request requestFx
+        , Effects.map Analysis analysisFx
+        , Effects.map Register registerFx
         ]
     )
 
@@ -56,19 +57,19 @@ init =
 --
 type Action
     = Login LoginForm.Action
-    | Request RequestForm.Action
+    | Analysis AnalysisForm.Action
     | Register RegisterForm.Action
     | ChangeLocation LocationLinks.Action
 
 update : Action -> Model -> (Model, Effects Action)
 update action model =
   case action of
-    Request input ->
+    Analysis input ->
       let
-        (newData, fx) = RequestForm.update input model.data
+        (newData, fx) = AnalysisForm.update input model.data
       in
         ( { model | data = newData }
-        , Effects.map Request fx
+        , Effects.map Analysis fx
         )
     --action to capture response from outside world
     --take action update state
@@ -83,7 +84,7 @@ update action model =
               --forward page?
               case newUser.response of
                 "OK" ->
-                  LocationLinks.update LocationLinks.Request
+                  LocationLinks.update LocationLinks.Analysis
                 _ ->
                   model.location
           }
@@ -122,7 +123,7 @@ forwardOnLogin : String -> String -> LocationLinks.Model
 forwardOnLogin response currentLocation =
   case response of
     "OK" ->
-      LocationLinks.update LocationLinks.Request
+      LocationLinks.update LocationLinks.Analysis
     _ ->
       currentLocation
 
@@ -142,10 +143,10 @@ view address model =
   --default is login
   case model.location of
     --if page is...
-    "request" ->
+    "analysis" ->
       div [][
           LocationLinks.view (Signal.forwardTo address ChangeLocation) model.location
-        , RequestForm.view (Signal.forwardTo address Request) model.data
+        , AnalysisForm.view (Signal.forwardTo address Analysis) model.data
         ]
     "register" ->
       div [][

@@ -1,18 +1,16 @@
-import Effects exposing (Never)
---import RequestForm exposing (init, update, view, testMailBox)
-import Router exposing (init, update, view)
+import StartApp
 
+import Router exposing (init, update, view)
 import LoginForm exposing (Action(Response), loginRequestMailBox)
 import RegisterForm exposing (Action(Response), registerRequestMailBox)
-import RequestForm exposing (Row, testMailBox)
+import AnalysisForm exposing (Row, quandlMailBox)
 
-import StartApp
+import Effects exposing (Never)
 import Task
 
-port quandlRequest : Signal (List RequestForm.Row)
-port quandlRequest = testMailBox.signal
-
 --^^^^^^^^^^^^^^^^^^^°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+--standardish startapp architecture setup
+
 app =
   StartApp.start
     { init = Router.init
@@ -27,7 +25,6 @@ main = app.html
 port tasks : Signal (Task.Task Never ())
 port tasks = app.tasks
 
-
 --*****************************************************
 --LOGIN
 --outgoing login requests to server
@@ -40,7 +37,6 @@ port loginResponse : Signal LoginForm.ResponseMessage
 incomingLoginActions : Signal (Router.Action)
 incomingLoginActions = Signal.map Router.Login (Signal.map LoginForm.Response loginResponse)
 
-
 --*****************************************************
 --Register
 --outgoing login requests to server
@@ -52,3 +48,9 @@ port registerResponse : Signal RegisterForm.ResponseMessage
 
 incomingRegisterActions : Signal (Router.Action)
 incomingRegisterActions = Signal.map Router.Register (Signal.map RegisterForm.Response registerResponse)
+
+--^^^^^^^^^^^^^^^^^^^°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+--quandl data request
+
+port quandlRequest : Signal (List AnalysisForm.Row)
+port quandlRequest = quandlMailBox.signal
