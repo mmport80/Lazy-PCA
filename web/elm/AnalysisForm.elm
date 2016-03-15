@@ -1,6 +1,6 @@
 module AnalysisForm where
 
-import Html exposing (a, text, Html, div)
+import Html exposing (a, text, Html, div, hr)
 import Html.Attributes exposing (href, id)
 import Html.Events exposing (targetChecked, on, onClick)
 
@@ -36,17 +36,26 @@ type alias Model = {
     , endDate : InputField.Model
     }
 
-init : String -> String -> Bool -> List String -> (Model, Effects Action)
-init source ticker yield optionValues =
+
+
+
+init : (Model, Effects Action)
+init =
+  let
+    sourceOptions = [{value = "YHOO", text= "Yahoo"},{value= "GOOG", text= "Google"},{value= "CBOE", text= "CBOE"},{value= "SPDJ", text= "SPDJ"}]
+    frequencyOptions = [{value = "1", text = "Daily"}, {value="5", text="Weekly"}, {value= "21", text= "Monthly"}, {value= "63", text= "Quarterly"}]
+  in
     (
-      { source = SelectInput.init source optionValues
-      , ticker = InputField.init ticker "Ticker" "text"
-      , yield = Yield.init yield
+      {
+        startDate = InputField.init "" "Start Date" "date"
+      , endDate = InputField.init "" "End Date" "date"
+      , ticker = InputField.init "INDEX_VIX" "Ticker" "text"
+      , yield = Yield.init False
       --start with useful default data? instead of useless default data
       , newData = [("",0,0,0,0,0,0)]
-      , frequency = SelectInput.init "Monthly" ["Daily","Weekly","Monthly","Quarterly"]
-      , startDate = InputField.init "" "Start Date" "date"
-      , endDate = InputField.init "" "End Date" "date"
+      --option names and values
+      , source = SelectInput.init "Yahoo" sourceOptions
+      , frequency = SelectInput.init "Monthly" frequencyOptions
       }
     , Effects.none
     )
@@ -73,9 +82,9 @@ update action model =
       , Effects.none
       )
     UpdateFrequency input ->
-        ( { model | frequency = SelectInput.update input model.frequency }
-        , Effects.none
-        )
+      ( { model | frequency = SelectInput.update input model.frequency }
+      , Effects.none
+      )
     UpdateTicker input ->
       ( { model | ticker = InputField.update input model.ticker }
       , Effects.none
@@ -113,7 +122,7 @@ update action model =
 -- VIEW
 view : Signal.Address Action -> Model -> Html
 view address model =
-  div[][
+  div [] [
       div []
         [
           SelectInput.view (Signal.forwardTo address UpdateSource) model.source
@@ -122,13 +131,16 @@ view address model =
         , text "Yield"
         , a [ href "#", onClick address Request ] [ text "Pull" ]
         ]
+    , hr [] []
     , div [id "plot"] []
+    , hr [] []
     , div [] [
         SelectInput.view (Signal.forwardTo address UpdateFrequency) model.frequency
       ]
+    , hr [] []
     , div [] [
-          InputField.view (Signal.forwardTo address UpdateStartDate) model.startDate
-        , InputField.view (Signal.forwardTo address UpdateEndDate) model.endDate
+        InputField.view (Signal.forwardTo address UpdateStartDate) model.startDate
+      , InputField.view (Signal.forwardTo address UpdateEndDate) model.endDate
       ]
   ]
 

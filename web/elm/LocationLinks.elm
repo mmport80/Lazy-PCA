@@ -1,6 +1,6 @@
 module LocationLinks where
 
-import Html exposing (Html, a, text, div)
+import Html exposing (Html, a, text, div, hr)
 import Html.Events exposing (targetValue, onClick)
 import Html.Attributes exposing (href)
 
@@ -35,16 +35,26 @@ view address model =
   case model of
     --reg location, show login link
     "register" ->
-        a [ href "#", onClick address Login ] [ text "Login" ]
+      div [][
+          a [ href "#", onClick address Login ] [ text "Login" ]
+        , hr [][]
+        ]
     --login location, show reg link
     "login" ->
-        a [ href "#", onClick address Register ] [ text "Register" ]
+      div [][
+          a [ href "#", onClick address Register ] [ text "Register" ]
+        , hr [][]
+        ]
     --request location show logout link
     "analysis" ->
-        a [ href "#", onClick address Logout ] [ text "Logout" ]
+      div [][
+          a [ href "#", onClick address Logout ] [ text "Logout" ]
+        , hr [][]
+        ]
     --logout/default location show both register and login
     _ ->
       div [][
           a [ href "#", onClick address Register ] [ text "Register" ]
         , a [ href "#", onClick address Login ] [ text "Login" ]
+        , hr [][]
         ]

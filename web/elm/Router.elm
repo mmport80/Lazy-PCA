@@ -36,7 +36,7 @@ type alias Model =
 init : (Model, Effects Action)
 init =
   let
-    (analysis, analysisFx) = AnalysisForm.init "Yahoo" "INDEX_VIX" False ["Yahoo","Google","CBOE","SPDJ"]
+    (analysis, analysisFx) = AnalysisForm.init
     (login, loginFx) = LoginForm.init "" ""
     (register, registerFx) = RegisterForm.init "" "" ""
     locationLinks = LocationLinks.init ""

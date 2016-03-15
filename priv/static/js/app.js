@@ -44887,20 +44887,27 @@ Elm.SelectInput.make = function (_elm) {
    $Basics = Elm.Basics.make(_elm),
    $Debug = Elm.Debug.make(_elm),
    $Html = Elm.Html.make(_elm),
+   $Html$Attributes = Elm.Html.Attributes.make(_elm),
    $Html$Events = Elm.Html.Events.make(_elm),
    $List = Elm.List.make(_elm),
    $Maybe = Elm.Maybe.make(_elm),
    $Result = Elm.Result.make(_elm),
    $Signal = Elm.Signal.make(_elm);
    var _op = {};
-   var options = function (s) {    return A2($Html.option,_U.list([]),_U.list([$Html.text(s)]));};
+   var options = F2(function (d,o) {
+      return _U.eq(d,o.text) ? A2($Html.option,
+      _U.list([$Html$Attributes.value(o.value),$Html$Attributes.selected(true)]),
+      _U.list([$Html.text(o.text)])) : A2($Html.option,_U.list([$Html$Attributes.value(o.value)]),_U.list([$Html.text(o.text)]));
+   });
    var view = F2(function (address,model) {
+      var optionsWDefault = options(model.value);
       return A2($Html.select,
       _U.list([A3($Html$Events.on,"change",$Html$Events.targetValue,$Signal.message(address))]),
-      A2($List.map,options,model.optionValues));
+      A2($List.map,optionsWDefault,model.optionValues));
    });
    var update = F2(function (newValue,model) {    return _U.update(model,{value: newValue});});
    var init = F2(function (value,optionValues) {    return {value: value,optionValues: optionValues};});
+   var Option = F2(function (a,b) {    return {text: a,value: b};});
    var Model = F2(function (a,b) {    return {value: a,optionValues: b};});
    return _elm.SelectInput.values = {_op: _op,init: init,update: update,view: view,Model: Model};
 };
@@ -45037,24 +45044,29 @@ Elm.AnalysisForm.make = function (_elm) {
                       ,A2($Yield.view,A2($Signal.forwardTo,address,UpdateYield),model.$yield)
                       ,$Html.text("Yield")
                       ,A2($Html.a,_U.list([$Html$Attributes.href("#"),A2($Html$Events.onClick,address,Request)]),_U.list([$Html.text("Pull")]))]))
+              ,A2($Html.hr,_U.list([]),_U.list([]))
               ,A2($Html.div,_U.list([$Html$Attributes.id("plot")]),_U.list([]))
+              ,A2($Html.hr,_U.list([]),_U.list([]))
               ,A2($Html.div,_U.list([]),_U.list([A2($SelectInput.view,A2($Signal.forwardTo,address,UpdateFrequency),model.frequency)]))
+              ,A2($Html.hr,_U.list([]),_U.list([]))
               ,A2($Html.div,
               _U.list([]),
               _U.list([A2($InputField.view,A2($Signal.forwardTo,address,UpdateStartDate),model.startDate)
                       ,A2($InputField.view,A2($Signal.forwardTo,address,UpdateEndDate),model.endDate)]))]));
    });
-   var init = F4(function (source,ticker,$yield,optionValues) {
+   var init = function () {
+      var frequencyOptions = _U.list([{value: "1",text: "Daily"},{value: "5",text: "Weekly"},{value: "21",text: "Monthly"},{value: "63",text: "Quarterly"}]);
+      var sourceOptions = _U.list([{value: "YHOO",text: "Yahoo"},{value: "GOOG",text: "Google"},{value: "CBOE",text: "CBOE"},{value: "SPDJ",text: "SPDJ"}]);
       return {ctor: "_Tuple2"
-             ,_0: {source: A2($SelectInput.init,source,optionValues)
-                  ,ticker: A3($InputField.init,ticker,"Ticker","text")
-                  ,$yield: $Yield.init($yield)
+             ,_0: {startDate: A3($InputField.init,"","Start Date","date")
+                  ,endDate: A3($InputField.init,"","End Date","date")
+                  ,ticker: A3($InputField.init,"INDEX_VIX","Ticker","text")
+                  ,$yield: $Yield.init(false)
                   ,newData: _U.list([{ctor: "_Tuple7",_0: "",_1: 0,_2: 0,_3: 0,_4: 0,_5: 0,_6: 0}])
-                  ,frequency: A2($SelectInput.init,"Monthly",_U.list(["Daily","Weekly","Monthly","Quarterly"]))
-                  ,startDate: A3($InputField.init,"","Start Date","date")
-                  ,endDate: A3($InputField.init,"","End Date","date")}
+                  ,source: A2($SelectInput.init,"Yahoo",sourceOptions)
+                  ,frequency: A2($SelectInput.init,"Monthly",frequencyOptions)}
              ,_1: $Effects.none};
-   });
+   }();
    var Model = F7(function (a,b,c,d,e,f,g) {    return {source: a,ticker: b,$yield: c,newData: d,frequency: e,startDate: f,endDate: g};});
    return _elm.AnalysisForm.values = {_op: _op
                                      ,Model: Model
@@ -45107,13 +45119,23 @@ Elm.LocationLinks.make = function (_elm) {
    var view = F2(function (address,model) {
       var _p1 = model;
       switch (_p1)
-      {case "register": return A2($Html.a,_U.list([$Html$Attributes.href("#"),A2($Html$Events.onClick,address,Login)]),_U.list([$Html.text("Login")]));
-         case "login": return A2($Html.a,_U.list([$Html$Attributes.href("#"),A2($Html$Events.onClick,address,Register)]),_U.list([$Html.text("Register")]));
-         case "analysis": return A2($Html.a,_U.list([$Html$Attributes.href("#"),A2($Html$Events.onClick,address,Logout)]),_U.list([$Html.text("Logout")]));
+      {case "register": return A2($Html.div,
+           _U.list([]),
+           _U.list([A2($Html.a,_U.list([$Html$Attributes.href("#"),A2($Html$Events.onClick,address,Login)]),_U.list([$Html.text("Login")]))
+                   ,A2($Html.hr,_U.list([]),_U.list([]))]));
+         case "login": return A2($Html.div,
+           _U.list([]),
+           _U.list([A2($Html.a,_U.list([$Html$Attributes.href("#"),A2($Html$Events.onClick,address,Register)]),_U.list([$Html.text("Register")]))
+                   ,A2($Html.hr,_U.list([]),_U.list([]))]));
+         case "analysis": return A2($Html.div,
+           _U.list([]),
+           _U.list([A2($Html.a,_U.list([$Html$Attributes.href("#"),A2($Html$Events.onClick,address,Logout)]),_U.list([$Html.text("Logout")]))
+                   ,A2($Html.hr,_U.list([]),_U.list([]))]));
          default: return A2($Html.div,
            _U.list([]),
            _U.list([A2($Html.a,_U.list([$Html$Attributes.href("#"),A2($Html$Events.onClick,address,Register)]),_U.list([$Html.text("Register")]))
-                   ,A2($Html.a,_U.list([$Html$Attributes.href("#"),A2($Html$Events.onClick,address,Login)]),_U.list([$Html.text("Login")]))]));}
+                   ,A2($Html.a,_U.list([$Html$Attributes.href("#"),A2($Html$Events.onClick,address,Login)]),_U.list([$Html.text("Login")]))
+                   ,A2($Html.hr,_U.list([]),_U.list([]))]));}
    });
    var Analysis = {ctor: "Analysis"};
    var init = function (location) {    return location;};
@@ -45329,7 +45351,7 @@ Elm.Router.make = function (_elm) {
       var _p3 = A2($LoginForm.init,"","");
       var login = _p3._0;
       var loginFx = _p3._1;
-      var _p4 = A4($AnalysisForm.init,"Yahoo","INDEX_VIX",false,_U.list(["Yahoo","Google","CBOE","SPDJ"]));
+      var _p4 = $AnalysisForm.init;
       var analysis = _p4._0;
       var analysisFx = _p4._1;
       return {ctor: "_Tuple2"
