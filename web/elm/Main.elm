@@ -1,9 +1,9 @@
 import StartApp
 
 import Router exposing (init, update, view)
-import LoginForm exposing (Action(Response), loginRequestMailBox)
-import RegisterForm exposing (Action(Response), registerRequestMailBox)
-import AnalysisForm exposing (Row, sendToPlotMailBox)
+import Forms.LoginForm as LoginForm exposing (Action(Response), loginRequestMailBox)
+import Forms.RegisterForm as RegisterForm exposing (Action(Response), registerRequestMailBox)
+import Forms.AnalysisForm as AnalysisForm exposing (Row, sendToPlotMailBox)
 
 import Effects exposing (Never)
 import Task

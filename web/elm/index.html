@@ -1,5 +1,5 @@
 <!DOCTYPE HTML>
-<html><head><meta charset="UTF-8"><title>Router</title><style>html,head,body { padding:0; margin:0; }
+<html><head><meta charset="UTF-8"><title>Main</title><style>html,head,body { padding:0; margin:0; }
 body { font-family: calibri, helvetica, arial, sans-serif; }</style><script type="text/javascript">var Elm = Elm || { Native: {} };Elm.Native.Array = {};
 Elm.Native.Array.make = function(localRuntime) {
 
@@ -11163,6 +11163,44 @@ Elm.Http.make = function (_elm) {
                              ,BadResponse: BadResponse
                              ,RawTimeout: RawTimeout
                              ,RawNetworkError: RawNetworkError};
+};Elm.StartApp = Elm.StartApp || {};
+Elm.StartApp.make = function (_elm) {
+   "use strict";
+   _elm.StartApp = _elm.StartApp || {};
+   if (_elm.StartApp.values) return _elm.StartApp.values;
+   var _U = Elm.Native.Utils.make(_elm),
+   $Basics = Elm.Basics.make(_elm),
+   $Debug = Elm.Debug.make(_elm),
+   $Effects = Elm.Effects.make(_elm),
+   $Html = Elm.Html.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm),
+   $Task = Elm.Task.make(_elm);
+   var _op = {};
+   var start = function (config) {
+      var updateStep = F2(function (action,_p0) {
+         var _p1 = _p0;
+         var _p2 = A2(config.update,action,_p1._0);
+         var newModel = _p2._0;
+         var additionalEffects = _p2._1;
+         return {ctor: "_Tuple2",_0: newModel,_1: $Effects.batch(_U.list([_p1._1,additionalEffects]))};
+      });
+      var update = F2(function (actions,_p3) {    var _p4 = _p3;return A3($List.foldl,updateStep,{ctor: "_Tuple2",_0: _p4._0,_1: $Effects.none},actions);});
+      var messages = $Signal.mailbox(_U.list([]));
+      var singleton = function (action) {    return _U.list([action]);};
+      var address = A2($Signal.forwardTo,messages.address,singleton);
+      var inputs = $Signal.mergeMany(A2($List._op["::"],messages.signal,A2($List.map,$Signal.map(singleton),config.inputs)));
+      var effectsAndModel = A3($Signal.foldp,update,config.init,inputs);
+      var model = A2($Signal.map,$Basics.fst,effectsAndModel);
+      return {html: A2($Signal.map,config.view(address),model)
+             ,model: model
+             ,tasks: A2($Signal.map,function (_p5) {    return A2($Effects.toTask,messages.address,$Basics.snd(_p5));},effectsAndModel)};
+   };
+   var App = F3(function (a,b,c) {    return {html: a,model: b,tasks: c};});
+   var Config = F4(function (a,b,c,d) {    return {init: a,update: b,view: c,inputs: d};});
+   return _elm.StartApp.values = {_op: _op,start: start,Config: Config,App: App};
 };Elm.Date = Elm.Date || {};
 Elm.Date.Format = Elm.Date.Format || {};
 Elm.Date.Format.make = function (_elm) {
@@ -11905,4 +11943,63 @@ Elm.Router.make = function (_elm) {
                                ,update: update
                                ,forwardOnLogin: forwardOnLogin
                                ,view: view};
-};</script></head><body><script type="text/javascript">Elm.fullscreen(Elm.Router)</script></body></html>
+};Elm.Main = Elm.Main || {};
+Elm.Main.make = function (_elm) {
+   "use strict";
+   _elm.Main = _elm.Main || {};
+   if (_elm.Main.values) return _elm.Main.values;
+   var _U = Elm.Native.Utils.make(_elm),
+   $Basics = Elm.Basics.make(_elm),
+   $Debug = Elm.Debug.make(_elm),
+   $Effects = Elm.Effects.make(_elm),
+   $Forms$AnalysisForm = Elm.Forms.AnalysisForm.make(_elm),
+   $Forms$LoginForm = Elm.Forms.LoginForm.make(_elm),
+   $Forms$RegisterForm = Elm.Forms.RegisterForm.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Router = Elm.Router.make(_elm),
+   $Signal = Elm.Signal.make(_elm),
+   $StartApp = Elm.StartApp.make(_elm),
+   $Task = Elm.Task.make(_elm);
+   var _op = {};
+   var sendToScatterPlot = Elm.Native.Port.make(_elm).outboundSignal("sendToScatterPlot",
+   function (v) {
+      return Elm.Native.List.make(_elm).toArray(v).map(function (v) {    return [v._0,v._1];});
+   },
+   $Forms$AnalysisForm.sendToPlotMailBox.signal);
+   var registerResponse = Elm.Native.Port.make(_elm).inboundSignal("registerResponse",
+   "Forms.RegisterForm.ResponseMessage",
+   function (v) {
+      return typeof v === "object" && "response" in v && "token" in v ? {_: {}
+                                                                        ,response: typeof v.response === "string" || typeof v.response === "object" && v.response instanceof String ? v.response : _U.badPort("a string",
+                                                                        v.response)
+                                                                        ,token: typeof v.token === "string" || typeof v.token === "object" && v.token instanceof String ? v.token : _U.badPort("a string",
+                                                                        v.token)} : _U.badPort("an object with fields `response`, `token`",v);
+   });
+   var incomingRegisterActions = A2($Signal.map,$Router.Register,A2($Signal.map,$Forms$RegisterForm.Response,registerResponse));
+   var registerRequest = Elm.Native.Port.make(_elm).outboundSignal("registerRequest",
+   function (v) {
+      return {username: v.username,fullname: v.fullname,password: v.password};
+   },
+   $Forms$RegisterForm.registerRequestMailBox.signal);
+   var loginResponse = Elm.Native.Port.make(_elm).inboundSignal("loginResponse",
+   "Forms.LoginForm.ResponseMessage",
+   function (v) {
+      return typeof v === "object" && "response" in v && "token" in v ? {_: {}
+                                                                        ,response: typeof v.response === "string" || typeof v.response === "object" && v.response instanceof String ? v.response : _U.badPort("a string",
+                                                                        v.response)
+                                                                        ,token: typeof v.token === "string" || typeof v.token === "object" && v.token instanceof String ? v.token : _U.badPort("a string",
+                                                                        v.token)} : _U.badPort("an object with fields `response`, `token`",v);
+   });
+   var incomingLoginActions = A2($Signal.map,$Router.Login,A2($Signal.map,$Forms$LoginForm.Response,loginResponse));
+   var loginRequest = Elm.Native.Port.make(_elm).outboundSignal("loginRequest",
+   function (v) {
+      return {username: v.username,password: v.password};
+   },
+   $Forms$LoginForm.loginRequestMailBox.signal);
+   var app = $StartApp.start({init: $Router.init,update: $Router.update,view: $Router.view,inputs: _U.list([incomingLoginActions,incomingRegisterActions])});
+   var main = app.html;
+   var tasks = Elm.Native.Task.make(_elm).performSignal("tasks",app.tasks);
+   return _elm.Main.values = {_op: _op,app: app,main: main,incomingLoginActions: incomingLoginActions,incomingRegisterActions: incomingRegisterActions};
+};</script></head><body><script type="text/javascript">Elm.fullscreen(Elm.Main)</script></body></html>
