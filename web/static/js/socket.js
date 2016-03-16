@@ -5,7 +5,7 @@ import {Socket} from "phoenix"
 
 
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//setup
+//Phoenix socket setup
 let socket = new Socket("/socket", {params: {token: window.userToken}})
 
 socket.connect()
@@ -29,6 +29,9 @@ channel.on("new_msg",
 channel.join()
   .receive("ok", resp => { console.log("Joined successfully", resp) })
   .receive("error", resp => { console.log("Unable to join", resp) })
+
+//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//Elm setup
 
 const initMesssage = {token: "", response: ""}
 

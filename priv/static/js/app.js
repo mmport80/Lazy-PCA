@@ -46199,7 +46199,7 @@ Object.defineProperty(exports, "__esModule", {
 var _phoenix = require("phoenix");
 
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//setup
+//Phoenix socket setup
 var socket = new _phoenix.Socket("/socket", { params: { token: window.userToken } });
 
 socket.connect();
@@ -46222,6 +46222,9 @@ channel.join().receive("ok", function (resp) {
 }).receive("error", function (resp) {
   console.log("Unable to join", resp);
 });
+
+//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//Elm setup
 
 var initMesssage = { token: "", response: "" };
 
