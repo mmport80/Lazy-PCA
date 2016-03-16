@@ -1,8 +1,8 @@
 module Router where
 
-import LoginForm exposing (init, update, view, loginRequestMailBox, Action)
-import RegisterForm exposing (init, update, view, registerRequestMailBox, Action)
-import AnalysisForm exposing (init, update, view, sendToPlotMailBox, Action)
+import Forms.LoginForm as LoginForm exposing (init, update, view, loginRequestMailBox, Action)
+import Forms.RegisterForm as RegisterForm exposing (init, update, view, registerRequestMailBox, Action)
+import Forms.AnalysisForm as AnalysisForm exposing (init, update, view, sendToPlotMailBox, Action)
 
 import LocationLinks exposing (init, update, view, Action)
 
