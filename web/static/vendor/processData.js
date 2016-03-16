@@ -26,7 +26,10 @@ const getReturns = d => {
 
 const elmProcessData = d =>
   {
-  const closePrices = d.map(x => x[6]);
+  const closePrices = d.map(x => x[1]);
+
+  console.log("d");
+  console.log(d);
 
   const returns = getReturns(closePrices);
   const mean = jStat.mean(returns);

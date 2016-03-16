@@ -3271,6 +3271,46 @@ Elm.Color.make = function (_elm) {
                               ,gray: gray
                               ,darkGray: darkGray};
 };
+Elm.Native.Date = {};
+Elm.Native.Date.make = function(localRuntime) {
+	localRuntime.Native = localRuntime.Native || {};
+	localRuntime.Native.Date = localRuntime.Native.Date || {};
+	if (localRuntime.Native.Date.values)
+	{
+		return localRuntime.Native.Date.values;
+	}
+
+	var Result = Elm.Result.make(localRuntime);
+
+	function readDate(str)
+	{
+		var date = new Date(str);
+		return isNaN(date.getTime())
+			? Result.Err('unable to parse \'' + str + '\' as a date')
+			: Result.Ok(date);
+	}
+
+	var dayTable = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+	var monthTable =
+		['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+		 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+
+	return localRuntime.Native.Date.values = {
+		read: readDate,
+		year: function(d) { return d.getFullYear(); },
+		month: function(d) { return { ctor: monthTable[d.getMonth()] }; },
+		day: function(d) { return d.getDate(); },
+		hour: function(d) { return d.getHours(); },
+		minute: function(d) { return d.getMinutes(); },
+		second: function(d) { return d.getSeconds(); },
+		millisecond: function(d) { return d.getMilliseconds(); },
+		toTime: function(d) { return d.getTime(); },
+		fromTime: function(t) { return new Date(t); },
+		dayOfWeek: function(d) { return { ctor: dayTable[d.getDay()] }; }
+	};
+};
+
 Elm.Native.Signal = {};
 
 Elm.Native.Signal.make = function(localRuntime) {
@@ -6673,6 +6713,76 @@ Elm.Time.make = function (_elm) {
                              ,delay: delay
                              ,since: since};
 };
+Elm.Date = Elm.Date || {};
+Elm.Date.make = function (_elm) {
+   "use strict";
+   _elm.Date = _elm.Date || {};
+   if (_elm.Date.values) return _elm.Date.values;
+   var _U = Elm.Native.Utils.make(_elm),$Native$Date = Elm.Native.Date.make(_elm),$Result = Elm.Result.make(_elm),$Time = Elm.Time.make(_elm);
+   var _op = {};
+   var millisecond = $Native$Date.millisecond;
+   var second = $Native$Date.second;
+   var minute = $Native$Date.minute;
+   var hour = $Native$Date.hour;
+   var dayOfWeek = $Native$Date.dayOfWeek;
+   var day = $Native$Date.day;
+   var month = $Native$Date.month;
+   var year = $Native$Date.year;
+   var fromTime = $Native$Date.fromTime;
+   var toTime = $Native$Date.toTime;
+   var fromString = $Native$Date.read;
+   var Dec = {ctor: "Dec"};
+   var Nov = {ctor: "Nov"};
+   var Oct = {ctor: "Oct"};
+   var Sep = {ctor: "Sep"};
+   var Aug = {ctor: "Aug"};
+   var Jul = {ctor: "Jul"};
+   var Jun = {ctor: "Jun"};
+   var May = {ctor: "May"};
+   var Apr = {ctor: "Apr"};
+   var Mar = {ctor: "Mar"};
+   var Feb = {ctor: "Feb"};
+   var Jan = {ctor: "Jan"};
+   var Sun = {ctor: "Sun"};
+   var Sat = {ctor: "Sat"};
+   var Fri = {ctor: "Fri"};
+   var Thu = {ctor: "Thu"};
+   var Wed = {ctor: "Wed"};
+   var Tue = {ctor: "Tue"};
+   var Mon = {ctor: "Mon"};
+   var Date = {ctor: "Date"};
+   return _elm.Date.values = {_op: _op
+                             ,fromString: fromString
+                             ,toTime: toTime
+                             ,fromTime: fromTime
+                             ,year: year
+                             ,month: month
+                             ,day: day
+                             ,dayOfWeek: dayOfWeek
+                             ,hour: hour
+                             ,minute: minute
+                             ,second: second
+                             ,millisecond: millisecond
+                             ,Jan: Jan
+                             ,Feb: Feb
+                             ,Mar: Mar
+                             ,Apr: Apr
+                             ,May: May
+                             ,Jun: Jun
+                             ,Jul: Jul
+                             ,Aug: Aug
+                             ,Sep: Sep
+                             ,Oct: Oct
+                             ,Nov: Nov
+                             ,Dec: Dec
+                             ,Mon: Mon
+                             ,Tue: Tue
+                             ,Wed: Wed
+                             ,Thu: Thu
+                             ,Fri: Fri
+                             ,Sat: Sat
+                             ,Sun: Sun};
+};
 Elm.Native.String = {};
 
 Elm.Native.String.make = function(localRuntime) {
@@ -8284,6 +8394,165 @@ Elm.Json.Decode.make = function (_elm) {
                                     ,andThen: andThen
                                     ,value: value
                                     ,customDecoder: customDecoder};
+};
+Elm.Native.Regex = {};
+Elm.Native.Regex.make = function(localRuntime) {
+	localRuntime.Native = localRuntime.Native || {};
+	localRuntime.Native.Regex = localRuntime.Native.Regex || {};
+	if (localRuntime.Native.Regex.values)
+	{
+		return localRuntime.Native.Regex.values;
+	}
+	if ('values' in Elm.Native.Regex)
+	{
+		return localRuntime.Native.Regex.values = Elm.Native.Regex.values;
+	}
+
+	var List = Elm.Native.List.make(localRuntime);
+	var Maybe = Elm.Maybe.make(localRuntime);
+
+	function escape(str)
+	{
+		return str.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+	}
+	function caseInsensitive(re)
+	{
+		return new RegExp(re.source, 'gi');
+	}
+	function regex(raw)
+	{
+		return new RegExp(raw, 'g');
+	}
+
+	function contains(re, string)
+	{
+		return string.match(re) !== null;
+	}
+
+	function find(n, re, str)
+	{
+		n = n.ctor === 'All' ? Infinity : n._0;
+		var out = [];
+		var number = 0;
+		var string = str;
+		var lastIndex = re.lastIndex;
+		var prevLastIndex = -1;
+		var result;
+		while (number++ < n && (result = re.exec(string)))
+		{
+			if (prevLastIndex === re.lastIndex) break;
+			var i = result.length - 1;
+			var subs = new Array(i);
+			while (i > 0)
+			{
+				var submatch = result[i];
+				subs[--i] = submatch === undefined
+					? Maybe.Nothing
+					: Maybe.Just(submatch);
+			}
+			out.push({
+				match: result[0],
+				submatches: List.fromArray(subs),
+				index: result.index,
+				number: number
+			});
+			prevLastIndex = re.lastIndex;
+		}
+		re.lastIndex = lastIndex;
+		return List.fromArray(out);
+	}
+
+	function replace(n, re, replacer, string)
+	{
+		n = n.ctor === 'All' ? Infinity : n._0;
+		var count = 0;
+		function jsReplacer(match)
+		{
+			if (count++ >= n)
+			{
+				return match;
+			}
+			var i = arguments.length - 3;
+			var submatches = new Array(i);
+			while (i > 0)
+			{
+				var submatch = arguments[i];
+				submatches[--i] = submatch === undefined
+					? Maybe.Nothing
+					: Maybe.Just(submatch);
+			}
+			return replacer({
+				match: match,
+				submatches: List.fromArray(submatches),
+				index: arguments[i - 1],
+				number: count
+			});
+		}
+		return string.replace(re, jsReplacer);
+	}
+
+	function split(n, re, str)
+	{
+		n = n.ctor === 'All' ? Infinity : n._0;
+		if (n === Infinity)
+		{
+			return List.fromArray(str.split(re));
+		}
+		var string = str;
+		var result;
+		var out = [];
+		var start = re.lastIndex;
+		while (n--)
+		{
+			if (!(result = re.exec(string))) break;
+			out.push(string.slice(start, result.index));
+			start = re.lastIndex;
+		}
+		out.push(string.slice(start));
+		return List.fromArray(out);
+	}
+
+	return Elm.Native.Regex.values = {
+		regex: regex,
+		caseInsensitive: caseInsensitive,
+		escape: escape,
+
+		contains: F2(contains),
+		find: F3(find),
+		replace: F4(replace),
+		split: F3(split)
+	};
+};
+
+Elm.Regex = Elm.Regex || {};
+Elm.Regex.make = function (_elm) {
+   "use strict";
+   _elm.Regex = _elm.Regex || {};
+   if (_elm.Regex.values) return _elm.Regex.values;
+   var _U = Elm.Native.Utils.make(_elm),$Maybe = Elm.Maybe.make(_elm),$Native$Regex = Elm.Native.Regex.make(_elm);
+   var _op = {};
+   var split = $Native$Regex.split;
+   var replace = $Native$Regex.replace;
+   var find = $Native$Regex.find;
+   var AtMost = function (a) {    return {ctor: "AtMost",_0: a};};
+   var All = {ctor: "All"};
+   var Match = F4(function (a,b,c,d) {    return {match: a,submatches: b,index: c,number: d};});
+   var contains = $Native$Regex.contains;
+   var caseInsensitive = $Native$Regex.caseInsensitive;
+   var regex = $Native$Regex.regex;
+   var escape = $Native$Regex.escape;
+   var Regex = {ctor: "Regex"};
+   return _elm.Regex.values = {_op: _op
+                              ,regex: regex
+                              ,escape: escape
+                              ,caseInsensitive: caseInsensitive
+                              ,contains: contains
+                              ,find: find
+                              ,replace: replace
+                              ,split: split
+                              ,Match: Match
+                              ,All: All
+                              ,AtMost: AtMost};
 };
 Elm.Native.Effects = {};
 Elm.Native.Effects.make = function(localRuntime) {
@@ -10982,6 +11251,105 @@ Elm.StartApp.make = function (_elm) {
    var Config = F4(function (a,b,c,d) {    return {init: a,update: b,view: c,inputs: d};});
    return _elm.StartApp.values = {_op: _op,start: start,Config: Config,App: App};
 };
+Elm.Date = Elm.Date || {};
+Elm.Date.Format = Elm.Date.Format || {};
+Elm.Date.Format.make = function (_elm) {
+   "use strict";
+   _elm.Date = _elm.Date || {};
+   _elm.Date.Format = _elm.Date.Format || {};
+   if (_elm.Date.Format.values) return _elm.Date.Format.values;
+   var _U = Elm.Native.Utils.make(_elm),
+   $Basics = Elm.Basics.make(_elm),
+   $Date = Elm.Date.make(_elm),
+   $Debug = Elm.Debug.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Regex = Elm.Regex.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm),
+   $String = Elm.String.make(_elm);
+   var _op = {};
+   var padWith = function (c) {    return function (_p0) {    return A3($String.padLeft,2,c,$Basics.toString(_p0));};};
+   var zero2twelve = function (n) {    return _U.eq(n,0) ? 12 : n;};
+   var mod12 = function (h) {    return A2($Basics._op["%"],h,12);};
+   var fullDayOfWeek = function (dow) {
+      var _p1 = dow;
+      switch (_p1.ctor)
+      {case "Mon": return "Monday";
+         case "Tue": return "Tuesday";
+         case "Wed": return "Wednesday";
+         case "Thu": return "Thursday";
+         case "Fri": return "Friday";
+         case "Sat": return "Saturday";
+         default: return "Sunday";}
+   };
+   var monthToFullName = function (m) {
+      var _p2 = m;
+      switch (_p2.ctor)
+      {case "Jan": return "January";
+         case "Feb": return "February";
+         case "Mar": return "March";
+         case "Apr": return "April";
+         case "May": return "May";
+         case "Jun": return "June";
+         case "Jul": return "July";
+         case "Aug": return "August";
+         case "Sep": return "September";
+         case "Oct": return "October";
+         case "Nov": return "November";
+         default: return "December";}
+   };
+   var monthToInt = function (m) {
+      var _p3 = m;
+      switch (_p3.ctor)
+      {case "Jan": return 1;
+         case "Feb": return 2;
+         case "Mar": return 3;
+         case "Apr": return 4;
+         case "May": return 5;
+         case "Jun": return 6;
+         case "Jul": return 7;
+         case "Aug": return 8;
+         case "Sep": return 9;
+         case "Oct": return 10;
+         case "Nov": return 11;
+         default: return 12;}
+   };
+   var formatToken = F2(function (d,m) {
+      var symbol = function () {
+         var _p4 = m.submatches;
+         if (_p4.ctor === "::" && _p4._0.ctor === "Just" && _p4._1.ctor === "[]") {
+               return _p4._0._0;
+            } else {
+               return " ";
+            }
+      }();
+      var _p5 = symbol;
+      switch (_p5)
+      {case "%": return "%";
+         case "Y": return $Basics.toString($Date.year(d));
+         case "m": return A3($String.padLeft,2,_U.chr("0"),$Basics.toString(monthToInt($Date.month(d))));
+         case "B": return monthToFullName($Date.month(d));
+         case "b": return $Basics.toString($Date.month(d));
+         case "d": return A2(padWith,_U.chr("0"),$Date.day(d));
+         case "e": return A2(padWith,_U.chr(" "),$Date.day(d));
+         case "a": return $Basics.toString($Date.dayOfWeek(d));
+         case "A": return fullDayOfWeek($Date.dayOfWeek(d));
+         case "H": return A2(padWith,_U.chr("0"),$Date.hour(d));
+         case "k": return A2(padWith,_U.chr(" "),$Date.hour(d));
+         case "I": return A2(padWith,_U.chr("0"),zero2twelve(mod12($Date.hour(d))));
+         case "l": return A2(padWith,_U.chr(" "),zero2twelve(mod12($Date.hour(d))));
+         case "p": return _U.cmp($Date.hour(d),13) < 0 ? "AM" : "PM";
+         case "P": return _U.cmp($Date.hour(d),13) < 0 ? "am" : "pm";
+         case "M": return A2(padWith,_U.chr("0"),$Date.minute(d));
+         case "S": return A2(padWith,_U.chr("0"),$Date.second(d));
+         default: return "";}
+   });
+   var re = $Regex.regex("%(%|Y|m|B|b|d|e|a|A|H|k|I|l|p|P|M|S)");
+   var format = F2(function (s,d) {    return A4($Regex.replace,$Regex.All,re,formatToken(d),s);});
+   var formatISO8601 = format("%Y-%m-%dT%H:%M:%SZ");
+   return _elm.Date.Format.values = {_op: _op,format: format,formatISO8601: formatISO8601};
+};
 Elm.SelectInput = Elm.SelectInput || {};
 Elm.SelectInput.make = function (_elm) {
    "use strict";
@@ -10999,7 +11367,7 @@ Elm.SelectInput.make = function (_elm) {
    $Signal = Elm.Signal.make(_elm);
    var _op = {};
    var options = F2(function (d,o) {
-      return _U.eq(d,o.text) ? A2($Html.option,
+      return _U.eq(d,o.value) ? A2($Html.option,
       _U.list([$Html$Attributes.value(o.value),$Html$Attributes.selected(true)]),
       _U.list([$Html.text(o.text)])) : A2($Html.option,_U.list([$Html$Attributes.value(o.value)]),_U.list([$Html.text(o.text)]));
    });
@@ -11107,6 +11475,8 @@ Elm.AnalysisForm.make = function (_elm) {
    if (_elm.AnalysisForm.values) return _elm.AnalysisForm.values;
    var _U = Elm.Native.Utils.make(_elm),
    $Basics = Elm.Basics.make(_elm),
+   $Date = Elm.Date.make(_elm),
+   $Date$Format = Elm.Date.Format.make(_elm),
    $Debug = Elm.Debug.make(_elm),
    $Effects = Elm.Effects.make(_elm),
    $Html = Elm.Html.make(_elm),
@@ -11120,19 +11490,21 @@ Elm.AnalysisForm.make = function (_elm) {
    $Result = Elm.Result.make(_elm),
    $SelectInput = Elm.SelectInput.make(_elm),
    $Signal = Elm.Signal.make(_elm),
+   $String = Elm.String.make(_elm),
    $Task = Elm.Task.make(_elm),
    $Yield = Elm.Yield.make(_elm);
    var _op = {};
-   var quandlMailBox = $Signal.mailbox(_U.list([{ctor: "_Tuple7",_0: "",_1: 0,_2: 0,_3: 0,_4: 0,_5: 0,_6: 0}]));
+   var fromDateToInteger = function (d) {    return function (_p0) {    return A2($Maybe.withDefault,d,$Result.toMaybe($String.toInt(_p0)));};};
+   var toDate = function (_p1) {    return A2($Result.withDefault,$Date.fromTime(0),$Date.fromString(_p1));};
+   var toInteger = function (d) {    return function (_p2) {    return A2($Maybe.withDefault,d,$Result.toMaybe($String.toInt(_p2)));};};
+   var sendToPlotMailBox = $Signal.mailbox(_U.list([{ctor: "_Tuple2",_0: "",_1: 0}]));
    _op["=>"] = F2(function (v0,v1) {    return {ctor: "_Tuple2",_0: v0,_1: v1};});
-   var quandlUrl = function (model) {
-      return A2($Http.url,
-      A2($Basics._op["++"],
-      "https://www.quandl.com/api/v3/datasets/",
-      A2($Basics._op["++"],model.source.value,A2($Basics._op["++"],"/",A2($Basics._op["++"],model.ticker.value,".json")))),
-      _U.list([A2(_op["=>"],"auth_token","Fp6cFhibc5xvL2pN3dnu")]));
-   };
-   var row = A8($Json$Decode.tuple7,
+   var csvRow = A2($Json$Decode.map,
+   function (_p3) {
+      var _p4 = _p3;
+      return {ctor: "_Tuple2",_0: toDate(_p4._0),_1: _p4._6};
+   },
+   A8($Json$Decode.tuple7,
    F7(function (v0,v1,v2,v3,v4,v5,v6) {    return {ctor: "_Tuple7",_0: v0,_1: v1,_2: v2,_3: v3,_4: v4,_5: v5,_6: v6};}),
    $Json$Decode.string,
    $Json$Decode.$float,
@@ -11140,23 +11512,42 @@ Elm.AnalysisForm.make = function (_elm) {
    $Json$Decode.$float,
    $Json$Decode.$float,
    $Json$Decode.$float,
-   $Json$Decode.$float);
-   var decodeData = A2($Json$Decode.at,_U.list(["dataset","data"]),$Json$Decode.list(row));
+   $Json$Decode.$float));
+   var decodeData = A2($Json$Decode.at,_U.list(["dataset","data"]),$Json$Decode.list(csvRow));
+   var quandlUrl = function (model) {
+      return A2($Http.url,
+      A2($Basics._op["++"],
+      "https://www.quandl.com/api/v3/datasets/",
+      A2($Basics._op["++"],model.source.value,A2($Basics._op["++"],"/",A2($Basics._op["++"],model.ticker.value,".json")))),
+      _U.list([A2(_op["=>"],"auth_token","Fp6cFhibc5xvL2pN3dnu")]));
+   };
    var NoOp = {ctor: "NoOp"};
    var sendData = function (data) {
-      return $Effects.task(A2($Task.andThen,A2($Signal.send,quandlMailBox.address,data),function (_p0) {    return $Task.succeed(NoOp);}));
+      return $Effects.task(A2($Task.andThen,A2($Signal.send,sendToPlotMailBox.address,data),function (_p5) {    return $Task.succeed(NoOp);}));
    };
+   var sendDataToPlot = F2(function (model,data) {
+      var ed = $Date.toTime(toDate(model.startDate.value));
+      var sd = $Date.toTime(toDate(model.startDate.value));
+      var fInt = A2(toInteger,21,model.frequency.value);
+      return sendData(A2($List.map,function (_p6) {    var _p7 = _p6;return {ctor: "_Tuple2",_0: A2($Date$Format.format,"%Y-%m-%d",_p7._0),_1: _p7._1};},data));
+   });
    var NewData = function (a) {    return {ctor: "NewData",_0: a};};
    var getData = function (model) {    return $Effects.task(A2($Task.map,NewData,$Task.toMaybe(A2($Http.get,decodeData,quandlUrl(model)))));};
    var update = F2(function (action,model) {
-      var _p1 = action;
-      switch (_p1.ctor)
-      {case "UpdateSource": return {ctor: "_Tuple2",_0: _U.update(model,{source: A2($SelectInput.update,_p1._0,model.source)}),_1: $Effects.none};
-         case "UpdateFrequency": return {ctor: "_Tuple2",_0: _U.update(model,{frequency: A2($SelectInput.update,_p1._0,model.frequency)}),_1: $Effects.none};
-         case "UpdateTicker": return {ctor: "_Tuple2",_0: _U.update(model,{ticker: A2($InputField.update,_p1._0,model.ticker)}),_1: $Effects.none};
-         case "UpdateYield": return {ctor: "_Tuple2",_0: _U.update(model,{$yield: A2($Yield.update,_p1._0,model.$yield)}),_1: $Effects.none};
-         case "UpdateStartDate": return {ctor: "_Tuple2",_0: _U.update(model,{startDate: A2($InputField.update,_p1._0,model.startDate)}),_1: $Effects.none};
-         case "UpdateEndDate": return {ctor: "_Tuple2",_0: _U.update(model,{endDate: A2($InputField.update,_p1._0,model.endDate)}),_1: $Effects.none};
+      var _p8 = action;
+      switch (_p8.ctor)
+      {case "UpdateSource": return {ctor: "_Tuple2",_0: _U.update(model,{source: A2($SelectInput.update,_p8._0,model.source)}),_1: $Effects.none};
+         case "UpdateFrequency": return {ctor: "_Tuple2"
+                                        ,_0: _U.update(model,{frequency: A2($SelectInput.update,_p8._0,model.frequency)})
+                                        ,_1: A2(sendDataToPlot,model,model.newData)};
+         case "UpdateTicker": return {ctor: "_Tuple2",_0: _U.update(model,{ticker: A2($InputField.update,_p8._0,model.ticker)}),_1: $Effects.none};
+         case "UpdateYield": return {ctor: "_Tuple2",_0: _U.update(model,{$yield: A2($Yield.update,_p8._0,model.$yield)}),_1: $Effects.none};
+         case "UpdateStartDate": return {ctor: "_Tuple2"
+                                        ,_0: _U.update(model,{startDate: A2($InputField.update,_p8._0,model.startDate)})
+                                        ,_1: A2(sendDataToPlot,model,model.newData)};
+         case "UpdateEndDate": return {ctor: "_Tuple2"
+                                      ,_0: _U.update(model,{endDate: A2($InputField.update,_p8._0,model.endDate)})
+                                      ,_1: A2(sendDataToPlot,model,model.newData)};
          case "Request": return {ctor: "_Tuple2"
                                 ,_0: _U.update(model,
                                 {frequency: A2($SelectInput.update,$SelectInput.Enable,model.frequency)
@@ -11164,8 +11555,17 @@ Elm.AnalysisForm.make = function (_elm) {
                                 ,endDate: A2($InputField.update,$InputField.Enable,model.endDate)})
                                 ,_1: getData(model)};
          case "NoOp": return {ctor: "_Tuple2",_0: model,_1: $Effects.none};
-         default: var data = A2($Maybe.withDefault,model.newData,_p1._0);
-           return {ctor: "_Tuple2",_0: _U.update(model,{newData: data}),_1: sendData(data)};}
+         default: var data = A2($Maybe.withDefault,model.newData,_p8._0);
+           var onlyDates = A2($List.map,function (_p9) {    var _p10 = _p9;return _p10._0;},data);
+           var maybeToDate = function (_p11) {    return A2($Date$Format.format,"%Y-%m-%d",A2($Maybe.withDefault,$Date.fromTime(0),_p11));};
+           var newStartDate = maybeToDate($List.head(onlyDates));
+           var newEndDate = maybeToDate($List.head($List.reverse(onlyDates)));
+           return {ctor: "_Tuple2"
+                  ,_0: _U.update(model,
+                  {newData: data
+                  ,startDate: A2($InputField.update,$InputField.Update(newEndDate),model.startDate)
+                  ,endDate: A2($InputField.update,$InputField.Update(newStartDate),model.endDate)})
+                  ,_1: A2(sendDataToPlot,model,data)};}
    });
    var Request = {ctor: "Request"};
    var UpdateEndDate = function (a) {    return {ctor: "UpdateEndDate",_0: a};};
@@ -11191,15 +11591,19 @@ Elm.AnalysisForm.make = function (_elm) {
               ,A2($Html.hr,_U.list([]),_U.list([]))
               ,A2($Html.div,
               _U.list([]),
-              _U.list([A2($InputField.view,A2($Signal.forwardTo,address,UpdateStartDate),model.startDate)
+              _U.list([$Html.text("Start Date")
+                      ,A2($InputField.view,A2($Signal.forwardTo,address,UpdateStartDate),model.startDate)
+                      ,$Html.text("End Date")
                       ,A2($InputField.view,A2($Signal.forwardTo,address,UpdateEndDate),model.endDate)]))]));
    });
+   var Model = F7(function (a,b,c,d,e,f,g) {    return {source: a,ticker: b,$yield: c,newData: d,frequency: e,startDate: f,endDate: g};});
+   var defaultRow = A2(F2(function (v0,v1) {    return {ctor: "_Tuple2",_0: v0,_1: v1};}),$Date.fromTime(0),0);
    var init = function () {
       var frequencyOptions = _U.list([A2($SelectInput.Option,"1","Daily")
                                      ,A2($SelectInput.Option,"5","Weekly")
                                      ,A2($SelectInput.Option,"21","Monthly")
                                      ,A2($SelectInput.Option,"63","Quarterly")]);
-      var sourceOptions = _U.list([A2($SelectInput.Option,"YHOO","Yahoo")
+      var sourceOptions = _U.list([A2($SelectInput.Option,"YAHOO","Yahoo")
                                   ,A2($SelectInput.Option,"GOOG","Google")
                                   ,A2($SelectInput.Option,"CBOE","Chicago Board of Options Exchange")
                                   ,A2($SelectInput.Option,"SPDJ","S&P Dow Jones")]);
@@ -11208,13 +11612,13 @@ Elm.AnalysisForm.make = function (_elm) {
                   ,endDate: A4($InputField.init,"","End Date","date",true)
                   ,ticker: A4($InputField.init,"INDEX_VIX","Ticker","text",false)
                   ,$yield: $Yield.init(false)
-                  ,newData: _U.list([{ctor: "_Tuple7",_0: "",_1: 0,_2: 0,_3: 0,_4: 0,_5: 0,_6: 0}])
-                  ,source: A3($SelectInput.init,"Yahoo",sourceOptions,false)
-                  ,frequency: A3($SelectInput.init,"Monthly",frequencyOptions,true)}
+                  ,newData: _U.list([defaultRow])
+                  ,source: A3($SelectInput.init,"YAHOO",sourceOptions,false)
+                  ,frequency: A3($SelectInput.init,"21",frequencyOptions,true)}
              ,_1: $Effects.none};
    }();
-   var Model = F7(function (a,b,c,d,e,f,g) {    return {source: a,ticker: b,$yield: c,newData: d,frequency: e,startDate: f,endDate: g};});
    return _elm.AnalysisForm.values = {_op: _op
+                                     ,defaultRow: defaultRow
                                      ,Model: Model
                                      ,init: init
                                      ,UpdateSource: UpdateSource
@@ -11228,12 +11632,16 @@ Elm.AnalysisForm.make = function (_elm) {
                                      ,NoOp: NoOp
                                      ,update: update
                                      ,view: view
-                                     ,row: row
                                      ,quandlUrl: quandlUrl
                                      ,decodeData: decodeData
+                                     ,csvRow: csvRow
                                      ,getData: getData
+                                     ,sendDataToPlot: sendDataToPlot
                                      ,sendData: sendData
-                                     ,quandlMailBox: quandlMailBox};
+                                     ,sendToPlotMailBox: sendToPlotMailBox
+                                     ,toInteger: toInteger
+                                     ,toDate: toDate
+                                     ,fromDateToInteger: fromDateToInteger};
 };
 Elm.LocationLinks = Elm.LocationLinks || {};
 Elm.LocationLinks.make = function (_elm) {
@@ -11280,6 +11688,7 @@ Elm.LocationLinks.make = function (_elm) {
          default: return A2($Html.div,
            _U.list([]),
            _U.list([A2($Html.a,_U.list([$Html$Attributes.href("#"),A2($Html$Events.onClick,address,Register)]),_U.list([$Html.text("Register")]))
+                   ,$Html.text(" | ")
                    ,A2($Html.a,_U.list([$Html$Attributes.href("#"),A2($Html$Events.onClick,address,Login)]),_U.list([$Html.text("Login")]))
                    ,A2($Html.hr,_U.list([]),_U.list([]))]));}
    });
@@ -11571,11 +11980,11 @@ Elm.Main.make = function (_elm) {
    $StartApp = Elm.StartApp.make(_elm),
    $Task = Elm.Task.make(_elm);
    var _op = {};
-   var quandlRequest = Elm.Native.Port.make(_elm).outboundSignal("quandlRequest",
+   var sendToScatterPlot = Elm.Native.Port.make(_elm).outboundSignal("sendToScatterPlot",
    function (v) {
-      return Elm.Native.List.make(_elm).toArray(v).map(function (v) {    return [v._0,v._1,v._2,v._3,v._4,v._5,v._6];});
+      return Elm.Native.List.make(_elm).toArray(v).map(function (v) {    return [v._0,v._1];});
    },
-   $AnalysisForm.quandlMailBox.signal);
+   $AnalysisForm.sendToPlotMailBox.signal);
    var registerResponse = Elm.Native.Port.make(_elm).inboundSignal("registerResponse",
    "RegisterForm.ResponseMessage",
    function (v) {

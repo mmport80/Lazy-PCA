@@ -55,6 +55,7 @@ view address model =
     _ ->
       div [][
           a [ href "#", onClick address Register ] [ text "Register" ]
+        , text " | "
         , a [ href "#", onClick address Login ] [ text "Login" ]
         , hr [][]
         ]

@@ -2,7 +2,7 @@ module Router where
 
 import LoginForm exposing (init, update, view, loginRequestMailBox, Action)
 import RegisterForm exposing (init, update, view, registerRequestMailBox, Action)
-import AnalysisForm exposing (init, update, view, quandlMailBox, Action)
+import AnalysisForm exposing (init, update, view, sendToPlotMailBox, Action)
 
 import LocationLinks exposing (init, update, view, Action)
 
@@ -45,12 +45,11 @@ init =
         ]
     )
 
-
 --********************************************************************************
 --********************************************************************************
 -- UPDATE
 --act like a router, sending to different forms based on actions
---
+
 type Action
     = Login LoginForm.Action
     | Analysis AnalysisForm.Action

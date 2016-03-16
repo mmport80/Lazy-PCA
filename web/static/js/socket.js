@@ -65,7 +65,7 @@ app.ports.loginRequest.subscribe(loginCallback);
 
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-const x = z =>
+const draw = z =>
   {
   const {data:data,result:result} = elmProcessData(z);
 
@@ -74,7 +74,7 @@ const x = z =>
   return null;
   };
 
-app.ports.quandlRequest.subscribe(x);
+app.ports.sendToScatterPlot.subscribe(draw);
 
 
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

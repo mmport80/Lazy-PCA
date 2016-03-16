@@ -45,7 +45,7 @@ view address model =
 
 options : String -> Option -> Html
 options  d o =
-  if d == o.text then
+  if d == o.value then
     option [ value o.value , selected True] [ text o.text ]
   else
     option [ value o.value ] [ text o.text ]

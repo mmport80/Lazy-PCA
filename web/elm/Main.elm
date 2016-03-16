@@ -3,7 +3,7 @@ import StartApp
 import Router exposing (init, update, view)
 import LoginForm exposing (Action(Response), loginRequestMailBox)
 import RegisterForm exposing (Action(Response), registerRequestMailBox)
-import AnalysisForm exposing (Row, quandlMailBox)
+import AnalysisForm exposing (Row, sendToPlotMailBox)
 
 import Effects exposing (Never)
 import Task
@@ -50,7 +50,7 @@ incomingRegisterActions : Signal (Router.Action)
 incomingRegisterActions = Signal.map Router.Register (Signal.map RegisterForm.Response registerResponse)
 
 --^^^^^^^^^^^^^^^^^^^°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
---quandl data request
+--send data to scatter plot
 
-port quandlRequest : Signal (List AnalysisForm.Row)
-port quandlRequest = quandlMailBox.signal
+port sendToScatterPlot : Signal (List (String,Float))
+port sendToScatterPlot = sendToPlotMailBox.signal
