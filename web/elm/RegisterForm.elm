@@ -32,9 +32,9 @@ type alias Model = {
 init : String -> String -> String -> (Model, Effects Action)
 init username password fullname =
     (
-      { username = InputField.init username "Username" "text"
-      , fullname = InputField.init fullname "Full Name" "text"
-      , password = InputField.init password "Password" "password"
+      { username = InputField.init username "Username" "text" False
+      , fullname = InputField.init fullname "Full Name" "text" False
+      , password = InputField.init password "Password" "password" False
       , response = ""
       , token = ""
       }
@@ -47,9 +47,9 @@ init username password fullname =
 -- UPDATE
 
 type Action
-    = UpdateUsername String
-    | UpdateFullname String
-    | UpdatePassword String
+    = UpdateUsername InputField.Action
+    | UpdateFullname InputField.Action
+    | UpdatePassword InputField.Action
     | Request
     | Response ResponseMessage
     | NoOp
@@ -84,7 +84,7 @@ update action model =
     Response input ->
       --remove pw & set response
       ( { model |
-          password = InputField.update "" model.password
+          password = InputField.update InputField.Reset model.password
         , response = input.response
         , token = input.token
         }

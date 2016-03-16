@@ -12,7 +12,7 @@ import Signal exposing (Address)
 
 import Json.Decode as Json exposing (at, string)
 
-import SelectInput exposing (init, view, update, Action)
+import SelectInput exposing (init, view, update, Action, Option)
 import InputField exposing (view, update)
 import Yield exposing (view, update)
 
@@ -36,20 +36,16 @@ type alias Model = {
     , endDate : InputField.Model
     }
 
-
-
-
 init : (Model, Effects Action)
 init =
   let
-    sourceOptions = [{value = "YHOO", text= "Yahoo"},{value= "GOOG", text= "Google"},{value= "CBOE", text= "CBOE"},{value= "SPDJ", text= "SPDJ"}]
-    frequencyOptions = [{value = "1", text = "Daily"}, {value="5", text="Weekly"}, {value= "21", text= "Monthly"}, {value= "63", text= "Quarterly"}]
+    sourceOptions = [ Option "YHOO" "Yahoo", Option "GOOG" "Google", Option "CBOE" "Chicago Board of Options Exchange", Option "SPDJ" "S&P Dow Jones" ]
+    frequencyOptions = [ Option "1" "Daily",Option "5" "Weekly", Option "21" "Monthly", Option "63" "Quarterly" ]
   in
     (
-      {
-        startDate = InputField.init "" "Start Date" "date"
-      , endDate = InputField.init "" "End Date" "date"
-      , ticker = InputField.init "INDEX_VIX" "Ticker" "text"
+      { startDate = InputField.init "" "Start Date" "date" True
+      , endDate = InputField.init "" "End Date" "date" True
+      , ticker = InputField.init "INDEX_VIX" "Ticker" "text" False
       , yield = Yield.init False
       --start with useful default data? instead of useless default data
       , newData = [("",0,0,0,0,0,0)]
@@ -66,10 +62,10 @@ init =
 type Action
     = UpdateSource SelectInput.Action
     | UpdateFrequency SelectInput.Action
-    | UpdateTicker String
+    | UpdateTicker InputField.Action
     | UpdateYield Bool
-    | UpdateStartDate String
-    | UpdateEndDate String
+    | UpdateStartDate InputField.Action
+    | UpdateEndDate InputField.Action
     | Request
     | NewData ( Maybe (List Row) )
     | NoOp
@@ -102,7 +98,12 @@ update action model =
       , Effects.none
       )
     Request ->
-      ( model, getData model )
+      ( {model |
+          frequency = SelectInput.update SelectInput.Enable model.frequency
+        , startDate = InputField.update InputField.Enable model.startDate
+        , endDate = InputField.update InputField.Enable model.endDate
+        }
+      , getData model )
     NoOp ->
       ( model, Effects.none )
     --update

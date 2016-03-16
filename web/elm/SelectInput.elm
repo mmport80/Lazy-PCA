@@ -13,7 +13,7 @@ type alias Model = {
   , disabled : Bool
   }
 
-type alias Option = {text: String, value: String}
+type alias Option = { value: String, text: String }
 
 init : String -> List Option -> Bool -> Model
 init value optionValues disabled = Model value optionValues disabled
@@ -38,7 +38,7 @@ view address model =
     optionsWDefault = options model.value
   in
     select [
-        on "change" targetValue (Update >> Signal.message address)
+        on "change" targetValue (Signal.message address << Update )
       , disabled model.disabled
       ]
       ( List.map optionsWDefault model.optionValues )
@@ -49,5 +49,3 @@ options  d o =
     option [ value o.value , selected True] [ text o.text ]
   else
     option [ value o.value ] [ text o.text ]
-
---optionValues = ["Yahoo","Google","CBOE","SPDJ"]

@@ -11020,7 +11020,7 @@ Elm.SelectInput.make = function (_elm) {
       A2($List.map,optionsWDefault,model.optionValues));
    });
    var Enable = {ctor: "Enable"};
-   var Option = F2(function (a,b) {    return {text: a,value: b};});
+   var Option = F2(function (a,b) {    return {value: a,text: b};});
    var Model = F3(function (a,b,c) {    return {value: a,optionValues: b,disabled: c};});
    var init = F3(function (value,optionValues,disabled) {    return A3(Model,value,optionValues,disabled);});
    return _elm.SelectInput.values = {_op: _op
@@ -11050,18 +11050,30 @@ Elm.InputField.make = function (_elm) {
    $Result = Elm.Result.make(_elm),
    $Signal = Elm.Signal.make(_elm);
    var _op = {};
+   var update = F2(function (action,model) {
+      var _p0 = action;
+      switch (_p0.ctor)
+      {case "Reset": return _U.update(model,{value: ""});
+         case "Update": return _U.update(model,{value: _p0._0});
+         case "Enable": return _U.update(model,{disabled: false});
+         default: return _U.update(model,{disabled: true});}
+   });
+   var Reset = {ctor: "Reset"};
+   var Disable = {ctor: "Disable"};
+   var Enable = {ctor: "Enable"};
+   var Update = function (a) {    return {ctor: "Update",_0: a};};
    var view = F2(function (address,model) {
       return A2($Html.input,
       _U.list([$Html$Attributes.value(model.value)
               ,$Html$Attributes.type$(model.inputType)
-              ,A3($Html$Events.on,"input",$Html$Events.targetValue,$Signal.message(address))
+              ,A3($Html$Events.on,"input",$Html$Events.targetValue,function (_p1) {    return A2($Signal.message,address,Update(_p1));})
+              ,$Html$Attributes.disabled(model.disabled)
               ,$Html$Attributes.placeholder(model.placeHolder)]),
       _U.list([]));
    });
-   var update = F2(function (input,model) {    return _U.update(model,{value: input});});
-   var Model = F3(function (a,b,c) {    return {value: a,placeHolder: b,inputType: c};});
-   var init = F3(function (input,placeHolder,inputType) {    return A3(Model,input,placeHolder,inputType);});
-   return _elm.InputField.values = {_op: _op,Model: Model,init: init,update: update,view: view};
+   var Model = F4(function (a,b,c,d) {    return {value: a,placeHolder: b,inputType: c,disabled: d};});
+   var init = F4(function (input,placeHolder,inputType,disabled) {    return A4(Model,input,placeHolder,inputType,disabled);});
+   return _elm.InputField.values = {_op: _op,Model: Model,init: init,Update: Update,Enable: Enable,Disable: Disable,Reset: Reset,update: update,view: view};
 };
 Elm.Yield = Elm.Yield || {};
 Elm.Yield.make = function (_elm) {
@@ -11145,7 +11157,12 @@ Elm.AnalysisForm.make = function (_elm) {
          case "UpdateYield": return {ctor: "_Tuple2",_0: _U.update(model,{$yield: A2($Yield.update,_p1._0,model.$yield)}),_1: $Effects.none};
          case "UpdateStartDate": return {ctor: "_Tuple2",_0: _U.update(model,{startDate: A2($InputField.update,_p1._0,model.startDate)}),_1: $Effects.none};
          case "UpdateEndDate": return {ctor: "_Tuple2",_0: _U.update(model,{endDate: A2($InputField.update,_p1._0,model.endDate)}),_1: $Effects.none};
-         case "Request": return {ctor: "_Tuple2",_0: model,_1: getData(model)};
+         case "Request": return {ctor: "_Tuple2"
+                                ,_0: _U.update(model,
+                                {frequency: A2($SelectInput.update,$SelectInput.Enable,model.frequency)
+                                ,startDate: A2($InputField.update,$InputField.Enable,model.startDate)
+                                ,endDate: A2($InputField.update,$InputField.Enable,model.endDate)})
+                                ,_1: getData(model)};
          case "NoOp": return {ctor: "_Tuple2",_0: model,_1: $Effects.none};
          default: var data = A2($Maybe.withDefault,model.newData,_p1._0);
            return {ctor: "_Tuple2",_0: _U.update(model,{newData: data}),_1: sendData(data)};}
@@ -11178,12 +11195,18 @@ Elm.AnalysisForm.make = function (_elm) {
                       ,A2($InputField.view,A2($Signal.forwardTo,address,UpdateEndDate),model.endDate)]))]));
    });
    var init = function () {
-      var frequencyOptions = _U.list([{value: "1",text: "Daily"},{value: "5",text: "Weekly"},{value: "21",text: "Monthly"},{value: "63",text: "Quarterly"}]);
-      var sourceOptions = _U.list([{value: "YHOO",text: "Yahoo"},{value: "GOOG",text: "Google"},{value: "CBOE",text: "CBOE"},{value: "SPDJ",text: "SPDJ"}]);
+      var frequencyOptions = _U.list([A2($SelectInput.Option,"1","Daily")
+                                     ,A2($SelectInput.Option,"5","Weekly")
+                                     ,A2($SelectInput.Option,"21","Monthly")
+                                     ,A2($SelectInput.Option,"63","Quarterly")]);
+      var sourceOptions = _U.list([A2($SelectInput.Option,"YHOO","Yahoo")
+                                  ,A2($SelectInput.Option,"GOOG","Google")
+                                  ,A2($SelectInput.Option,"CBOE","Chicago Board of Options Exchange")
+                                  ,A2($SelectInput.Option,"SPDJ","S&P Dow Jones")]);
       return {ctor: "_Tuple2"
-             ,_0: {startDate: A3($InputField.init,"","Start Date","date")
-                  ,endDate: A3($InputField.init,"","End Date","date")
-                  ,ticker: A3($InputField.init,"INDEX_VIX","Ticker","text")
+             ,_0: {startDate: A4($InputField.init,"","Start Date","date",true)
+                  ,endDate: A4($InputField.init,"","End Date","date",true)
+                  ,ticker: A4($InputField.init,"INDEX_VIX","Ticker","text",false)
                   ,$yield: $Yield.init(false)
                   ,newData: _U.list([{ctor: "_Tuple7",_0: "",_1: 0,_2: 0,_3: 0,_4: 0,_5: 0,_6: 0}])
                   ,source: A3($SelectInput.init,"Yahoo",sourceOptions,false)
@@ -11299,7 +11322,7 @@ Elm.LoginForm.make = function (_elm) {
          case "Request": return {ctor: "_Tuple2",_0: model,_1: sendData({username: model.username.value,password: model.password.value})};
          default: var _p2 = _p1._0;
            return {ctor: "_Tuple2"
-                  ,_0: _U.update(model,{password: A2($InputField.update,"",model.password),response: _p2.response,token: _p2.token})
+                  ,_0: _U.update(model,{password: A2($InputField.update,$InputField.Reset,model.password),response: _p2.response,token: _p2.token})
                   ,_1: $Effects.none};}
    });
    var Response = function (a) {    return {ctor: "Response",_0: a};};
@@ -11316,8 +11339,8 @@ Elm.LoginForm.make = function (_elm) {
    });
    var init = F2(function (username,password) {
       return {ctor: "_Tuple2"
-             ,_0: {username: A3($InputField.init,username,"Username","text")
-                  ,password: A3($InputField.init,password,"Password","password")
+             ,_0: {username: A4($InputField.init,username,"Username","text",false)
+                  ,password: A4($InputField.init,password,"Password","password",false)
                   ,response: ""
                   ,token: ""}
              ,_1: $Effects.none};
@@ -11374,7 +11397,7 @@ Elm.RegisterForm.make = function (_elm) {
          case "Request": return {ctor: "_Tuple2",_0: model,_1: sendData(A3(RegisterRequest,model.username.value,model.fullname.value,model.password.value))};
          default: var _p2 = _p1._0;
            return {ctor: "_Tuple2"
-                  ,_0: _U.update(model,{password: A2($InputField.update,"",model.password),response: _p2.response,token: _p2.token})
+                  ,_0: _U.update(model,{password: A2($InputField.update,$InputField.Reset,model.password),response: _p2.response,token: _p2.token})
                   ,_1: $Effects.none};}
    });
    var Response = function (a) {    return {ctor: "Response",_0: a};};
@@ -11393,9 +11416,9 @@ Elm.RegisterForm.make = function (_elm) {
    });
    var init = F3(function (username,password,fullname) {
       return {ctor: "_Tuple2"
-             ,_0: {username: A3($InputField.init,username,"Username","text")
-                  ,fullname: A3($InputField.init,fullname,"Full Name","text")
-                  ,password: A3($InputField.init,password,"Password","password")
+             ,_0: {username: A4($InputField.init,username,"Username","text",false)
+                  ,fullname: A4($InputField.init,fullname,"Full Name","text",false)
+                  ,password: A4($InputField.init,password,"Password","password",false)
                   ,response: ""
                   ,token: ""}
              ,_1: $Effects.none};
