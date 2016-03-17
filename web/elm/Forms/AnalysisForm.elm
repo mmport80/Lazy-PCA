@@ -78,6 +78,7 @@ type Action
     | Request
     | NewData ( Maybe ( List (Row) ) )
     | NoOp
+    | Save
 
 update : Action -> Model -> (Model, Effects Action)
 update action model =
@@ -126,6 +127,11 @@ update action model =
     --remove this
     NoOp ->
       ( model, Effects.none )
+    Save ->
+      let
+        pModel = convertElmModelToPortableFormat model
+      in
+        ( model, saveData pModel )
     --Send data to JS
     NewData maybeList ->
       let
@@ -139,6 +145,7 @@ update action model =
           , startDate = InputField.update (InputField.Update newStartDate) model.startDate
           , endDate = InputField.update (InputField.Update newEndDate) model.endDate
           }
+        pModel = convertElmModelToPortableFormat model
       in
         (
           model'
@@ -254,7 +261,7 @@ sendData data =
     --add error condition
     --remove no op
     --and flag errors
-    `Task.andThen` (\_ -> Task.succeed NoOp)
+    `Task.andThen` (\_ -> Task.succeed Save)
   |> Effects.task
 
 sendToPlotMailBox :
@@ -266,11 +273,13 @@ sendToPlotMailBox = Signal.mailbox [ ("",0) ]
 --^^^^^^^^^^^^^^^^^^^°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 --^^^^^^^^^^^^^^^^^^^°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 
+--one send which sends everything?
+
 type alias PortableModel = {
       endDate : String
     , startDate : String
     , ticker : String
-    , yield : Bool
+    , y : Bool
     , source : String
     , frequency : String
     , newData : List (String, Float)
@@ -281,7 +290,7 @@ convertElmModelToPortableFormat model =
   { endDate = model.endDate.value
   , startDate = model.startDate.value
   , ticker = model.ticker.value
-  , yield = model.yield
+  , y = model.yield
   , source = model.source.value
   , frequency = model.frequency.value
   , newData =  model.newData |> List.map (\ (a,b) -> (dateToISOFormat a,b) )

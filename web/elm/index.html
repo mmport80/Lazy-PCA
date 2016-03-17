@@ -11467,7 +11467,7 @@ Elm.Forms.AnalysisForm.make = function (_elm) {
    var fromDateToInteger = function (d) {    return function (_p2) {    return A2($Maybe.withDefault,d,$Result.toMaybe($String.toInt(_p2)));};};
    var toDate = function (d) {    return function (_p3) {    return A2($Result.withDefault,d,$Date.fromString(_p3));};};
    var toInteger = function (d) {    return function (_p4) {    return A2($Maybe.withDefault,d,$Result.toMaybe($String.toInt(_p4)));};};
-   var PortableModel = F7(function (a,b,c,d,e,f,g) {    return {endDate: a,startDate: b,ticker: c,$yield: d,source: e,frequency: f,newData: g};});
+   var PortableModel = F7(function (a,b,c,d,e,f,g) {    return {endDate: a,startDate: b,ticker: c,y: d,source: e,frequency: f,newData: g};});
    var saveToDBMailBox = $Signal.mailbox(A7(PortableModel,"","","",false,"","",_U.list([{ctor: "_Tuple2",_0: "",_1: 0}])));
    var sendToPlotMailBox = $Signal.mailbox(_U.list([{ctor: "_Tuple2",_0: "",_1: 0}]));
    var dateToISOFormat = $Date$Format.format("%Y-%m-%d");
@@ -11475,7 +11475,7 @@ Elm.Forms.AnalysisForm.make = function (_elm) {
       return {endDate: model.endDate.value
              ,startDate: model.startDate.value
              ,ticker: model.ticker.value
-             ,$yield: model.$yield
+             ,y: model.$yield
              ,source: model.source.value
              ,frequency: model.frequency.value
              ,newData: A2($List.map,function (_p5) {    var _p6 = _p5;return {ctor: "_Tuple2",_0: dateToISOFormat(_p6._0),_1: _p6._1};},model.newData)};
@@ -11503,9 +11503,9 @@ Elm.Forms.AnalysisForm.make = function (_elm) {
       A2($Basics._op["++"],model.source.value,A2($Basics._op["++"],"/",A2($Basics._op["++"],model.ticker.value,".json")))),
       _U.list([A2(_op["=>"],"auth_token","Fp6cFhibc5xvL2pN3dnu")]));
    };
-   var NoOp = {ctor: "NoOp"};
+   var Save = {ctor: "Save"};
    var sendData = function (data) {
-      return $Effects.task(A2($Task.andThen,A2($Signal.send,sendToPlotMailBox.address,data),function (_p9) {    return $Task.succeed(NoOp);}));
+      return $Effects.task(A2($Task.andThen,A2($Signal.send,sendToPlotMailBox.address,data),function (_p9) {    return $Task.succeed(Save);}));
    };
    var sendDataToPlot = function (model) {
       var ed = $Date.toTime(A2(toDate,$Date.fromTime(0),model.endDate.value));
@@ -11529,6 +11529,7 @@ Elm.Forms.AnalysisForm.make = function (_elm) {
       },
       A2($List.indexedMap,F2(function (i,_p17) {    var _p18 = _p17;return {ctor: "_Tuple3",_0: i,_1: _p18._0,_2: _p18._1};}),model.newData)))));
    };
+   var NoOp = {ctor: "NoOp"};
    var saveData = function (model) {
       return $Effects.task(A2($Task.andThen,A2($Signal.send,saveToDBMailBox.address,model),function (_p19) {    return $Task.succeed(NoOp);}));
    };
@@ -11557,7 +11558,10 @@ Elm.Forms.AnalysisForm.make = function (_elm) {
                                 ,endDate: A2($Forms$Components$InputField.update,$Forms$Components$InputField.Enable,model.endDate)})
                                 ,_1: getData(model)};
          case "NoOp": return {ctor: "_Tuple2",_0: model,_1: $Effects.none};
-         default: var data = A2($Maybe.withDefault,model.newData,_p20._0);
+         case "Save": var pModel = convertElmModelToPortableFormat(model);
+           return {ctor: "_Tuple2",_0: model,_1: saveData(pModel)};
+         default: var pModel = convertElmModelToPortableFormat(model);
+           var data = A2($Maybe.withDefault,model.newData,_p20._0);
            var onlyDates = A2($List.map,function (_p21) {    var _p22 = _p21;return _p22._0;},data);
            var maybeToDate = function (_p23) {    return A2($Date$Format.format,"%Y-%m-%d",A2($Maybe.withDefault,$Date.fromTime(0),_p23));};
            var newEndDate = maybeToDate($List.head(onlyDates));
@@ -11634,6 +11638,7 @@ Elm.Forms.AnalysisForm.make = function (_elm) {
                                            ,Request: Request
                                            ,NewData: NewData
                                            ,NoOp: NoOp
+                                           ,Save: Save
                                            ,update: update
                                            ,view: view
                                            ,quandlUrl: quandlUrl
@@ -12006,7 +12011,7 @@ Elm.Main.make = function (_elm) {
       return {endDate: v.endDate
              ,startDate: v.startDate
              ,ticker: v.ticker
-             ,yield: v.yield
+             ,y: v.y
              ,source: v.source
              ,frequency: v.frequency
              ,newData: Elm.Native.List.make(_elm).toArray(v.newData).map(function (v) {    return [v._0,v._1];})};

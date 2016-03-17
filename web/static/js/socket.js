@@ -87,7 +87,7 @@ const db = s =>
   console.log(s);
   };
 
-//app.ports.saveToDB.subscribe(db);
+app.ports.saveToDB.subscribe(db);
 
 
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
