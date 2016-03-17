@@ -23,10 +23,6 @@ import Date
 import Date.Format
 import Time exposing (every, millisecond)
 
-import Debug
-
-import Graphics.Element exposing (show)
-
 --********************************************************************************
 --********************************************************************************
 -- MODEL
@@ -60,9 +56,8 @@ init =
       , endDate = InputField.init "" "End Date" "date" True
       , ticker = InputField.init "INDEX_VIX" "Ticker" "text" False
       , yield = Yield.init False
-      --start with useful default data? instead of useless default data
+      --start with useful default data? instead of useless data
       , newData =  [ defaultRow ]
-      --option names and values
       , source = SelectInput.init "YAHOO" sourceOptions False
       , frequency = SelectInput.init "21" frequencyOptions True
       , plotId = now
@@ -202,6 +197,10 @@ quandlUrl model =
   Http.url ("https://www.quandl.com/api/v3/datasets/"++model.source.value++"/"++model.ticker.value++".json")
     [ "auth_token" => "Fp6cFhibc5xvL2pN3dnu" ]
 
+--remove?
+--don't like new operators that much
+(=>) = (,)
+
 --change name to something like 'decodeList'
 decodeData : Json.Decoder (List (Date.Date, Float))
 decodeData = Json.at ["dataset", "data"] (Json.list csvRow)
@@ -212,9 +211,7 @@ csvRow = (Json.tuple7 (,,,,,,)
   )
   |> Json.map (\ (a,_,_,_,_,_,b) -> ( (toDate (Date.fromTime 0) a), b ) )
 
---remove?
---don't like new operators that much
-(=>) = (,)
+
 
 getData : Model -> Effects Action
 getData model =
@@ -243,9 +240,12 @@ sendDataToPlot model =
     |> List.filter (\(_,a,_) ->
         (Date.toTime a >= sd) && (Date.toTime a <= ed)
       )
-    |> List.map (\ (_,a,b) -> ((Date.Format.format "%Y-%m-%d" a), b) )
+    |> List.map (\ (_,a,b) -> ((dateToISOFormat a), b) )
     --send data to UI
     |> sendData
+
+dateToISOFormat : Date.Date -> String
+dateToISOFormat = Date.Format.format "%Y-%m-%d"
 
 
 sendData : List (String, Float) -> Effects Action
@@ -262,6 +262,47 @@ sendToPlotMailBox :
   , signal : Signal (List (String, Float))
   }
 sendToPlotMailBox = Signal.mailbox [ ("",0) ]
+
+--^^^^^^^^^^^^^^^^^^^°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+--^^^^^^^^^^^^^^^^^^^°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+
+type alias PortableModel = {
+      endDate : String
+    , startDate : String
+    , ticker : String
+    , yield : Bool
+    , source : String
+    , frequency : String
+    , newData : List (String, Float)
+    }
+
+convertElmModelToPortableFormat : Model -> PortableModel
+convertElmModelToPortableFormat model =
+  { endDate = model.endDate.value
+  , startDate = model.startDate.value
+  , ticker = model.ticker.value
+  , yield = model.yield
+  , source = model.source.value
+  , frequency = model.frequency.value
+  , newData =  model.newData |> List.map (\ (a,b) -> (dateToISOFormat a,b) )
+  }
+
+
+saveData : PortableModel -> Effects Action
+saveData model =
+  Signal.send saveToDBMailBox.address model
+    --add error condition
+    --remove no op
+    --and flag errors
+    `Task.andThen` (\_ -> Task.succeed NoOp)
+  |> Effects.task
+
+saveToDBMailBox :
+  { address : Signal.Address PortableModel
+  , signal : Signal PortableModel
+  }
+saveToDBMailBox = Signal.mailbox (PortableModel "" "" "" False "" "" [("",0)])
+
 
 
 --^^^^^^^^^^^^^^^^^^^°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°

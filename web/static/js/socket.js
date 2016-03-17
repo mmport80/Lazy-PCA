@@ -82,5 +82,14 @@ app.ports.sendToScatterPlot.subscribe(draw);
 
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+const db = s =>
+  {
+  console.log(s);
+  };
+
+//app.ports.saveToDB.subscribe(db);
+
+
+//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 export default socket

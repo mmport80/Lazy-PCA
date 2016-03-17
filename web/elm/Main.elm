@@ -3,7 +3,7 @@ import StartApp
 import Router exposing (init, update, view)
 import Forms.LoginForm as LoginForm exposing (Action(Response), loginRequestMailBox)
 import Forms.RegisterForm as RegisterForm exposing (Action(Response), registerRequestMailBox)
-import Forms.AnalysisForm as AnalysisForm exposing (Row, sendToPlotMailBox)
+import Forms.AnalysisForm as AnalysisForm exposing (Row, sendToPlotMailBox, saveToDBMailBox)
 
 import Effects exposing (Never)
 import Task
@@ -54,3 +54,13 @@ incomingRegisterActions = Signal.map Router.Register (Signal.map RegisterForm.Re
 
 port sendToScatterPlot : Signal (List (String,Float))
 port sendToScatterPlot = sendToPlotMailBox.signal
+
+
+--^^^^^^^^^^^^^^^^^^^°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+--save data
+--need a response also - confirming save
+
+
+
+port saveToDB : Signal AnalysisForm.PortableModel
+port saveToDB = saveToDBMailBox.signal
