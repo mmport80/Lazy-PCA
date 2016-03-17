@@ -22,6 +22,8 @@ import String
 import Date
 import Date.Format
 
+import Debug
+
 
 --********************************************************************************
 --********************************************************************************
@@ -86,9 +88,12 @@ update action model =
       , Effects.none
       )
     UpdateFrequency input ->
-      ( { model | frequency = SelectInput.update input model.frequency }
-      , sendDataToPlot model model.newData
-      )
+      let
+        model' = { model | frequency = SelectInput.update input model.frequency }
+      in
+        ( model'
+        , sendDataToPlot model'
+        )
     UpdateTicker input ->
       ( { model | ticker = InputField.update input model.ticker }
       , Effects.none
@@ -98,13 +103,19 @@ update action model =
       , Effects.none
       )
     UpdateStartDate input ->
-      ( { model | startDate = InputField.update input model.startDate }
-      , sendDataToPlot model model.newData
-      )
+      let
+        model' = { model | startDate = InputField.update input model.startDate }
+      in
+        ( model'
+        , sendDataToPlot model'
+        )
     UpdateEndDate input ->
-      ( { model | endDate = InputField.update input model.endDate }
-      , sendDataToPlot model model.newData
-      )
+      let
+        model' = { model | endDate = InputField.update input model.endDate }
+      in
+        ( model'
+        , sendDataToPlot model'
+        )
     --get data from quandl
     Request ->
       ( {model |
@@ -113,6 +124,7 @@ update action model =
         , endDate = InputField.update InputField.Enable model.endDate
         }
       , getData model )
+    --remove this
     NoOp ->
       ( model, Effects.none )
     --Send data to JS
@@ -121,16 +133,17 @@ update action model =
         maybeToDate = (Maybe.withDefault (Date.fromTime 0)) >> (Date.Format.format "%Y-%m-%d" )
         data = Maybe.withDefault model.newData maybeList
         onlyDates = data |> List.map (\ (a,_) -> a )
-        newStartDate = onlyDates |> List.head |> maybeToDate
-        newEndDate = onlyDates |> List.reverse |> List.head |> maybeToDate
-      in
-        ( --take new data, save it down
-          { model |
-              newData = data
-            , startDate = InputField.update (InputField.Update newEndDate) model.startDate
-            , endDate = InputField.update (InputField.Update newStartDate) model.endDate
+        newEndDate = onlyDates |> List.head |> maybeToDate
+        newStartDate = onlyDates |> List.reverse |> List.head |> maybeToDate
+        model' = { model |
+            newData = data
+          , startDate = InputField.update (InputField.Update newStartDate) model.startDate
+          , endDate = InputField.update (InputField.Update newEndDate) model.endDate
           }
-          , sendDataToPlot model data
+      in
+        (
+          model'
+        , sendDataToPlot model'
         )
 
 
@@ -160,8 +173,10 @@ view address model =
     , div [] [
         text "Start Date"
       , InputField.view (Signal.forwardTo address UpdateStartDate) model.startDate
+
       , text "End Date"
       , InputField.view (Signal.forwardTo address UpdateEndDate) model.endDate
+
       ]
   ]
 
@@ -186,7 +201,7 @@ csvRow : Json.Decoder (Date.Date, Float)
 csvRow = (Json.tuple7 (,,,,,,)
   Json.string Json.float Json.float Json.float Json.float Json.float Json.float
   )
-  |> Json.map (\ (a,_,_,_,_,_,b) -> ( (toDate a), b ) )
+  |> Json.map (\ (a,_,_,_,_,_,b) -> ( (toDate (Date.fromTime 0) a), b ) )
 
 --remove?
 --don't like new operators that much
@@ -204,24 +219,22 @@ getData model =
 --OUTGOING DATA
 
 --filter new data appropriately before plotting it
-sendDataToPlot : Model -> List Row -> Effects Action
-sendDataToPlot model data =
+sendDataToPlot : Model -> Effects Action
+sendDataToPlot model =
   let
     fInt = toInteger 21 model.frequency.value
-    sd = model.startDate.value |> toDate |> Date.toTime
-    ed = model.startDate.value |> toDate |> Date.toTime
+    sd = model.startDate.value |> toDate (Date.fromTime 0) |> Date.toTime
+    ed = model.endDate.value |> toDate (Date.fromTime 0) |> Date.toTime
   in
-    data
-    --|> List.indexedMap (\ i (a,b) -> (i,a,b))
+    model.newData
+    |> List.indexedMap (\ i (a,b) -> (i,a,b))
     --filter by frequency
-    --|> List.filter (\ (i,a,b) -> i % fInt == 0 )
+    |> List.filter (\ (i,a,b) -> i % fInt == 0 )
     --filter out according to start and end dates
-    {--
     |> List.filter (\(_,a,_) ->
-        (Date.toTime a) >= sd && (Date.toTime a) <= ed
+        (Date.toTime a >= sd) && (Date.toTime a <= ed)
       )
-    --}
-    |> List.map (\ (a,b) -> ((Date.Format.format "%Y-%m-%d" a), b) )
+    |> List.map (\ (_,a,b) -> ((Date.Format.format "%Y-%m-%d" a), b) )
     --send data to UI
     |> sendData
 
@@ -252,10 +265,10 @@ toInteger d =
   >> Maybe.withDefault d
 
 --convert string to int with default value as backup
-toDate : String -> Date.Date
-toDate =
+toDate : Date.Date -> String -> Date.Date
+toDate d =
   Date.fromString
-  >> Result.withDefault (Date.fromTime 0)
+  >> Result.withDefault d
 
 fromDateToInteger : Int -> String -> Int
 fromDateToInteger d =

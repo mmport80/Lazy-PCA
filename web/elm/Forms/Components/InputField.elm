@@ -28,12 +28,14 @@ update action model =
   case action of
     Reset ->
       { model | value = "" }
+    --if date then validate first
     Update input ->
       { model | value = input }
     Enable ->
       { model | disabled = False }
     Disable ->
       { model | disabled = True }
+    --validation message
 
 -- VIEW
 view : Signal.Address Action -> Model -> Html
@@ -41,7 +43,7 @@ view address model =
   input [
       value model.value
     , type' model.inputType
-    , on "input" targetValue ( Signal.message address << Update )
+    , on "input" targetValue ( Update >> Signal.message address )
     , disabled model.disabled
     , placeholder model.placeHolder
     ] []

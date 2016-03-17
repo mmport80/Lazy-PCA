@@ -1,5 +1,5 @@
 <!DOCTYPE HTML>
-<html><head><meta charset="UTF-8"><title>Main</title><style>html,head,body { padding:0; margin:0; }
+<html><head><meta charset="UTF-8"><title>Forms.AnalysisForm</title><style>html,head,body { padding:0; margin:0; }
 body { font-family: calibri, helvetica, arial, sans-serif; }</style><script type="text/javascript">var Elm = Elm || { Native: {} };Elm.Native.Array = {};
 Elm.Native.Array.make = function(localRuntime) {
 
@@ -11163,44 +11163,6 @@ Elm.Http.make = function (_elm) {
                              ,BadResponse: BadResponse
                              ,RawTimeout: RawTimeout
                              ,RawNetworkError: RawNetworkError};
-};Elm.StartApp = Elm.StartApp || {};
-Elm.StartApp.make = function (_elm) {
-   "use strict";
-   _elm.StartApp = _elm.StartApp || {};
-   if (_elm.StartApp.values) return _elm.StartApp.values;
-   var _U = Elm.Native.Utils.make(_elm),
-   $Basics = Elm.Basics.make(_elm),
-   $Debug = Elm.Debug.make(_elm),
-   $Effects = Elm.Effects.make(_elm),
-   $Html = Elm.Html.make(_elm),
-   $List = Elm.List.make(_elm),
-   $Maybe = Elm.Maybe.make(_elm),
-   $Result = Elm.Result.make(_elm),
-   $Signal = Elm.Signal.make(_elm),
-   $Task = Elm.Task.make(_elm);
-   var _op = {};
-   var start = function (config) {
-      var updateStep = F2(function (action,_p0) {
-         var _p1 = _p0;
-         var _p2 = A2(config.update,action,_p1._0);
-         var newModel = _p2._0;
-         var additionalEffects = _p2._1;
-         return {ctor: "_Tuple2",_0: newModel,_1: $Effects.batch(_U.list([_p1._1,additionalEffects]))};
-      });
-      var update = F2(function (actions,_p3) {    var _p4 = _p3;return A3($List.foldl,updateStep,{ctor: "_Tuple2",_0: _p4._0,_1: $Effects.none},actions);});
-      var messages = $Signal.mailbox(_U.list([]));
-      var singleton = function (action) {    return _U.list([action]);};
-      var address = A2($Signal.forwardTo,messages.address,singleton);
-      var inputs = $Signal.mergeMany(A2($List._op["::"],messages.signal,A2($List.map,$Signal.map(singleton),config.inputs)));
-      var effectsAndModel = A3($Signal.foldp,update,config.init,inputs);
-      var model = A2($Signal.map,$Basics.fst,effectsAndModel);
-      return {html: A2($Signal.map,config.view(address),model)
-             ,model: model
-             ,tasks: A2($Signal.map,function (_p5) {    return A2($Effects.toTask,messages.address,$Basics.snd(_p5));},effectsAndModel)};
-   };
-   var App = F3(function (a,b,c) {    return {html: a,model: b,tasks: c};});
-   var Config = F4(function (a,b,c,d) {    return {init: a,update: b,view: c,inputs: d};});
-   return _elm.StartApp.values = {_op: _op,start: start,Config: Config,App: App};
 };Elm.Date = Elm.Date || {};
 Elm.Date.Format = Elm.Date.Format || {};
 Elm.Date.Format.make = function (_elm) {
@@ -11463,14 +11425,14 @@ Elm.Forms.AnalysisForm.make = function (_elm) {
    $Task = Elm.Task.make(_elm);
    var _op = {};
    var fromDateToInteger = function (d) {    return function (_p0) {    return A2($Maybe.withDefault,d,$Result.toMaybe($String.toInt(_p0)));};};
-   var toDate = function (_p1) {    return A2($Result.withDefault,$Date.fromTime(0),$Date.fromString(_p1));};
+   var toDate = function (d) {    return function (_p1) {    return A2($Result.withDefault,d,$Date.fromString(_p1));};};
    var toInteger = function (d) {    return function (_p2) {    return A2($Maybe.withDefault,d,$Result.toMaybe($String.toInt(_p2)));};};
    var sendToPlotMailBox = $Signal.mailbox(_U.list([{ctor: "_Tuple2",_0: "",_1: 0}]));
    _op["=>"] = F2(function (v0,v1) {    return {ctor: "_Tuple2",_0: v0,_1: v1};});
    var csvRow = A2($Json$Decode.map,
    function (_p3) {
       var _p4 = _p3;
-      return {ctor: "_Tuple2",_0: toDate(_p4._0),_1: _p4._6};
+      return {ctor: "_Tuple2",_0: A2(toDate,$Date.fromTime(0),_p4._0),_1: _p4._6};
    },
    A8($Json$Decode.tuple7,
    F7(function (v0,v1,v2,v3,v4,v5,v6) {    return {ctor: "_Tuple7",_0: v0,_1: v1,_2: v2,_3: v3,_4: v4,_5: v5,_6: v6};}),
@@ -11493,33 +11455,46 @@ Elm.Forms.AnalysisForm.make = function (_elm) {
    var sendData = function (data) {
       return $Effects.task(A2($Task.andThen,A2($Signal.send,sendToPlotMailBox.address,data),function (_p5) {    return $Task.succeed(NoOp);}));
    };
-   var sendDataToPlot = F2(function (model,data) {
-      var ed = $Date.toTime(toDate(model.startDate.value));
-      var sd = $Date.toTime(toDate(model.startDate.value));
+   var sendDataToPlot = function (model) {
+      var ed = $Date.toTime(A2(toDate,$Date.fromTime(0),model.endDate.value));
+      var sd = $Date.toTime(A2(toDate,$Date.fromTime(0),model.startDate.value));
       var fInt = A2(toInteger,21,model.frequency.value);
-      return sendData(A2($List.map,function (_p6) {    var _p7 = _p6;return {ctor: "_Tuple2",_0: A2($Date$Format.format,"%Y-%m-%d",_p7._0),_1: _p7._1};},data));
-   });
+      return sendData(A2($List.map,
+      function (_p6) {
+         var _p7 = _p6;
+         return {ctor: "_Tuple2",_0: A2($Date$Format.format,"%Y-%m-%d",_p7._1),_1: _p7._2};
+      },
+      A2($List.filter,
+      function (_p8) {
+         var _p9 = _p8;
+         var _p10 = _p9._1;
+         return _U.cmp($Date.toTime(_p10),sd) > -1 && _U.cmp($Date.toTime(_p10),ed) < 1;
+      },
+      A2($List.filter,
+      function (_p11) {
+         var _p12 = _p11;
+         return _U.eq(A2($Basics._op["%"],_p12._0,fInt),0);
+      },
+      A2($List.indexedMap,F2(function (i,_p13) {    var _p14 = _p13;return {ctor: "_Tuple3",_0: i,_1: _p14._0,_2: _p14._1};}),model.newData)))));
+   };
    var NewData = function (a) {    return {ctor: "NewData",_0: a};};
    var getData = function (model) {    return $Effects.task(A2($Task.map,NewData,$Task.toMaybe(A2($Http.get,decodeData,quandlUrl(model)))));};
    var update = F2(function (action,model) {
-      var _p8 = action;
-      switch (_p8.ctor)
+      var _p15 = action;
+      switch (_p15.ctor)
       {case "UpdateSource": return {ctor: "_Tuple2"
-                                   ,_0: _U.update(model,{source: A2($Forms$Components$SelectInput.update,_p8._0,model.source)})
+                                   ,_0: _U.update(model,{source: A2($Forms$Components$SelectInput.update,_p15._0,model.source)})
                                    ,_1: $Effects.none};
-         case "UpdateFrequency": return {ctor: "_Tuple2"
-                                        ,_0: _U.update(model,{frequency: A2($Forms$Components$SelectInput.update,_p8._0,model.frequency)})
-                                        ,_1: A2(sendDataToPlot,model,model.newData)};
+         case "UpdateFrequency": var model$ = _U.update(model,{frequency: A2($Forms$Components$SelectInput.update,_p15._0,model.frequency)});
+           return {ctor: "_Tuple2",_0: model$,_1: sendDataToPlot(model$)};
          case "UpdateTicker": return {ctor: "_Tuple2"
-                                     ,_0: _U.update(model,{ticker: A2($Forms$Components$InputField.update,_p8._0,model.ticker)})
+                                     ,_0: _U.update(model,{ticker: A2($Forms$Components$InputField.update,_p15._0,model.ticker)})
                                      ,_1: $Effects.none};
-         case "UpdateYield": return {ctor: "_Tuple2",_0: _U.update(model,{$yield: A2($Forms$Components$Yield.update,_p8._0,model.$yield)}),_1: $Effects.none};
-         case "UpdateStartDate": return {ctor: "_Tuple2"
-                                        ,_0: _U.update(model,{startDate: A2($Forms$Components$InputField.update,_p8._0,model.startDate)})
-                                        ,_1: A2(sendDataToPlot,model,model.newData)};
-         case "UpdateEndDate": return {ctor: "_Tuple2"
-                                      ,_0: _U.update(model,{endDate: A2($Forms$Components$InputField.update,_p8._0,model.endDate)})
-                                      ,_1: A2(sendDataToPlot,model,model.newData)};
+         case "UpdateYield": return {ctor: "_Tuple2",_0: _U.update(model,{$yield: A2($Forms$Components$Yield.update,_p15._0,model.$yield)}),_1: $Effects.none};
+         case "UpdateStartDate": var model$ = _U.update(model,{startDate: A2($Forms$Components$InputField.update,_p15._0,model.startDate)});
+           return {ctor: "_Tuple2",_0: model$,_1: sendDataToPlot(model$)};
+         case "UpdateEndDate": var model$ = _U.update(model,{endDate: A2($Forms$Components$InputField.update,_p15._0,model.endDate)});
+           return {ctor: "_Tuple2",_0: model$,_1: sendDataToPlot(model$)};
          case "Request": return {ctor: "_Tuple2"
                                 ,_0: _U.update(model,
                                 {frequency: A2($Forms$Components$SelectInput.update,$Forms$Components$SelectInput.Enable,model.frequency)
@@ -11527,17 +11502,16 @@ Elm.Forms.AnalysisForm.make = function (_elm) {
                                 ,endDate: A2($Forms$Components$InputField.update,$Forms$Components$InputField.Enable,model.endDate)})
                                 ,_1: getData(model)};
          case "NoOp": return {ctor: "_Tuple2",_0: model,_1: $Effects.none};
-         default: var data = A2($Maybe.withDefault,model.newData,_p8._0);
-           var onlyDates = A2($List.map,function (_p9) {    var _p10 = _p9;return _p10._0;},data);
-           var maybeToDate = function (_p11) {    return A2($Date$Format.format,"%Y-%m-%d",A2($Maybe.withDefault,$Date.fromTime(0),_p11));};
-           var newStartDate = maybeToDate($List.head(onlyDates));
-           var newEndDate = maybeToDate($List.head($List.reverse(onlyDates)));
-           return {ctor: "_Tuple2"
-                  ,_0: _U.update(model,
-                  {newData: data
-                  ,startDate: A2($Forms$Components$InputField.update,$Forms$Components$InputField.Update(newEndDate),model.startDate)
-                  ,endDate: A2($Forms$Components$InputField.update,$Forms$Components$InputField.Update(newStartDate),model.endDate)})
-                  ,_1: A2(sendDataToPlot,model,data)};}
+         default: var data = A2($Maybe.withDefault,model.newData,_p15._0);
+           var onlyDates = A2($List.map,function (_p16) {    var _p17 = _p16;return _p17._0;},data);
+           var maybeToDate = function (_p18) {    return A2($Date$Format.format,"%Y-%m-%d",A2($Maybe.withDefault,$Date.fromTime(0),_p18));};
+           var newEndDate = maybeToDate($List.head(onlyDates));
+           var newStartDate = maybeToDate($List.head($List.reverse(onlyDates)));
+           var model$ = _U.update(model,
+           {newData: data
+           ,startDate: A2($Forms$Components$InputField.update,$Forms$Components$InputField.Update(newStartDate),model.startDate)
+           ,endDate: A2($Forms$Components$InputField.update,$Forms$Components$InputField.Update(newEndDate),model.endDate)});
+           return {ctor: "_Tuple2",_0: model$,_1: sendDataToPlot(model$)};}
    });
    var Request = {ctor: "Request"};
    var UpdateEndDate = function (a) {    return {ctor: "UpdateEndDate",_0: a};};
@@ -11614,392 +11588,4 @@ Elm.Forms.AnalysisForm.make = function (_elm) {
                                            ,toInteger: toInteger
                                            ,toDate: toDate
                                            ,fromDateToInteger: fromDateToInteger};
-};Elm.Forms = Elm.Forms || {};
-Elm.Forms.LoginForm = Elm.Forms.LoginForm || {};
-Elm.Forms.LoginForm.make = function (_elm) {
-   "use strict";
-   _elm.Forms = _elm.Forms || {};
-   _elm.Forms.LoginForm = _elm.Forms.LoginForm || {};
-   if (_elm.Forms.LoginForm.values) return _elm.Forms.LoginForm.values;
-   var _U = Elm.Native.Utils.make(_elm),
-   $Basics = Elm.Basics.make(_elm),
-   $Debug = Elm.Debug.make(_elm),
-   $Effects = Elm.Effects.make(_elm),
-   $Forms$Components$InputField = Elm.Forms.Components.InputField.make(_elm),
-   $Html = Elm.Html.make(_elm),
-   $Html$Attributes = Elm.Html.Attributes.make(_elm),
-   $Html$Events = Elm.Html.Events.make(_elm),
-   $List = Elm.List.make(_elm),
-   $Maybe = Elm.Maybe.make(_elm),
-   $Result = Elm.Result.make(_elm),
-   $Signal = Elm.Signal.make(_elm),
-   $Task = Elm.Task.make(_elm);
-   var _op = {};
-   var LoginRequest = F2(function (a,b) {    return {username: a,password: b};});
-   var loginRequestMailBox = $Signal.mailbox(A2(LoginRequest,"",""));
-   var ResponseMessage = F2(function (a,b) {    return {response: a,token: b};});
-   var NoOp = {ctor: "NoOp"};
-   var sendData = function (data) {
-      return $Effects.task(A2($Task.andThen,A2($Signal.send,loginRequestMailBox.address,data),function (_p0) {    return $Task.succeed(NoOp);}));
-   };
-   var update = F2(function (action,model) {
-      var _p1 = action;
-      switch (_p1.ctor)
-      {case "UpdateUsername": return {ctor: "_Tuple2"
-                                     ,_0: _U.update(model,{username: A2($Forms$Components$InputField.update,_p1._0,model.username)})
-                                     ,_1: $Effects.none};
-         case "UpdatePassword": return {ctor: "_Tuple2"
-                                       ,_0: _U.update(model,{password: A2($Forms$Components$InputField.update,_p1._0,model.password)})
-                                       ,_1: $Effects.none};
-         case "NoOp": return {ctor: "_Tuple2",_0: model,_1: $Effects.none};
-         case "Request": return {ctor: "_Tuple2",_0: model,_1: sendData({username: model.username.value,password: model.password.value})};
-         default: var _p2 = _p1._0;
-           return {ctor: "_Tuple2"
-                  ,_0: _U.update(model,
-                  {password: A2($Forms$Components$InputField.update,$Forms$Components$InputField.Reset,model.password),response: _p2.response,token: _p2.token})
-                  ,_1: $Effects.none};}
-   });
-   var Response = function (a) {    return {ctor: "Response",_0: a};};
-   var Request = {ctor: "Request"};
-   var UpdatePassword = function (a) {    return {ctor: "UpdatePassword",_0: a};};
-   var UpdateUsername = function (a) {    return {ctor: "UpdateUsername",_0: a};};
-   var view = F2(function (address,model) {
-      return A2($Html.div,
-      _U.list([]),
-      _U.list([A2($Forms$Components$InputField.view,A2($Signal.forwardTo,address,UpdateUsername),model.username)
-              ,A2($Forms$Components$InputField.view,A2($Signal.forwardTo,address,UpdatePassword),model.password)
-              ,A2($Html.a,_U.list([$Html$Attributes.href("#"),A2($Html$Events.onClick,address,Request)]),_U.list([$Html.text("Login")]))
-              ,$Html.text(model.response)]));
-   });
-   var init = F2(function (username,password) {
-      return {ctor: "_Tuple2"
-             ,_0: {username: A4($Forms$Components$InputField.init,username,"Username","text",false)
-                  ,password: A4($Forms$Components$InputField.init,password,"Password","password",false)
-                  ,response: ""
-                  ,token: ""}
-             ,_1: $Effects.none};
-   });
-   var Model = F4(function (a,b,c,d) {    return {username: a,password: b,response: c,token: d};});
-   return _elm.Forms.LoginForm.values = {_op: _op
-                                        ,Model: Model
-                                        ,init: init
-                                        ,UpdateUsername: UpdateUsername
-                                        ,UpdatePassword: UpdatePassword
-                                        ,Request: Request
-                                        ,Response: Response
-                                        ,NoOp: NoOp
-                                        ,ResponseMessage: ResponseMessage
-                                        ,update: update
-                                        ,view: view
-                                        ,LoginRequest: LoginRequest
-                                        ,sendData: sendData
-                                        ,loginRequestMailBox: loginRequestMailBox};
-};Elm.Forms = Elm.Forms || {};
-Elm.Forms.RegisterForm = Elm.Forms.RegisterForm || {};
-Elm.Forms.RegisterForm.make = function (_elm) {
-   "use strict";
-   _elm.Forms = _elm.Forms || {};
-   _elm.Forms.RegisterForm = _elm.Forms.RegisterForm || {};
-   if (_elm.Forms.RegisterForm.values) return _elm.Forms.RegisterForm.values;
-   var _U = Elm.Native.Utils.make(_elm),
-   $Basics = Elm.Basics.make(_elm),
-   $Debug = Elm.Debug.make(_elm),
-   $Effects = Elm.Effects.make(_elm),
-   $Forms$Components$InputField = Elm.Forms.Components.InputField.make(_elm),
-   $Html = Elm.Html.make(_elm),
-   $Html$Attributes = Elm.Html.Attributes.make(_elm),
-   $Html$Events = Elm.Html.Events.make(_elm),
-   $List = Elm.List.make(_elm),
-   $Maybe = Elm.Maybe.make(_elm),
-   $Result = Elm.Result.make(_elm),
-   $Signal = Elm.Signal.make(_elm),
-   $Task = Elm.Task.make(_elm);
-   var _op = {};
-   var RegisterRequest = F3(function (a,b,c) {    return {username: a,fullname: b,password: c};});
-   var registerRequestMailBox = $Signal.mailbox(A3(RegisterRequest,"","",""));
-   var ResponseMessage = F2(function (a,b) {    return {response: a,token: b};});
-   var NoOp = {ctor: "NoOp"};
-   var sendData = function (data) {
-      return $Effects.task(A2($Task.andThen,A2($Signal.send,registerRequestMailBox.address,data),function (_p0) {    return $Task.succeed(NoOp);}));
-   };
-   var update = F2(function (action,model) {
-      var _p1 = action;
-      switch (_p1.ctor)
-      {case "UpdateFullname": return {ctor: "_Tuple2"
-                                     ,_0: _U.update(model,{fullname: A2($Forms$Components$InputField.update,_p1._0,model.fullname)})
-                                     ,_1: $Effects.none};
-         case "UpdateUsername": return {ctor: "_Tuple2"
-                                       ,_0: _U.update(model,{username: A2($Forms$Components$InputField.update,_p1._0,model.username)})
-                                       ,_1: $Effects.none};
-         case "UpdatePassword": return {ctor: "_Tuple2"
-                                       ,_0: _U.update(model,{password: A2($Forms$Components$InputField.update,_p1._0,model.password)})
-                                       ,_1: $Effects.none};
-         case "NoOp": return {ctor: "_Tuple2",_0: model,_1: $Effects.none};
-         case "Request": return {ctor: "_Tuple2",_0: model,_1: sendData(A3(RegisterRequest,model.username.value,model.fullname.value,model.password.value))};
-         default: var _p2 = _p1._0;
-           return {ctor: "_Tuple2"
-                  ,_0: _U.update(model,
-                  {password: A2($Forms$Components$InputField.update,$Forms$Components$InputField.Reset,model.password),response: _p2.response,token: _p2.token})
-                  ,_1: $Effects.none};}
-   });
-   var Response = function (a) {    return {ctor: "Response",_0: a};};
-   var Request = {ctor: "Request"};
-   var UpdatePassword = function (a) {    return {ctor: "UpdatePassword",_0: a};};
-   var UpdateFullname = function (a) {    return {ctor: "UpdateFullname",_0: a};};
-   var UpdateUsername = function (a) {    return {ctor: "UpdateUsername",_0: a};};
-   var view = F2(function (address,model) {
-      return A2($Html.div,
-      _U.list([]),
-      _U.list([A2($Forms$Components$InputField.view,A2($Signal.forwardTo,address,UpdateFullname),model.fullname)
-              ,A2($Forms$Components$InputField.view,A2($Signal.forwardTo,address,UpdateUsername),model.username)
-              ,A2($Forms$Components$InputField.view,A2($Signal.forwardTo,address,UpdatePassword),model.password)
-              ,A2($Html.a,_U.list([$Html$Attributes.href("#"),A2($Html$Events.onClick,address,Request)]),_U.list([$Html.text("Register")]))
-              ,$Html.text(model.response)]));
-   });
-   var init = F3(function (username,password,fullname) {
-      return {ctor: "_Tuple2"
-             ,_0: {username: A4($Forms$Components$InputField.init,username,"Username","text",false)
-                  ,fullname: A4($Forms$Components$InputField.init,fullname,"Full Name","text",false)
-                  ,password: A4($Forms$Components$InputField.init,password,"Password","password",false)
-                  ,response: ""
-                  ,token: ""}
-             ,_1: $Effects.none};
-   });
-   var Model = F5(function (a,b,c,d,e) {    return {username: a,fullname: b,password: c,response: d,token: e};});
-   return _elm.Forms.RegisterForm.values = {_op: _op
-                                           ,Model: Model
-                                           ,init: init
-                                           ,UpdateUsername: UpdateUsername
-                                           ,UpdateFullname: UpdateFullname
-                                           ,UpdatePassword: UpdatePassword
-                                           ,Request: Request
-                                           ,Response: Response
-                                           ,NoOp: NoOp
-                                           ,ResponseMessage: ResponseMessage
-                                           ,update: update
-                                           ,view: view
-                                           ,RegisterRequest: RegisterRequest
-                                           ,sendData: sendData
-                                           ,registerRequestMailBox: registerRequestMailBox};
-};Elm.LocationLinks = Elm.LocationLinks || {};
-Elm.LocationLinks.make = function (_elm) {
-   "use strict";
-   _elm.LocationLinks = _elm.LocationLinks || {};
-   if (_elm.LocationLinks.values) return _elm.LocationLinks.values;
-   var _U = Elm.Native.Utils.make(_elm),
-   $Basics = Elm.Basics.make(_elm),
-   $Debug = Elm.Debug.make(_elm),
-   $Html = Elm.Html.make(_elm),
-   $Html$Attributes = Elm.Html.Attributes.make(_elm),
-   $Html$Events = Elm.Html.Events.make(_elm),
-   $List = Elm.List.make(_elm),
-   $Maybe = Elm.Maybe.make(_elm),
-   $Result = Elm.Result.make(_elm),
-   $Signal = Elm.Signal.make(_elm);
-   var _op = {};
-   var update = function (action) {
-      var _p0 = action;
-      switch (_p0.ctor)
-      {case "Analysis": return "analysis";
-         case "Login": return "login";
-         case "Register": return "register";
-         default: return "logout";}
-   };
-   var Logout = {ctor: "Logout"};
-   var Register = {ctor: "Register"};
-   var Login = {ctor: "Login"};
-   var view = F2(function (address,model) {
-      var _p1 = model;
-      switch (_p1)
-      {case "register": return A2($Html.div,
-           _U.list([]),
-           _U.list([A2($Html.a,_U.list([$Html$Attributes.href("#"),A2($Html$Events.onClick,address,Login)]),_U.list([$Html.text("Login")]))
-                   ,A2($Html.hr,_U.list([]),_U.list([]))]));
-         case "login": return A2($Html.div,
-           _U.list([]),
-           _U.list([A2($Html.a,_U.list([$Html$Attributes.href("#"),A2($Html$Events.onClick,address,Register)]),_U.list([$Html.text("Register")]))
-                   ,A2($Html.hr,_U.list([]),_U.list([]))]));
-         case "analysis": return A2($Html.div,
-           _U.list([]),
-           _U.list([A2($Html.a,_U.list([$Html$Attributes.href("#"),A2($Html$Events.onClick,address,Logout)]),_U.list([$Html.text("Logout")]))
-                   ,A2($Html.hr,_U.list([]),_U.list([]))]));
-         default: return A2($Html.div,
-           _U.list([]),
-           _U.list([A2($Html.a,_U.list([$Html$Attributes.href("#"),A2($Html$Events.onClick,address,Register)]),_U.list([$Html.text("Register")]))
-                   ,$Html.text(" | ")
-                   ,A2($Html.a,_U.list([$Html$Attributes.href("#"),A2($Html$Events.onClick,address,Login)]),_U.list([$Html.text("Login")]))
-                   ,A2($Html.hr,_U.list([]),_U.list([]))]));}
-   });
-   var Analysis = {ctor: "Analysis"};
-   var init = function (location) {    return location;};
-   return _elm.LocationLinks.values = {_op: _op,init: init,Analysis: Analysis,Login: Login,Register: Register,Logout: Logout,update: update,view: view};
-};Elm.Router = Elm.Router || {};
-Elm.Router.make = function (_elm) {
-   "use strict";
-   _elm.Router = _elm.Router || {};
-   if (_elm.Router.values) return _elm.Router.values;
-   var _U = Elm.Native.Utils.make(_elm),
-   $Basics = Elm.Basics.make(_elm),
-   $Debug = Elm.Debug.make(_elm),
-   $Effects = Elm.Effects.make(_elm),
-   $Forms$AnalysisForm = Elm.Forms.AnalysisForm.make(_elm),
-   $Forms$LoginForm = Elm.Forms.LoginForm.make(_elm),
-   $Forms$RegisterForm = Elm.Forms.RegisterForm.make(_elm),
-   $Html = Elm.Html.make(_elm),
-   $List = Elm.List.make(_elm),
-   $LocationLinks = Elm.LocationLinks.make(_elm),
-   $Maybe = Elm.Maybe.make(_elm),
-   $Result = Elm.Result.make(_elm),
-   $Signal = Elm.Signal.make(_elm);
-   var _op = {};
-   var forwardOnLogin = F2(function (response,currentLocation) {
-      var _p0 = response;
-      if (_p0 === "OK") {
-            return $LocationLinks.update($LocationLinks.Analysis);
-         } else {
-            return currentLocation;
-         }
-   });
-   var ChangeLocation = function (a) {    return {ctor: "ChangeLocation",_0: a};};
-   var Register = function (a) {    return {ctor: "Register",_0: a};};
-   var Analysis = function (a) {    return {ctor: "Analysis",_0: a};};
-   var Login = function (a) {    return {ctor: "Login",_0: a};};
-   var view = F2(function (address,model) {
-      var _p1 = model.location;
-      switch (_p1)
-      {case "analysis": return A2($Html.div,
-           _U.list([]),
-           _U.list([A2($LocationLinks.view,A2($Signal.forwardTo,address,ChangeLocation),model.location)
-                   ,A2($Forms$AnalysisForm.view,A2($Signal.forwardTo,address,Analysis),model.data)]));
-         case "register": return A2($Html.div,
-           _U.list([]),
-           _U.list([A2($LocationLinks.view,A2($Signal.forwardTo,address,ChangeLocation),model.location)
-                   ,A2($Forms$RegisterForm.view,A2($Signal.forwardTo,address,Register),model.userRegister)]));
-         case "login": return A2($Html.div,
-           _U.list([]),
-           _U.list([A2($LocationLinks.view,A2($Signal.forwardTo,address,ChangeLocation),model.location)
-                   ,A2($Forms$LoginForm.view,A2($Signal.forwardTo,address,Login),model.userLogin)]));
-         default: return A2($Html.div,_U.list([]),_U.list([A2($LocationLinks.view,A2($Signal.forwardTo,address,ChangeLocation),model.location)]));}
-   });
-   var Model = F4(function (a,b,c,d) {    return {data: a,userLogin: b,userRegister: c,location: d};});
-   var init = function () {
-      var locationLinks = $LocationLinks.init("");
-      var _p2 = A3($Forms$RegisterForm.init,"","","");
-      var register = _p2._0;
-      var registerFx = _p2._1;
-      var _p3 = A2($Forms$LoginForm.init,"","");
-      var login = _p3._0;
-      var loginFx = _p3._1;
-      var _p4 = $Forms$AnalysisForm.init;
-      var analysis = _p4._0;
-      var analysisFx = _p4._1;
-      return {ctor: "_Tuple2"
-             ,_0: A4(Model,analysis,login,register,locationLinks)
-             ,_1: $Effects.batch(_U.list([A2($Effects.map,Login,loginFx),A2($Effects.map,Analysis,analysisFx),A2($Effects.map,Register,registerFx)]))};
-   }();
-   var update = F2(function (action,model) {
-      var _p5 = action;
-      switch (_p5.ctor)
-      {case "Analysis": var _p6 = A2($Forms$AnalysisForm.update,_p5._0,model.data);
-           var newData = _p6._0;
-           var fx = _p6._1;
-           return {ctor: "_Tuple2",_0: _U.update(model,{data: newData}),_1: A2($Effects.map,Analysis,fx)};
-         case "Register": var _p7 = A2($Forms$RegisterForm.update,_p5._0,model.userRegister);
-           var newUser = _p7._0;
-           var fx = _p7._1;
-           return {ctor: "_Tuple2"
-                  ,_0: _U.update(model,
-                  {userRegister: newUser
-                  ,location: function () {
-                     var _p8 = newUser.response;
-                     if (_p8 === "OK") {
-                           return $LocationLinks.update($LocationLinks.Analysis);
-                        } else {
-                           return model.location;
-                        }
-                  }()})
-                  ,_1: A2($Effects.map,Register,fx)};
-         case "Login": var _p9 = A2($Forms$LoginForm.update,_p5._0,model.userLogin);
-           var newUser = _p9._0;
-           var fx = _p9._1;
-           return {ctor: "_Tuple2"
-                  ,_0: _U.update(model,{userLogin: newUser,location: A2(forwardOnLogin,newUser.response,model.location)})
-                  ,_1: A2($Effects.map,Login,fx)};
-         default: var newLocation = $LocationLinks.update(_p5._0);
-           var _p10 = newLocation;
-           if (_p10 === "logout") {
-                 return init;
-              } else {
-                 return {ctor: "_Tuple2",_0: _U.update(model,{location: newLocation}),_1: $Effects.none};
-              }}
-   });
-   return _elm.Router.values = {_op: _op
-                               ,Model: Model
-                               ,init: init
-                               ,Login: Login
-                               ,Analysis: Analysis
-                               ,Register: Register
-                               ,ChangeLocation: ChangeLocation
-                               ,update: update
-                               ,forwardOnLogin: forwardOnLogin
-                               ,view: view};
-};Elm.Main = Elm.Main || {};
-Elm.Main.make = function (_elm) {
-   "use strict";
-   _elm.Main = _elm.Main || {};
-   if (_elm.Main.values) return _elm.Main.values;
-   var _U = Elm.Native.Utils.make(_elm),
-   $Basics = Elm.Basics.make(_elm),
-   $Debug = Elm.Debug.make(_elm),
-   $Effects = Elm.Effects.make(_elm),
-   $Forms$AnalysisForm = Elm.Forms.AnalysisForm.make(_elm),
-   $Forms$LoginForm = Elm.Forms.LoginForm.make(_elm),
-   $Forms$RegisterForm = Elm.Forms.RegisterForm.make(_elm),
-   $List = Elm.List.make(_elm),
-   $Maybe = Elm.Maybe.make(_elm),
-   $Result = Elm.Result.make(_elm),
-   $Router = Elm.Router.make(_elm),
-   $Signal = Elm.Signal.make(_elm),
-   $StartApp = Elm.StartApp.make(_elm),
-   $Task = Elm.Task.make(_elm);
-   var _op = {};
-   var sendToScatterPlot = Elm.Native.Port.make(_elm).outboundSignal("sendToScatterPlot",
-   function (v) {
-      return Elm.Native.List.make(_elm).toArray(v).map(function (v) {    return [v._0,v._1];});
-   },
-   $Forms$AnalysisForm.sendToPlotMailBox.signal);
-   var registerResponse = Elm.Native.Port.make(_elm).inboundSignal("registerResponse",
-   "Forms.RegisterForm.ResponseMessage",
-   function (v) {
-      return typeof v === "object" && "response" in v && "token" in v ? {_: {}
-                                                                        ,response: typeof v.response === "string" || typeof v.response === "object" && v.response instanceof String ? v.response : _U.badPort("a string",
-                                                                        v.response)
-                                                                        ,token: typeof v.token === "string" || typeof v.token === "object" && v.token instanceof String ? v.token : _U.badPort("a string",
-                                                                        v.token)} : _U.badPort("an object with fields `response`, `token`",v);
-   });
-   var incomingRegisterActions = A2($Signal.map,$Router.Register,A2($Signal.map,$Forms$RegisterForm.Response,registerResponse));
-   var registerRequest = Elm.Native.Port.make(_elm).outboundSignal("registerRequest",
-   function (v) {
-      return {username: v.username,fullname: v.fullname,password: v.password};
-   },
-   $Forms$RegisterForm.registerRequestMailBox.signal);
-   var loginResponse = Elm.Native.Port.make(_elm).inboundSignal("loginResponse",
-   "Forms.LoginForm.ResponseMessage",
-   function (v) {
-      return typeof v === "object" && "response" in v && "token" in v ? {_: {}
-                                                                        ,response: typeof v.response === "string" || typeof v.response === "object" && v.response instanceof String ? v.response : _U.badPort("a string",
-                                                                        v.response)
-                                                                        ,token: typeof v.token === "string" || typeof v.token === "object" && v.token instanceof String ? v.token : _U.badPort("a string",
-                                                                        v.token)} : _U.badPort("an object with fields `response`, `token`",v);
-   });
-   var incomingLoginActions = A2($Signal.map,$Router.Login,A2($Signal.map,$Forms$LoginForm.Response,loginResponse));
-   var loginRequest = Elm.Native.Port.make(_elm).outboundSignal("loginRequest",
-   function (v) {
-      return {username: v.username,password: v.password};
-   },
-   $Forms$LoginForm.loginRequestMailBox.signal);
-   var app = $StartApp.start({init: $Router.init,update: $Router.update,view: $Router.view,inputs: _U.list([incomingLoginActions,incomingRegisterActions])});
-   var main = app.html;
-   var tasks = Elm.Native.Task.make(_elm).performSignal("tasks",app.tasks);
-   return _elm.Main.values = {_op: _op,app: app,main: main,incomingLoginActions: incomingLoginActions,incomingRegisterActions: incomingRegisterActions};
-};</script></head><body><script type="text/javascript">Elm.fullscreen(Elm.Main)</script></body></html>
+};</script></head><body><script type="text/javascript">Elm.fullscreen(Elm.Forms.AnalysisForm)</script></body></html>
