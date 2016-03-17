@@ -11517,14 +11517,14 @@ Elm.Forms.AnalysisForm.make = function (_elm) {
    $Task = Elm.Task.make(_elm);
    var _op = {};
    var fromDateToInteger = function (d) {    return function (_p0) {    return A2($Maybe.withDefault,d,$Result.toMaybe($String.toInt(_p0)));};};
-   var toDate = function (_p1) {    return A2($Result.withDefault,$Date.fromTime(0),$Date.fromString(_p1));};
+   var toDate = function (d) {    return function (_p1) {    return A2($Result.withDefault,d,$Date.fromString(_p1));};};
    var toInteger = function (d) {    return function (_p2) {    return A2($Maybe.withDefault,d,$Result.toMaybe($String.toInt(_p2)));};};
    var sendToPlotMailBox = $Signal.mailbox(_U.list([{ctor: "_Tuple2",_0: "",_1: 0}]));
    _op["=>"] = F2(function (v0,v1) {    return {ctor: "_Tuple2",_0: v0,_1: v1};});
    var csvRow = A2($Json$Decode.map,
    function (_p3) {
       var _p4 = _p3;
-      return {ctor: "_Tuple2",_0: toDate(_p4._0),_1: _p4._6};
+      return {ctor: "_Tuple2",_0: A2(toDate,$Date.fromTime(0),_p4._0),_1: _p4._6};
    },
    A8($Json$Decode.tuple7,
    F7(function (v0,v1,v2,v3,v4,v5,v6) {    return {ctor: "_Tuple7",_0: v0,_1: v1,_2: v2,_3: v3,_4: v4,_5: v5,_6: v6};}),
@@ -11548,8 +11548,8 @@ Elm.Forms.AnalysisForm.make = function (_elm) {
       return $Effects.task(A2($Task.andThen,A2($Signal.send,sendToPlotMailBox.address,data),function (_p5) {    return $Task.succeed(NoOp);}));
    };
    var sendDataToPlot = function (model) {
-      var ed = $Date.toTime(toDate(model.endDate.value));
-      var sd = $Date.toTime(toDate(model.startDate.value));
+      var ed = $Date.toTime(A2(toDate,$Date.fromTime(0),model.endDate.value));
+      var sd = $Date.toTime(A2(toDate,$Date.fromTime(0),model.startDate.value));
       var fInt = A2(toInteger,21,model.frequency.value);
       return sendData(A2($List.map,
       function (_p6) {
@@ -11631,10 +11631,8 @@ Elm.Forms.AnalysisForm.make = function (_elm) {
               _U.list([]),
               _U.list([$Html.text("Start Date")
                       ,A2($Forms$Components$InputField.view,A2($Signal.forwardTo,address,UpdateStartDate),model.startDate)
-                      ,$Html.text(model.startDate.value)
                       ,$Html.text("End Date")
-                      ,A2($Forms$Components$InputField.view,A2($Signal.forwardTo,address,UpdateEndDate),model.endDate)
-                      ,$Html.text(model.endDate.value)]))]));
+                      ,A2($Forms$Components$InputField.view,A2($Signal.forwardTo,address,UpdateEndDate),model.endDate)]))]));
    });
    var Model = F7(function (a,b,c,d,e,f,g) {    return {source: a,ticker: b,$yield: c,newData: d,frequency: e,startDate: f,endDate: g};});
    var defaultRow = A2(F2(function (v0,v1) {    return {ctor: "_Tuple2",_0: v0,_1: v1};}),$Date.fromTime(0),0);

@@ -147,6 +147,10 @@ update action model =
         )
 
 
+--on change send data to plot
+--send data to server
+--every model has a creation id / timestamp
+
 
 
 --********************************************************************************
@@ -243,6 +247,8 @@ sendData : List (String, Float) -> Effects Action
 sendData data =
   Signal.send sendToPlotMailBox.address data
     --add error condition
+    --remove no op
+    --and flag errors
     `Task.andThen` (\_ -> Task.succeed NoOp)
   |> Effects.task
 
