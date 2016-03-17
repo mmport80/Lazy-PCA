@@ -16,8 +16,6 @@ import Task exposing (toMaybe, andThen)
 import Effects exposing (Effects)
 import Signal exposing (Address)
 
-import Time exposing (every, millisecond)
-
 import List
 
 --********************************************************************************
@@ -166,14 +164,3 @@ view address model =
 --********************************************************************************
 --********************************************************************************
 -- EFFECTS
-
-
-
-
-
-
---********************************************************************************
---********************************************************************************
--- UTILS
-currentTime : Signal Time.Time
-currentTime = Time.every Time.millisecond

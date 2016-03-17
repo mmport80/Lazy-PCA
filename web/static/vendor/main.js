@@ -11514,17 +11514,19 @@ Elm.Forms.AnalysisForm.make = function (_elm) {
    $Result = Elm.Result.make(_elm),
    $Signal = Elm.Signal.make(_elm),
    $String = Elm.String.make(_elm),
-   $Task = Elm.Task.make(_elm);
+   $Task = Elm.Task.make(_elm),
+   $Time = Elm.Time.make(_elm);
    var _op = {};
-   var fromDateToInteger = function (d) {    return function (_p0) {    return A2($Maybe.withDefault,d,$Result.toMaybe($String.toInt(_p0)));};};
-   var toDate = function (d) {    return function (_p1) {    return A2($Result.withDefault,d,$Date.fromString(_p1));};};
-   var toInteger = function (d) {    return function (_p2) {    return A2($Maybe.withDefault,d,$Result.toMaybe($String.toInt(_p2)));};};
+   var now = A2($Signal.map,function (_p0) {    var _p1 = _p0;return _p1._0;},$Time.timestamp($Signal.constant(1)));
+   var fromDateToInteger = function (d) {    return function (_p2) {    return A2($Maybe.withDefault,d,$Result.toMaybe($String.toInt(_p2)));};};
+   var toDate = function (d) {    return function (_p3) {    return A2($Result.withDefault,d,$Date.fromString(_p3));};};
+   var toInteger = function (d) {    return function (_p4) {    return A2($Maybe.withDefault,d,$Result.toMaybe($String.toInt(_p4)));};};
    var sendToPlotMailBox = $Signal.mailbox(_U.list([{ctor: "_Tuple2",_0: "",_1: 0}]));
    _op["=>"] = F2(function (v0,v1) {    return {ctor: "_Tuple2",_0: v0,_1: v1};});
    var csvRow = A2($Json$Decode.map,
-   function (_p3) {
-      var _p4 = _p3;
-      return {ctor: "_Tuple2",_0: A2(toDate,$Date.fromTime(0),_p4._0),_1: _p4._6};
+   function (_p5) {
+      var _p6 = _p5;
+      return {ctor: "_Tuple2",_0: A2(toDate,$Date.fromTime(0),_p6._0),_1: _p6._6};
    },
    A8($Json$Decode.tuple7,
    F7(function (v0,v1,v2,v3,v4,v5,v6) {    return {ctor: "_Tuple7",_0: v0,_1: v1,_2: v2,_3: v3,_4: v4,_5: v5,_6: v6};}),
@@ -11545,47 +11547,47 @@ Elm.Forms.AnalysisForm.make = function (_elm) {
    };
    var NoOp = {ctor: "NoOp"};
    var sendData = function (data) {
-      return $Effects.task(A2($Task.andThen,A2($Signal.send,sendToPlotMailBox.address,data),function (_p5) {    return $Task.succeed(NoOp);}));
+      return $Effects.task(A2($Task.andThen,A2($Signal.send,sendToPlotMailBox.address,data),function (_p7) {    return $Task.succeed(NoOp);}));
    };
    var sendDataToPlot = function (model) {
       var ed = $Date.toTime(A2(toDate,$Date.fromTime(0),model.endDate.value));
       var sd = $Date.toTime(A2(toDate,$Date.fromTime(0),model.startDate.value));
       var fInt = A2(toInteger,21,model.frequency.value);
       return sendData(A2($List.map,
-      function (_p6) {
-         var _p7 = _p6;
-         return {ctor: "_Tuple2",_0: A2($Date$Format.format,"%Y-%m-%d",_p7._1),_1: _p7._2};
-      },
-      A2($List.filter,
       function (_p8) {
          var _p9 = _p8;
-         var _p10 = _p9._1;
-         return _U.cmp($Date.toTime(_p10),sd) > -1 && _U.cmp($Date.toTime(_p10),ed) < 1;
+         return {ctor: "_Tuple2",_0: A2($Date$Format.format,"%Y-%m-%d",_p9._1),_1: _p9._2};
       },
       A2($List.filter,
-      function (_p11) {
-         var _p12 = _p11;
-         return _U.eq(A2($Basics._op["%"],_p12._0,fInt),0);
+      function (_p10) {
+         var _p11 = _p10;
+         var _p12 = _p11._1;
+         return _U.cmp($Date.toTime(_p12),sd) > -1 && _U.cmp($Date.toTime(_p12),ed) < 1;
       },
-      A2($List.indexedMap,F2(function (i,_p13) {    var _p14 = _p13;return {ctor: "_Tuple3",_0: i,_1: _p14._0,_2: _p14._1};}),model.newData)))));
+      A2($List.filter,
+      function (_p13) {
+         var _p14 = _p13;
+         return _U.eq(A2($Basics._op["%"],_p14._0,fInt),0);
+      },
+      A2($List.indexedMap,F2(function (i,_p15) {    var _p16 = _p15;return {ctor: "_Tuple3",_0: i,_1: _p16._0,_2: _p16._1};}),model.newData)))));
    };
    var NewData = function (a) {    return {ctor: "NewData",_0: a};};
    var getData = function (model) {    return $Effects.task(A2($Task.map,NewData,$Task.toMaybe(A2($Http.get,decodeData,quandlUrl(model)))));};
    var update = F2(function (action,model) {
-      var _p15 = action;
-      switch (_p15.ctor)
+      var _p17 = action;
+      switch (_p17.ctor)
       {case "UpdateSource": return {ctor: "_Tuple2"
-                                   ,_0: _U.update(model,{source: A2($Forms$Components$SelectInput.update,_p15._0,model.source)})
+                                   ,_0: _U.update(model,{source: A2($Forms$Components$SelectInput.update,_p17._0,model.source)})
                                    ,_1: $Effects.none};
-         case "UpdateFrequency": var model$ = _U.update(model,{frequency: A2($Forms$Components$SelectInput.update,_p15._0,model.frequency)});
+         case "UpdateFrequency": var model$ = _U.update(model,{frequency: A2($Forms$Components$SelectInput.update,_p17._0,model.frequency)});
            return {ctor: "_Tuple2",_0: model$,_1: sendDataToPlot(model$)};
          case "UpdateTicker": return {ctor: "_Tuple2"
-                                     ,_0: _U.update(model,{ticker: A2($Forms$Components$InputField.update,_p15._0,model.ticker)})
+                                     ,_0: _U.update(model,{ticker: A2($Forms$Components$InputField.update,_p17._0,model.ticker)})
                                      ,_1: $Effects.none};
-         case "UpdateYield": return {ctor: "_Tuple2",_0: _U.update(model,{$yield: A2($Forms$Components$Yield.update,_p15._0,model.$yield)}),_1: $Effects.none};
-         case "UpdateStartDate": var model$ = _U.update(model,{startDate: A2($Forms$Components$InputField.update,_p15._0,model.startDate)});
+         case "UpdateYield": return {ctor: "_Tuple2",_0: _U.update(model,{$yield: A2($Forms$Components$Yield.update,_p17._0,model.$yield)}),_1: $Effects.none};
+         case "UpdateStartDate": var model$ = _U.update(model,{startDate: A2($Forms$Components$InputField.update,_p17._0,model.startDate)});
            return {ctor: "_Tuple2",_0: model$,_1: sendDataToPlot(model$)};
-         case "UpdateEndDate": var model$ = _U.update(model,{endDate: A2($Forms$Components$InputField.update,_p15._0,model.endDate)});
+         case "UpdateEndDate": var model$ = _U.update(model,{endDate: A2($Forms$Components$InputField.update,_p17._0,model.endDate)});
            return {ctor: "_Tuple2",_0: model$,_1: sendDataToPlot(model$)};
          case "Request": return {ctor: "_Tuple2"
                                 ,_0: _U.update(model,
@@ -11594,9 +11596,9 @@ Elm.Forms.AnalysisForm.make = function (_elm) {
                                 ,endDate: A2($Forms$Components$InputField.update,$Forms$Components$InputField.Enable,model.endDate)})
                                 ,_1: getData(model)};
          case "NoOp": return {ctor: "_Tuple2",_0: model,_1: $Effects.none};
-         default: var data = A2($Maybe.withDefault,model.newData,_p15._0);
-           var onlyDates = A2($List.map,function (_p16) {    var _p17 = _p16;return _p17._0;},data);
-           var maybeToDate = function (_p18) {    return A2($Date$Format.format,"%Y-%m-%d",A2($Maybe.withDefault,$Date.fromTime(0),_p18));};
+         default: var data = A2($Maybe.withDefault,model.newData,_p17._0);
+           var onlyDates = A2($List.map,function (_p18) {    var _p19 = _p18;return _p19._0;},data);
+           var maybeToDate = function (_p20) {    return A2($Date$Format.format,"%Y-%m-%d",A2($Maybe.withDefault,$Date.fromTime(0),_p20));};
            var newEndDate = maybeToDate($List.head(onlyDates));
            var newStartDate = maybeToDate($List.head($List.reverse(onlyDates)));
            var model$ = _U.update(model,
@@ -11632,9 +11634,11 @@ Elm.Forms.AnalysisForm.make = function (_elm) {
               _U.list([$Html.text("Start Date")
                       ,A2($Forms$Components$InputField.view,A2($Signal.forwardTo,address,UpdateStartDate),model.startDate)
                       ,$Html.text("End Date")
-                      ,A2($Forms$Components$InputField.view,A2($Signal.forwardTo,address,UpdateEndDate),model.endDate)]))]));
+                      ,A2($Forms$Components$InputField.view,A2($Signal.forwardTo,address,UpdateEndDate),model.endDate)
+                      ,$Html.text($Basics.toString(model.plotId))
+                      ,$Html.text("xoxo")]))]));
    });
-   var Model = F7(function (a,b,c,d,e,f,g) {    return {source: a,ticker: b,$yield: c,newData: d,frequency: e,startDate: f,endDate: g};});
+   var Model = F8(function (a,b,c,d,e,f,g,h) {    return {plotId: a,source: b,ticker: c,$yield: d,newData: e,frequency: f,startDate: g,endDate: h};});
    var defaultRow = A2(F2(function (v0,v1) {    return {ctor: "_Tuple2",_0: v0,_1: v1};}),$Date.fromTime(0),0);
    var init = function () {
       var frequencyOptions = _U.list([A2($Forms$Components$SelectInput.Option,"1","Daily")
@@ -11652,7 +11656,8 @@ Elm.Forms.AnalysisForm.make = function (_elm) {
                   ,$yield: $Forms$Components$Yield.init(false)
                   ,newData: _U.list([defaultRow])
                   ,source: A3($Forms$Components$SelectInput.init,"YAHOO",sourceOptions,false)
-                  ,frequency: A3($Forms$Components$SelectInput.init,"21",frequencyOptions,true)}
+                  ,frequency: A3($Forms$Components$SelectInput.init,"21",frequencyOptions,true)
+                  ,plotId: now}
              ,_1: $Effects.none};
    }();
    return _elm.Forms.AnalysisForm.values = {_op: _op
@@ -11679,7 +11684,8 @@ Elm.Forms.AnalysisForm.make = function (_elm) {
                                            ,sendToPlotMailBox: sendToPlotMailBox
                                            ,toInteger: toInteger
                                            ,toDate: toDate
-                                           ,fromDateToInteger: fromDateToInteger};
+                                           ,fromDateToInteger: fromDateToInteger
+                                           ,now: now};
 };
 Elm.Forms = Elm.Forms || {};
 Elm.Forms.LoginForm = Elm.Forms.LoginForm || {};
