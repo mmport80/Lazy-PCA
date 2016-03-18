@@ -2,7 +2,7 @@ module Router where
 
 import Forms.LoginForm as LoginForm exposing (init, update, view, loginRequestMailBox, Action)
 import Forms.RegisterForm as RegisterForm exposing (init, update, view, registerRequestMailBox, Action)
-import Forms.AnalysisForm as AnalysisForm exposing (init, update, view, sendToPlotMailBox, Action)
+import Forms.AnalysisForm as AnalysisForm exposing (init, update, view, sendToPlotMailBox, Action, Action(Save))
 
 import LocationLinks exposing (init, update, view, Action)
 
@@ -28,11 +28,13 @@ import List
 
 --user model encompasses both login and reg?
 
+--need to trigger save event from here and send off data to db & plot
+
 type alias Model =
     {
       analysisForm : AnalysisForm.Model
     , loginForm : LoginForm.Model
-    , userRegister : RegisterForm.Model
+    , registerForm : RegisterForm.Model
     , locationLinks: LocationLinks.Model
     }
 
@@ -62,26 +64,34 @@ type Action
     | Analysis AnalysisForm.Action
     | Register RegisterForm.Action
     | ChangeLocation LocationLinks.Action
-
+    
 update : Action -> Model -> (Model, Effects Action)
 update action model =
   case action of
     Analysis input ->
-      let
-        (newData, fx) = AnalysisForm.update input model.analysisForm
-      in
-        ( { model | analysisForm = newData }
-        , Effects.map Analysis fx
-        )
+          let
+            (newData, fx) = AnalysisForm.update input model.analysisForm
+          in
+            case input of
+              AnalysisForm.Save ->
+                --if save, then send data
+                ( { model | analysisForm = newData }
+                , Effects.map Analysis fx
+                )
+              _ ->
+                ( { model | analysisForm = newData }
+                , Effects.map Analysis fx
+                )
     --action to capture response from outside world
     --take action update state
     --then send on another action to update whichever form...
+
     Register input ->
       let
-        (newUser, fx) = RegisterForm.update input model.userRegister
+        (newUser, fx) = RegisterForm.update input model.registerForm
       in
         ( { model |
-              userRegister = newUser
+              registerForm = newUser
             , locationLinks =
               --forward page?
               case newUser.response of
@@ -153,7 +163,7 @@ view address model =
     "register" ->
       div [][
           LocationLinks.view (Signal.forwardTo address ChangeLocation) model.locationLinks
-        , RegisterForm.view (Signal.forwardTo address Register) model.userRegister
+        , RegisterForm.view (Signal.forwardTo address Register) model.registerForm
         ]
     "login" ->
       div [][

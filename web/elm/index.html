@@ -11911,14 +11911,14 @@ Elm.Router.make = function (_elm) {
          case "register": return A2($Html.div,
            _U.list([]),
            _U.list([A2($LocationLinks.view,A2($Signal.forwardTo,address,ChangeLocation),model.locationLinks)
-                   ,A2($Forms$RegisterForm.view,A2($Signal.forwardTo,address,Register),model.userRegister)]));
+                   ,A2($Forms$RegisterForm.view,A2($Signal.forwardTo,address,Register),model.registerForm)]));
          case "login": return A2($Html.div,
            _U.list([]),
            _U.list([A2($LocationLinks.view,A2($Signal.forwardTo,address,ChangeLocation),model.locationLinks)
-                   ,A2($Forms$LoginForm.view,A2($Signal.forwardTo,address,Login),model.userLogin)]));
+                   ,A2($Forms$LoginForm.view,A2($Signal.forwardTo,address,Login),model.loginForm)]));
          default: return A2($Html.div,_U.list([]),_U.list([A2($LocationLinks.view,A2($Signal.forwardTo,address,ChangeLocation),model.locationLinks)]));}
    });
-   var Model = F4(function (a,b,c,d) {    return {analysisForm: a,userLogin: b,userRegister: c,locationLinks: d};});
+   var Model = F4(function (a,b,c,d) {    return {analysisForm: a,loginForm: b,registerForm: c,locationLinks: d};});
    var init = function () {
       var locationLinks = $LocationLinks.init("");
       var _p2 = A3($Forms$RegisterForm.init,"","","");
@@ -11937,34 +11937,40 @@ Elm.Router.make = function (_elm) {
    var update = F2(function (action,model) {
       var _p5 = action;
       switch (_p5.ctor)
-      {case "Analysis": var _p6 = A2($Forms$AnalysisForm.update,_p5._0,model.analysisForm);
+      {case "Analysis": var _p8 = _p5._0;
+           var _p6 = A2($Forms$AnalysisForm.update,_p8,model.analysisForm);
            var newData = _p6._0;
            var fx = _p6._1;
-           return {ctor: "_Tuple2",_0: _U.update(model,{analysisForm: newData}),_1: A2($Effects.map,Analysis,fx)};
-         case "Register": var _p7 = A2($Forms$RegisterForm.update,_p5._0,model.userRegister);
-           var newUser = _p7._0;
-           var fx = _p7._1;
+           var _p7 = _p8;
+           if (_p7.ctor === "Save") {
+                 return {ctor: "_Tuple2",_0: _U.update(model,{analysisForm: newData}),_1: A2($Effects.map,Analysis,fx)};
+              } else {
+                 return {ctor: "_Tuple2",_0: _U.update(model,{analysisForm: newData}),_1: A2($Effects.map,Analysis,fx)};
+              }
+         case "Register": var _p9 = A2($Forms$RegisterForm.update,_p5._0,model.registerForm);
+           var newUser = _p9._0;
+           var fx = _p9._1;
            return {ctor: "_Tuple2"
                   ,_0: _U.update(model,
-                  {userRegister: newUser
+                  {registerForm: newUser
                   ,locationLinks: function () {
-                     var _p8 = newUser.response;
-                     if (_p8 === "OK") {
+                     var _p10 = newUser.response;
+                     if (_p10 === "OK") {
                            return $LocationLinks.update($LocationLinks.Analysis);
                         } else {
                            return model.locationLinks;
                         }
                   }()})
                   ,_1: A2($Effects.map,Register,fx)};
-         case "Login": var _p9 = A2($Forms$LoginForm.update,_p5._0,model.userLogin);
-           var newUser = _p9._0;
-           var fx = _p9._1;
+         case "Login": var _p11 = A2($Forms$LoginForm.update,_p5._0,model.loginForm);
+           var newUser = _p11._0;
+           var fx = _p11._1;
            return {ctor: "_Tuple2"
-                  ,_0: _U.update(model,{userLogin: newUser,locationLinks: A2(forwardOnLogin,newUser.response,model.locationLinks)})
+                  ,_0: _U.update(model,{loginForm: newUser,locationLinks: A2(forwardOnLogin,newUser.response,model.locationLinks)})
                   ,_1: A2($Effects.map,Login,fx)};
          default: var newLocation = $LocationLinks.update(_p5._0);
-           var _p10 = newLocation;
-           if (_p10 === "logout") {
+           var _p12 = newLocation;
+           if (_p12 === "logout") {
                  return init;
               } else {
                  return {ctor: "_Tuple2",_0: _U.update(model,{locationLinks: newLocation}),_1: $Effects.none};
