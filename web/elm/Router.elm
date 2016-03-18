@@ -31,7 +31,7 @@ import List
 type alias Model =
     {
       analysisForm : AnalysisForm.Model
-    , userLogin : LoginForm.Model
+    , loginForm : LoginForm.Model
     , userRegister : RegisterForm.Model
     , locationLinks: LocationLinks.Model
     }
@@ -94,10 +94,10 @@ update action model =
         )
     Login input ->
       let
-        (newUser, fx) = LoginForm.update input model.userLogin
+        (newUser, fx) = LoginForm.update input model.loginForm
       in
         ( { model |
-            userLogin = newUser
+            loginForm = newUser
           --forward page?
           , locationLinks = forwardOnLogin newUser.response model.locationLinks
           }
@@ -158,7 +158,7 @@ view address model =
     "login" ->
       div [][
           LocationLinks.view (Signal.forwardTo address ChangeLocation) model.locationLinks
-        , LoginForm.view (Signal.forwardTo address Login) model.userLogin
+        , LoginForm.view (Signal.forwardTo address Login) model.loginForm
         ]
     _ ->
       div [][
