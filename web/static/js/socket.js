@@ -81,7 +81,18 @@ app.ports.sendToScatterPlot.subscribe(draw);
 
 
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//send to serverside
+//save down
+//
 
+//loading other stuff is seperate
+//new ui module which shows user's saved projects
+//show latest projects with same parameters
+
+
+//delete
+//load
+//new
 const db = s =>
   {
   console.log(s);

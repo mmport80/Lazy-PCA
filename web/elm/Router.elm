@@ -21,12 +21,19 @@ import List
 --********************************************************************************
 --********************************************************************************
 -- MODEL
+
+--need to create a model to send to browser
+--user
+--data
+
+--user model encompasses both login and reg?
+
 type alias Model =
     {
-      data : AnalysisForm.Model
+      analysisForm : AnalysisForm.Model
     , userLogin : LoginForm.Model
     , userRegister : RegisterForm.Model
-    , location: LocationLinks.Model
+    , locationLinks: LocationLinks.Model
     }
 
 init : (Model, Effects Action)
@@ -61,9 +68,9 @@ update action model =
   case action of
     Analysis input ->
       let
-        (newData, fx) = AnalysisForm.update input model.data
+        (newData, fx) = AnalysisForm.update input model.analysisForm
       in
-        ( { model | data = newData }
+        ( { model | analysisForm = newData }
         , Effects.map Analysis fx
         )
     --action to capture response from outside world
@@ -75,13 +82,13 @@ update action model =
       in
         ( { model |
               userRegister = newUser
-            , location =
+            , locationLinks =
               --forward page?
               case newUser.response of
                 "OK" ->
                   LocationLinks.update LocationLinks.Analysis
                 _ ->
-                  model.location
+                  model.locationLinks
           }
         , Effects.map Register fx
         )
@@ -92,7 +99,7 @@ update action model =
         ( { model |
             userLogin = newUser
           --forward page?
-          , location = forwardOnLogin newUser.response model.location
+          , locationLinks = forwardOnLogin newUser.response model.locationLinks
           }
         , Effects.map Login fx
         )
@@ -107,7 +114,7 @@ update action model =
             init
           _ ->
             ( { model |
-              location = newLocation
+              locationLinks = newLocation
               }
             , Effects.none
             )
@@ -136,26 +143,26 @@ view address model =
   --if login link is click, go to login form
   --if logout link is clicked, go to login page
   --default is login
-  case model.location of
+  case model.locationLinks of
     --if page is...
     "analysis" ->
       div [][
-          LocationLinks.view (Signal.forwardTo address ChangeLocation) model.location
-        , AnalysisForm.view (Signal.forwardTo address Analysis) model.data
+          LocationLinks.view (Signal.forwardTo address ChangeLocation) model.locationLinks
+        , AnalysisForm.view (Signal.forwardTo address Analysis) model.analysisForm
         ]
     "register" ->
       div [][
-          LocationLinks.view (Signal.forwardTo address ChangeLocation) model.location
+          LocationLinks.view (Signal.forwardTo address ChangeLocation) model.locationLinks
         , RegisterForm.view (Signal.forwardTo address Register) model.userRegister
         ]
     "login" ->
       div [][
-          LocationLinks.view (Signal.forwardTo address ChangeLocation) model.location
+          LocationLinks.view (Signal.forwardTo address ChangeLocation) model.locationLinks
         , LoginForm.view (Signal.forwardTo address Login) model.userLogin
         ]
     _ ->
       div [][
-          LocationLinks.view (Signal.forwardTo address ChangeLocation) model.location
+          LocationLinks.view (Signal.forwardTo address ChangeLocation) model.locationLinks
         ]
 
 

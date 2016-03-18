@@ -35,8 +35,7 @@ defaultRow : Row
 defaultRow = (,) (Date.fromTime 0) 0
 
 type alias Model = {
-      plotId : Signal Float
-    , source : SelectInput.Model
+      source : SelectInput.Model
     , ticker : InputField.Model
     , yield : Yield.Model
     , newData : List Row
@@ -60,7 +59,6 @@ init =
       , newData =  [ defaultRow ]
       , source = SelectInput.init "YAHOO" sourceOptions False
       , frequency = SelectInput.init "21" frequencyOptions True
-      , plotId = now
       }
     , Effects.none
     )
@@ -186,8 +184,6 @@ view address model =
 
       , text "End Date"
       , InputField.view (Signal.forwardTo address UpdateEndDate) model.endDate
-      , text (toString model.plotId)
-      , text "xoxo"
       ]
   ]
 
@@ -341,5 +337,5 @@ fromDateToInteger d =
 --currentTime : Signal Float
 --currentTime = Signal.map Time.inMilliseconds (Time.every Time.millisecond)
 
-now : Signal Float
-now = Signal.constant 1 |> Time.timestamp |> Signal.map (\(t,_) -> t)
+--now : Signal Float
+--now = Signal.constant 1 |> Time.timestamp |> Signal.map (\(t,_) -> t)
