@@ -42,6 +42,7 @@ type alias Model = {
     , frequency : SelectInput.Model
     , startDate : InputField.Model
     , endDate : InputField.Model
+    , progressMsg : String
     }
 
 init : (Model, Effects Action)
@@ -59,6 +60,7 @@ init =
       , newData =  [ defaultRow ]
       , source = SelectInput.init "YAHOO" sourceOptions False
       , frequency = SelectInput.init "21" frequencyOptions True
+      , progressMsg = ""
       }
     , Effects.none
     )
@@ -120,6 +122,7 @@ update action model =
           frequency = SelectInput.update SelectInput.Enable model.frequency
         , startDate = InputField.update InputField.Enable model.startDate
         , endDate = InputField.update InputField.Enable model.endDate
+        , progressMsg = "Please Wait..."
         }
       , getData model )
     --remove this
@@ -142,6 +145,7 @@ update action model =
             newData = data
           , startDate = InputField.update (InputField.Update newStartDate) model.startDate
           , endDate = InputField.update (InputField.Update newEndDate) model.endDate
+          , progressMsg = ""
           }
         pModel = convertElmModelToPortableFormat model
       in
@@ -170,6 +174,7 @@ view address model =
         , Yield.view (Signal.forwardTo address UpdateYield) model.yield
         , text "Yield"
         , a [ href "#", onClick address Request ] [ text "Pull" ]
+        , text model.progressMsg
         ]
     , hr [] []
     , div [id "plot"] []
@@ -213,8 +218,6 @@ csvRow = (Json.tuple7 (,,,,,,)
   Json.string Json.float Json.float Json.float Json.float Json.float Json.float
   )
   |> Json.map (\ (a,_,_,_,_,_,b) -> ( (toDate (Date.fromTime 0) a), b ) )
-
-
 
 getData : Model -> Effects Action
 getData model =
