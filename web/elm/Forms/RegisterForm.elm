@@ -78,7 +78,9 @@ update action model =
     --update
     --and also send to port
     Request ->
-      ( model
+      (
+        { model |
+          response = "Please Wait..." }
       , sendData (RegisterRequest model.username.value model.fullname.value model.password.value)
       )
     Response input ->

@@ -71,7 +71,10 @@ update action model =
     --update
     --and also send to port
     Request ->
-      ( model, sendData {username = model.username.value, password = model.password.value} )
+      ( { model |
+          response = "Please Wait..." }
+        , sendData (LoginRequest model.username.value model.password.value)
+      )
     Response input ->
       --remove pw & set response
       ( { model |

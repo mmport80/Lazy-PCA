@@ -11744,7 +11744,9 @@ Elm.Forms.LoginForm.make = function (_elm) {
                                        ,_0: _U.update(model,{password: A2($Forms$Components$InputField.update,_p1._0,model.password)})
                                        ,_1: $Effects.none};
          case "NoOp": return {ctor: "_Tuple2",_0: model,_1: $Effects.none};
-         case "Request": return {ctor: "_Tuple2",_0: model,_1: sendData({username: model.username.value,password: model.password.value})};
+         case "Request": return {ctor: "_Tuple2"
+                                ,_0: _U.update(model,{response: "Please Wait..."})
+                                ,_1: sendData(A2(LoginRequest,model.username.value,model.password.value))};
          default: var _p2 = _p1._0;
            return {ctor: "_Tuple2"
                   ,_0: _U.update(model,
@@ -11828,7 +11830,9 @@ Elm.Forms.RegisterForm.make = function (_elm) {
                                        ,_0: _U.update(model,{password: A2($Forms$Components$InputField.update,_p1._0,model.password)})
                                        ,_1: $Effects.none};
          case "NoOp": return {ctor: "_Tuple2",_0: model,_1: $Effects.none};
-         case "Request": return {ctor: "_Tuple2",_0: model,_1: sendData(A3(RegisterRequest,model.username.value,model.fullname.value,model.password.value))};
+         case "Request": return {ctor: "_Tuple2"
+                                ,_0: _U.update(model,{response: "Please Wait..."})
+                                ,_1: sendData(A3(RegisterRequest,model.username.value,model.fullname.value,model.password.value))};
          default: var _p2 = _p1._0;
            return {ctor: "_Tuple2"
                   ,_0: _U.update(model,
