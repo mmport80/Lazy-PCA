@@ -22,13 +22,6 @@ import List
 --********************************************************************************
 -- MODEL
 
---need to create a model to send to browser
---user
---data
-
---user model encompasses both login and reg?
---need to trigger save event from here and send off data to db & plot
-
 type alias Model =
     {
       analysisForm : AnalysisForm.Model
@@ -68,9 +61,6 @@ init =
 --********************************************************************************
 -- UPDATE
 --act like a router, sending to different forms based on actions
-
---on login or reg change, update user record
---on analysis newdata, send data to plot
 
 type alias ExportData = {
     user : User

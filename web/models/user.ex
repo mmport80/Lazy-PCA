@@ -7,6 +7,8 @@ defmodule Backend.User do
     field :password, :string, virtual: true
     field :password_hash, :string
 
+    has_many :plots2, Backend.Plot
+
     timestamps
   end
 

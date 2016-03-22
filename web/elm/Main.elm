@@ -55,7 +55,6 @@ incomingRegisterActions = Signal.map Router.Register (Signal.map RegisterForm.Re
 port sendToScatterPlot : Signal (List (String,Float))
 port sendToScatterPlot = sendToPlotMailBox.signal
 
-
 --^^^^^^^^^^^^^^^^^^^°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 --save data
 --need a response also - confirming save

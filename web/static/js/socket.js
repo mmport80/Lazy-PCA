@@ -12,6 +12,15 @@ socket.connect()
 
 let channel = socket.channel("rooms:lobby", {})
 
+
+channel.on("save_data",
+  payload => {
+    //send ok or error back
+    console.log("payload");
+    console.log(payload);
+    }
+  )
+
 channel.on("new_msg",
   payload => {
     const {token: token, response_text: response_text, action: action, fullname: fullname} = payload.body;
@@ -25,6 +34,7 @@ channel.on("new_msg",
         null)
     }
   )
+
 
 channel.join()
   .receive("ok", resp => { console.log("Joined successfully", resp) })
@@ -95,7 +105,8 @@ app.ports.sendToScatterPlot.subscribe(draw);
 //new
 const save = request =>
   {
-  //channel.push("save_data", {body: request})
+  console.log(request);
+  channel.push("save_data", {body: request});
   };
 
 app.ports.saveToDB.subscribe(save);

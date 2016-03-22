@@ -1,6 +1,7 @@
 defmodule Backend.RoomChannel do
 
   alias Backend.User
+  alias Backend.Plot
   alias Backend.Repo
 
   import Ecto.Query
@@ -8,6 +9,8 @@ defmodule Backend.RoomChannel do
   import Comeonin.Bcrypt, only: [checkpw: 2, dummy_checkpw: 0]
 
   use Phoenix.Channel
+
+  intercept ["new_msg", "save_data"]
 
   #public room
   #can create rooms to group users in
@@ -30,10 +33,47 @@ defmodule Backend.RoomChannel do
 
   def handle_in("save_data", %{"body" => params}, socket) do
     #get user data
+    IO.inspect params
+
+    %{"data" => data, "user" => user} = params
+
+    %{ "source" => source, "frequency" => frequency, "y" => y, "ticker" => ticker, "startDate" => startDate, "endDate" => endDate, "newData" => newData } = data
+    %{ "username" => username, "fullname" => fullname, "token" => token } = user
+
     #check token against user and socket
+    u = Repo.get_by(Backend.User, username: username )
+
+    cond do
+      Phoenix.Token.verify(socket, "user", token) ->
+        {:ok, sd} = Ecto.Date.cast(startDate)
+        {:ok, ed} = Ecto.Date.cast(endDate)
+
+        {f,_} = Integer.parse(frequency)
+
+        #save report
+        p = %Plot{source: source, ticker: ticker, frequency: f, startDate: sd, endDate: ed, y: y, deleted: false, user_id: u.id}
+
+        Repo.insert p
+        #return ok
+        r = "ok"
+      true ->
+        #don't save
+        #return error
+        r = "error"
+    end
+
     #if auth checks out, save down, report success
     #save down settings not data
     #if not report back failure
+
+    push socket, "save_data", %{body: r}
+    {:noreply, socket}
+  end
+
+
+  def handle_out("save_data", payload, socket) do
+    push socket, "save_data", payload
+    {:noreply, socket}
   end
 
   #all incoming connections go here
