@@ -24,10 +24,20 @@ defmodule Backend.RoomChannel do
   #Response struct to send back to client
   #token is the auth required to pull down data
   defmodule Response do
-    defstruct response_text: "", token: "", action: ""
+    defstruct response_text: "", token: "", action: "", fullname: ""
+  end
+
+
+  def handle_in("save_data", %{"body" => params}, socket) do
+    #get user data
+    #check token against user and socket
+    #if auth checks out, save down, report success
+    #save down settings not data
+    #if not report back failure
   end
 
   #all incoming connections go here
+  #
   def handle_in("new_msg", %{"body" => params}, socket) do
     #break into action and payload components
     %{"action" => action, "data" => data} = params
@@ -38,11 +48,11 @@ defmodule Backend.RoomChannel do
         %{"username" => username, "password" => password} = data
 
         #check password against user
-        %{response_text: response, token: token} = login_by_username_and_pass(socket, username, password)
-        response = %Response{response_text: response, token: token, action: action}
+        %{response_text: response, token: token, fullname: fullname} = login_by_username_and_pass(socket, username, password)
+        response = %Response{response_text: response, token: token, action: action, fullname: fullname}
       "register" ->
         #register user
-        %{"name" => name, "username" => username, "password" => password} = data
+        %{"fullname" => fullname, "username" => username, "password" => password} = data
 
         #changesets are fine-grained validation objects based on what's specified in the User model
         changeset = User.registration_changeset(%User{},data)
@@ -54,11 +64,11 @@ defmodule Backend.RoomChannel do
               #regd means logged in here
               #no user data to send, fresh account
               %{response_text: response, token: token} = login_by_username_and_pass(socket, username, password)
-              %Response{response_text: response, token: token, action: action}
+              %Response{response_text: response, token: token, action: action, fullname: fullname}
             {:error, changeset } ->
               #*-name already taken
               #*-inputs blank or too small --implement client side check
-              %Response{response_text: "Username already taken", token: "", action: action}
+              %Response{response_text: "Username already taken", token: "", action: action, fullname: fullname}
           end
     end
 
@@ -73,19 +83,18 @@ defmodule Backend.RoomChannel do
   #login logic
   def login_by_username_and_pass(socket, username, given_pass) do
     user = Repo.get_by(Backend.User, username: username)
-
     cond do
       #does user match the password and hashed pw?
       user && checkpw(given_pass, user.password_hash) ->
         token = Phoenix.Token.sign(socket, "user", user.id)
-        %{response_text: "OK", token: token}
+        %{response_text: "OK", token: token, fullname: user.fullname}
       #no need to be so granular
       user ->
-        %{response_text: "Password Not OK", token: ""}
+        %{response_text: "Password Not OK", token: "", fullname: ""}
       true ->
         #?? take up time between tries?
         dummy_checkpw()
-        %{response_text: "User Not Found", token: ""}
+        %{response_text: "User Not Found", token: "", fullname: ""}
     end
   end
 

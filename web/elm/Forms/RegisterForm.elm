@@ -54,7 +54,10 @@ type Action
     | Response ResponseMessage
     | NoOp
 
-type alias ResponseMessage = {response: String, token: String}
+type alias ResponseMessage = {
+    response: String
+  , token: String
+  , fullname : String}
 
 update : Action -> Model -> (Model, Effects Action)
 update action model =

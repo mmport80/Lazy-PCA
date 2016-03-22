@@ -2,7 +2,7 @@ defmodule Backend.User do
   use Backend.Web, :model
 
   schema "users" do
-    field :name, :string
+    field :fullname, :string
     field :username, :string
     field :password, :string, virtual: true
     field :password_hash, :string
@@ -10,7 +10,7 @@ defmodule Backend.User do
     timestamps
   end
 
-  @required_fields ~w(name username password) # password password_hash
+  @required_fields ~w(fullname username password) # password password_hash
   @optional_fields ~w()
 
   @doc """

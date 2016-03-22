@@ -14,8 +14,8 @@ let channel = socket.channel("rooms:lobby", {})
 
 channel.on("new_msg",
   payload => {
-    const {token: token, response_text: response_text, action: action} = payload.body;
-    const message = {token: token, response: response_text};
+    const {token: token, response_text: response_text, action: action, fullname: fullname} = payload.body;
+    const message = {token: token, response: response_text, fullname: fullname};
 
     action === "login" ?
       app.ports.loginResponse.send(message)
@@ -33,7 +33,7 @@ channel.join()
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //Elm setup
 
-const initMesssage = {token: "", response: ""}
+const initMesssage = {token: "", response: "", fullname: ""}
 
 const div = document.getElementById('elm');
 const app = Elm.embed(
@@ -51,7 +51,7 @@ const app = Elm.embed(
 const registerCallback = msg => {
   //change fields, so that clientside and serverside match up
   const {username: u, password: p, fullname: f} = msg;
-  const request = { action:"register", data: {username: u, password: p, name: f} }
+  const request = { action:"register", data: {username: u, password: p, fullname: f} }
   channel.push("new_msg", {body: request})
   }
 
@@ -93,14 +93,19 @@ app.ports.sendToScatterPlot.subscribe(draw);
 //delete
 //load
 //new
-const db = s =>
+const save = request =>
   {
-  console.log(s);
+  //channel.push("save_data", {body: request})
   };
 
-app.ports.saveToDB.subscribe(db);
-
+app.ports.saveToDB.subscribe(save);
 
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 export default socket
+
+//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//add new component
+//list all stored charts - except the one that's currently being edited
+//
+//save all the info coming

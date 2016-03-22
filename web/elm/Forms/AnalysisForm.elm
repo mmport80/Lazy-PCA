@@ -78,7 +78,6 @@ type Action
     | Request
     | NewData ( Maybe ( List (Row) ) )
     | NoOp
-    | Save
 
 update : Action -> Model -> (Model, Effects Action)
 update action model =
@@ -128,16 +127,18 @@ update action model =
     --remove this
     NoOp ->
       ( model, Effects.none )
-    Save ->
-      let
-        pModel = convertElmModelToPortableFormat model
-      in
-        ( model, saveData pModel )
     --Send data to JS
     NewData maybeList ->
       let
         maybeToDate = (Maybe.withDefault (Date.fromTime 0)) >> (Date.Format.format "%Y-%m-%d" )
         data = Maybe.withDefault model.newData maybeList
+
+        progressMsg =
+          if maybeList == Nothing then
+            "Could not find data"
+          else
+            ""
+
         onlyDates = data |> List.map (\ (a,_) -> a )
         newEndDate = onlyDates |> List.head |> maybeToDate
         newStartDate = onlyDates |> List.reverse |> List.head |> maybeToDate
@@ -145,9 +146,8 @@ update action model =
             newData = data
           , startDate = InputField.update (InputField.Update newStartDate) model.startDate
           , endDate = InputField.update (InputField.Update newEndDate) model.endDate
-          , progressMsg = ""
+          , progressMsg = progressMsg
           }
-        pModel = convertElmModelToPortableFormat model
       in
         (
           model'
@@ -157,9 +157,6 @@ update action model =
 
 --on change send data to plot
 --send data to server
---every model has a creation id / timestamp
-
-
 
 --********************************************************************************
 --********************************************************************************
@@ -192,14 +189,11 @@ view address model =
       ]
   ]
 
-
 --********************************************************************************
 --********************************************************************************
 -- EFFECTS
 
 --INCOMING DATA
-
-
 quandlUrl : Model -> String
 quandlUrl model =
   Http.url ("https://www.quandl.com/api/v3/datasets/"++model.source.value++"/"++model.ticker.value++".json")
@@ -226,8 +220,6 @@ getData model =
     |> Task.map NewData
     |> Effects.task
 
-
-
 --OUTGOING DATA
 
 --filter new data appropriately before plotting it
@@ -253,14 +245,13 @@ sendDataToPlot model =
 dateToISOFormat : Date.Date -> String
 dateToISOFormat = Date.Format.format "%Y-%m-%d"
 
-
 sendData : List (String, Float) -> Effects Action
 sendData data =
   Signal.send sendToPlotMailBox.address data
     --add error condition
     --remove no op
     --and flag errors
-    `Task.andThen` (\_ -> Task.succeed Save)
+    `Task.andThen` (\_ -> Task.succeed NoOp)
   |> Effects.task
 
 sendToPlotMailBox :
@@ -269,47 +260,12 @@ sendToPlotMailBox :
   }
 sendToPlotMailBox = Signal.mailbox [ ("",0) ]
 
---^^^^^^^^^^^^^^^^^^^°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
---^^^^^^^^^^^^^^^^^^^°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
-
---one send which sends everything?
-
-type alias PortableModel = {
-      endDate : String
-    , startDate : String
-    , ticker : String
-    , y : Bool
-    , source : String
-    , frequency : String
-    , newData : List (String, Float)
-    }
-
-convertElmModelToPortableFormat : Model -> PortableModel
-convertElmModelToPortableFormat model =
-  { endDate = model.endDate.value
-  , startDate = model.startDate.value
-  , ticker = model.ticker.value
-  , y = model.yield
-  , source = model.source.value
-  , frequency = model.frequency.value
-  , newData =  model.newData |> List.map (\ (a,b) -> (dateToISOFormat a,b) )
-  }
 
 
-saveData : PortableModel -> Effects Action
-saveData model =
-  Signal.send saveToDBMailBox.address model
-    --add error condition
-    --remove no op
-    --and flag errors
-    `Task.andThen` (\_ -> Task.succeed NoOp)
-  |> Effects.task
 
-saveToDBMailBox :
-  { address : Signal.Address PortableModel
-  , signal : Signal PortableModel
-  }
-saveToDBMailBox = Signal.mailbox (PortableModel "" "" "" False "" "" [("",0)])
+
+
+
 
 
 
@@ -337,8 +293,30 @@ fromDateToInteger d =
   >> Maybe.withDefault d
 
 
---currentTime : Signal Float
---currentTime = Signal.map Time.inMilliseconds (Time.every Time.millisecond)
 
---now : Signal Float
---now = Signal.constant 1 |> Time.timestamp |> Signal.map (\(t,_) -> t)
+
+
+
+type alias PortableModel = {
+      endDate : String
+    , startDate : String
+    , ticker : String
+    , y : Bool
+    , source : String
+    , frequency : String
+    , newData : List (String, Float)
+    }
+
+defaultPortableModel : PortableModel
+defaultPortableModel = PortableModel "" "" "" False "" "" [("",0)]
+
+convertElmModelToPortableFormat : Model -> PortableModel
+convertElmModelToPortableFormat model =
+  { endDate = model.endDate.value
+  , startDate = model.startDate.value
+  , ticker = model.ticker.value
+  , y = model.yield
+  , source = model.source.value
+  , frequency = model.frequency.value
+  , newData =  model.newData |> List.map (\ (a,b) -> (dateToISOFormat a,b) )
+  }

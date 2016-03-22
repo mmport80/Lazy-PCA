@@ -2,7 +2,7 @@ module Router where
 
 import Forms.LoginForm as LoginForm exposing (init, update, view, loginRequestMailBox, Action)
 import Forms.RegisterForm as RegisterForm exposing (init, update, view, registerRequestMailBox, Action)
-import Forms.AnalysisForm as AnalysisForm exposing (init, update, view, sendToPlotMailBox, Action, Action(Save))
+import Forms.AnalysisForm as AnalysisForm exposing (init, update, view, sendToPlotMailBox, Action, dateToISOFormat)
 
 import LocationLinks exposing (init, update, view, Action)
 
@@ -27,7 +27,6 @@ import List
 --data
 
 --user model encompasses both login and reg?
-
 --need to trigger save event from here and send off data to db & plot
 
 type alias Model =
@@ -36,7 +35,18 @@ type alias Model =
     , loginForm : LoginForm.Model
     , registerForm : RegisterForm.Model
     , locationLinks: LocationLinks.Model
+    , user: User
+    , data : AnalysisForm.PortableModel
     }
+
+type alias User = {
+    fullname: String
+  , username: String
+  , token: String
+  }
+
+defaultUser : User
+defaultUser = User "" "" ""
 
 init : (Model, Effects Action)
 init =
@@ -46,7 +56,7 @@ init =
     (register, registerFx) = RegisterForm.init "" "" ""
     locationLinks = LocationLinks.init ""
   in
-    ( Model analysis login register locationLinks
+    ( Model analysis login register locationLinks (User "" "" "") AnalysisForm.defaultPortableModel
     , Effects.batch
         [ Effects.map Login loginFx
         , Effects.map Analysis analysisFx
@@ -59,46 +69,52 @@ init =
 -- UPDATE
 --act like a router, sending to different forms based on actions
 
+--on login or reg change, update user record
+--on analysis newdata, send data to plot
+
+type alias ExportData = {
+    user : User
+  , data : AnalysisForm.PortableModel
+  }
+
+defaultExportData : ExportData
+defaultExportData = ExportData defaultUser AnalysisForm.defaultPortableModel
+
 type Action
     = Login LoginForm.Action
     | Analysis AnalysisForm.Action
     | Register RegisterForm.Action
     | ChangeLocation LocationLinks.Action
-    
+    | NoOp
+
 update : Action -> Model -> (Model, Effects Action)
 update action model =
   case action of
     Analysis input ->
-          let
-            (newData, fx) = AnalysisForm.update input model.analysisForm
-          in
-            case input of
-              AnalysisForm.Save ->
-                --if save, then send data
-                ( { model | analysisForm = newData }
-                , Effects.map Analysis fx
-                )
-              _ ->
-                ( { model | analysisForm = newData }
-                , Effects.map Analysis fx
-                )
-    --action to capture response from outside world
-    --take action update state
-    --then send on another action to update whichever form...
-
+      let
+        (newData, fx) = AnalysisForm.update input model.analysisForm
+        pModel = AnalysisForm.convertElmModelToPortableFormat newData
+        sd = saveData (ExportData model.user pModel)
+        model' = { model | analysisForm = newData }
+      in
+        --how to write one case to catch all 3?
+        case input of
+          AnalysisForm.UpdateSource i ->
+            ( model', Effects.map Analysis fx )
+          AnalysisForm.UpdateYield i ->
+            ( model', Effects.map Analysis fx )
+          AnalysisForm.UpdateTicker i ->
+            ( model', Effects.map Analysis fx )
+          _ ->
+            ( model', Effects.batch [sd, Effects.map Analysis fx] )
     Register input ->
       let
         (newUser, fx) = RegisterForm.update input model.registerForm
       in
         ( { model |
-              registerForm = newUser
-            , locationLinks =
-              --forward page?
-              case newUser.response of
-                "OK" ->
-                  LocationLinks.update LocationLinks.Analysis
-                _ ->
-                  model.locationLinks
+            registerForm = newUser
+          , locationLinks = forwardOnLogin newUser.response model.locationLinks
+          , user = User newUser.username.value newUser.fullname.value newUser.token
           }
         , Effects.map Register fx
         )
@@ -106,20 +122,28 @@ update action model =
       let
         (newUser, fx) = LoginForm.update input model.loginForm
       in
-        ( { model |
-            loginForm = newUser
-          --forward page?
-          , locationLinks = forwardOnLogin newUser.response model.locationLinks
-          }
-        , Effects.map Login fx
-        )
-    --reset to original state
+        case input of
+          LoginForm.Response i ->
+            ( { model |
+                loginForm = newUser
+              , locationLinks = forwardOnLogin newUser.response model.locationLinks
+              , user = User i.fullname newUser.username.value newUser.token
+              }
+            , Effects.map Login fx
+            )
+          _ ->
+            ( { model |
+                loginForm = newUser
+              , locationLinks = forwardOnLogin newUser.response model.locationLinks
+              }
+            , Effects.map Login fx
+            )
     ChangeLocation input ->
       let
         newLocation = LocationLinks.update input
       in
-        --forward?
         case newLocation of
+          --reset to original state
           "logout" ->
             init
           _ ->
@@ -128,8 +152,8 @@ update action model =
               }
             , Effects.none
             )
-
---forwardOnLogin : String -> String
+    NoOp ->
+      ( model, Effects.none )
 
 forwardOnLogin : String -> String -> LocationLinks.Model
 forwardOnLogin response currentLocation =
@@ -181,3 +205,26 @@ view address model =
 --********************************************************************************
 --********************************************************************************
 -- EFFECTS
+
+
+
+--^^^^^^^^^^^^^^^^^^^°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+--^^^^^^^^^^^^^^^^^^^°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+--one send which sends everything?
+
+
+
+saveData : ExportData -> Effects Action
+saveData model =
+  Signal.send saveToDBMailBox.address model
+    --add error condition
+    --remove no op
+    --and flag errors
+    `Task.andThen` (\_ -> Task.succeed NoOp)
+  |> Effects.task
+
+saveToDBMailBox :
+  { address : Signal.Address ExportData
+  , signal : Signal ExportData
+  }
+saveToDBMailBox = Signal.mailbox defaultExportData

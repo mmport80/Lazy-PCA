@@ -1,9 +1,9 @@
 import StartApp
 
-import Router exposing (init, update, view)
+import Router exposing (init, update, view, saveToDBMailBox)
 import Forms.LoginForm as LoginForm exposing (Action(Response), loginRequestMailBox)
 import Forms.RegisterForm as RegisterForm exposing (Action(Response), registerRequestMailBox)
-import Forms.AnalysisForm as AnalysisForm exposing (Row, sendToPlotMailBox, saveToDBMailBox)
+import Forms.AnalysisForm as AnalysisForm exposing (Row, sendToPlotMailBox)
 
 import Effects exposing (Never)
 import Task
@@ -60,7 +60,5 @@ port sendToScatterPlot = sendToPlotMailBox.signal
 --save data
 --need a response also - confirming save
 
-
-
-port saveToDB : Signal AnalysisForm.PortableModel
+port saveToDB : Signal Router.ExportData --{user: User, data: AnalysisForm.PortableModel}
 port saveToDB = saveToDBMailBox.signal
