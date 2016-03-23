@@ -3,6 +3,7 @@ defmodule Backend.RoomChannel do
   alias Backend.User
   alias Backend.Plot
   alias Backend.Repo
+  alias Ecto.Date
 
   import Ecto.Query
 
@@ -24,36 +25,21 @@ defmodule Backend.RoomChannel do
     {:error, %{reason: "unauthorized"}}
   end
 
-  #Response struct to send back to client
-  #token is the auth required to pull down data
-  defmodule Response do
-    defstruct response_text: "", token: "", action: "", fullname: ""
-  end
-
+  #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+  #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+  #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 
   def handle_in("save_data", %{"body" => params}, socket) do
     #get user data
-    IO.inspect params
+    #IO.inspect params
 
     %{"data" => data, "user" => user} = params
 
-    %{ "source" => source, "frequency" => frequency, "y" => y, "ticker" => ticker, "startDate" => startDate, "endDate" => endDate, "newData" => newData } = data
-    %{ "username" => username, "fullname" => fullname, "token" => token } = user
-
-    #check token against user and socket
-    u = Repo.get_by(Backend.User, username: username )
-
     cond do
-      Phoenix.Token.verify(socket, "user", token) ->
-        {:ok, sd} = Ecto.Date.cast(startDate)
-        {:ok, ed} = Ecto.Date.cast(endDate)
-
-        {f,_} = Integer.parse(frequency)
-
-        #save report
-        p = %Plot{source: source, ticker: ticker, frequency: f, startDate: sd, endDate: ed, y: y, deleted: false, user_id: u.id}
-
-        Repo.insert p
+      #check that id is owned by user
+      Phoenix.Token.verify(socket, "user", user["token"] ) ->
+        #save here not insert
+        #p = save_plot user data
         #return ok
         r = "ok"
       true ->
@@ -70,71 +56,114 @@ defmodule Backend.RoomChannel do
     {:noreply, socket}
   end
 
-
   def handle_out("save_data", payload, socket) do
     push socket, "save_data", payload
     {:noreply, socket}
   end
 
+
+  def save_plot(user, data) do
+    %{ "source" => source, "frequency" => frequency, "y" => y, "ticker" => ticker, "startDate" => startDate, "endDate" => endDate, "newData" => newData } = data
+    %{ "username" => username, "fullname" => fullname, "token" => token } = user
+
+    u = Repo.get_by(Backend.User, username: username )
+
+    {:ok, sd} = Ecto.Date.cast(startDate)
+    {:ok, ed} = Ecto.Date.cast(endDate)
+
+    {f,_} = Integer.parse(frequency)
+
+    #save report
+    p = %Plot{source: source, ticker: ticker, frequency: f, startDate: sd, endDate: ed, y: y, deleted: false, user_id: u.id}
+
+    r = Repo.insert p
+
+    #return plot id
+    r["id"]
+  end
+
+  #insert plot is always default
+  def insert_new_plot(user) do
+    {:ok, sd} = Ecto.Date.cast("1990-01-02")
+    today = Date.utc()
+    Repo.insert (user |> defaultPlot)
+  end
+
+  def defaultPlot(user) do
+    {:ok, sd} = Ecto.Date.cast("1990-01-02")
+    today = Date.utc()
+    %Plot{source: "YAHOO", ticker: "INDEX_VIX", frequency: 21, startDate: sd, endDate: today, y: false, deleted: false, user_id: user.id}
+  end
+
+  def defaultUser() do
+    %User{fullname: "", username: "",password: "", id: -1}
+  end
+
+#°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+#°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+
+  #Response struct to send back to client
+  #token is the auth required to pull down data
+  defmodule Response do
+    defstruct response_text: "", token: "", action: "", fullname: "", plots: []
+  end
+
   #all incoming connections go here
-  #
   def handle_in("new_msg", %{"body" => params}, socket) do
     #break into action and payload components
     %{"action" => action, "data" => data} = params
-
-    #I have been doing too much Elm recently...
+    #I have been doing too much Elm...
     case action do
       "login" ->
         %{"username" => username, "password" => password} = data
-
-        #check password against user
-        %{response_text: response, token: token, fullname: fullname} = login_by_username_and_pass(socket, username, password)
-        response = %Response{response_text: response, token: token, action: action, fullname: fullname}
+        response = login_by_username_and_pass( socket, username, password )
       "register" ->
-        #register user
         %{"fullname" => fullname, "username" => username, "password" => password} = data
-
         #changesets are fine-grained validation objects based on what's specified in the User model
         changeset = User.registration_changeset(%User{},data)
-
         #*reasons for problem
         response =
           case Repo.insert(changeset) do
             {:ok, user} ->
-              #regd means logged in here
-              #no user data to send, fresh account
-              %{response_text: response, token: token} = login_by_username_and_pass(socket, username, password)
-              %Response{response_text: response, token: token, action: action, fullname: fullname}
+              #insert new plot, login
+              {:ok, p} = insert_new_plot(user)
+              login_by_username_and_pass(socket, username, password)
             {:error, changeset } ->
               #*-name already taken
               #*-inputs blank or too small --implement client side check
-              %Response{response_text: "Username already taken", token: "", action: action, fullname: fullname}
+              %Response{response_text: "Try another username", action: action, fullname: fullname}
           end
+      #'null' reponse
+      true ->
+        response = %Response{}
     end
-
     #response back down socket
     #use broadcast! for 'room-wide' messages
     push socket, "new_msg", %{body: response}
-
     {:noreply, socket}
   end
 
-
-  #login logic
-  def login_by_username_and_pass(socket, username, given_pass) do
+  #handles login auth
+  def login_by_username_and_pass( socket, username, password ) do
     user = Repo.get_by(Backend.User, username: username)
     cond do
       #does user match the password and hashed pw?
-      user && checkpw(given_pass, user.password_hash) ->
+      user && checkpw(password, user.password_hash) ->
+        plots = Plot
+          |> where( [a], a.user_id == ^user.id )
+          |> Backend.Repo.all
+          #convert back into json-isable format
+          |> Enum.map(
+            fn(p) ->
+              %{ source: p.source, ticker: p.ticker, frequency: p.frequency, startDate: p.startDate, endDate: p.endDate, y: p.y, deleted: p.deleted, user_id: p.user_id, id: p.id }
+            end)
+
         token = Phoenix.Token.sign(socket, "user", user.id)
-        %{response_text: "OK", token: token, fullname: user.fullname}
-      #no need to be so granular
-      user ->
-        %{response_text: "Password Not OK", token: "", fullname: ""}
+        #ok is magic word which brings user to login
+        %Response{response_text: "OK", token: token, action: "login", fullname: user.fullname, plots: plots}
       true ->
-        #?? take up time between tries?
         dummy_checkpw()
-        %{response_text: "User Not Found", token: "", fullname: ""}
+        %Response{response_text: "Wrong password user combination", action: "login"}
     end
   end
 

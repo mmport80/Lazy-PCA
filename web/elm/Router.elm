@@ -44,6 +44,11 @@ defaultUser = User "" "" ""
 init : (Model, Effects Action)
 init =
   let
+    --add inputs so that it can be loaded from db
+    --initially static defaultUser
+    --later call init using plot config from db
+    --called when analysis.response comes thru
+    --works like a reset
     (analysis, analysisFx) = AnalysisForm.init
     (login, loginFx) = LoginForm.init "" ""
     (register, registerFx) = RegisterForm.init "" "" ""
@@ -96,6 +101,7 @@ update action model =
           AnalysisForm.UpdateTicker i ->
             ( model', Effects.map Analysis fx )
           _ ->
+            --
             ( model', Effects.batch [sd, Effects.map Analysis fx] )
     Register input ->
       let

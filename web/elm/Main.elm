@@ -32,6 +32,10 @@ port loginRequest : Signal LoginForm.LoginRequest
 port loginRequest = loginRequestMailBox.signal
 
 --incoming login responses
+--now with data also
+--jump to analysis if OK
+--load config after jumping
+--load config means calling init
 port loginResponse : Signal LoginForm.ResponseMessage
 
 incomingLoginActions : Signal (Router.Action)

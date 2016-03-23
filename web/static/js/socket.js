@@ -23,8 +23,14 @@ channel.on("save_data",
 
 channel.on("new_msg",
   payload => {
-    const {token: token, response_text: response_text, action: action, fullname: fullname} = payload.body;
+    const {token: token, response_text: response_text, action: action, fullname: fullname, plots: plots} = payload.body;
     const message = {token: token, response: response_text, fullname: fullname};
+
+    console.log("message");
+    console.log(message);
+
+    console.log('plots');
+    console.log(plots);
 
     action === "login" ?
       app.ports.loginResponse.send(message)
