@@ -23,22 +23,22 @@ import List
 -- MODEL
 --UI state
 type alias Model = {
-      username : InputField.Model
-    , password : InputField.Model
-    , response : String
-    , token : String
-    }
+    username : InputField.Model
+  , password : InputField.Model
+  , response : String
+  , token : String
+  }
 
 init : String -> String -> (Model, Effects Action)
 init username password =
-    (
-      { username = InputField.init username "Username" "text" False
-      , password = InputField.init password "Password" "password" False
-      , response = ""
-      , token = ""
-      }
-    , Effects.none
-    )
+  (
+    { username = InputField.init username "Username" "text" False
+    , password = InputField.init password "Password" "password" False
+    , response = ""
+    , token = ""
+    }
+  , Effects.none
+  )
 
 --********************************************************************************
 --********************************************************************************

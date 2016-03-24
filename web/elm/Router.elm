@@ -45,16 +45,11 @@ defaultUser = User "" "" ""
 init : (Model, Effects Action)
 init =
   let
-    --add inputs so that it can be loaded from db
-    --initially static defaultUser
-    --later call init using plot config from db
-    --called when analysis.response comes thru
-    --works like a reset
-    plots = [ AnalysisForm.defaultPlotConfig ]
-    (analysis, analysisFx) = AnalysisForm.init plots
+    (analysis, analysisFx) = AnalysisForm.init plots 0
     (login, loginFx) = LoginForm.init "" ""
     (register, registerFx) = RegisterForm.init "" "" ""
     locationLinks = LocationLinks.init ""
+    plots = [ AnalysisForm.defaultPlotConfig ]
   in
     ( Model analysis login register locationLinks (User "" "" "") AnalysisForm.defaultPortableModel plots
     , Effects.batch
@@ -92,7 +87,8 @@ update action model =
         (newData, fx) = AnalysisForm.update input model.analysisForm
         pModel = AnalysisForm.convertElmModelToPortableFormat newData
         sd = saveData (ExportData model.user pModel)
-        model' = { model | analysisForm = newData }
+        analysisForm' = { newData | plots = model.plots }
+        model' = { model | analysisForm = analysisForm' }
       in
         --how to write one case to catch all 3?
         case input of
@@ -120,17 +116,23 @@ update action model =
         (newUser, fx) = LoginForm.update input model.loginForm
         locationLinks = forwardOnLogin newUser.response model.locationLinks
         fxMap = Effects.map Login fx
+
       in
         case input of
           LoginForm.Response i ->
-            ( { model |
-                loginForm = newUser
-              , locationLinks = locationLinks
-              , user = User i.fullname newUser.username.value newUser.token
-              , plots = i.plots
-              }
-            , fxMap
-            )
+            let
+              (analysis, analysisFx) = AnalysisForm.init i.plots 0
+              analysisFxMap = Effects.map Analysis analysisFx
+              model' =
+                { model |
+                  loginForm = newUser
+                , locationLinks = locationLinks
+                , user = User i.fullname newUser.username.value newUser.token
+                , plots = i.plots
+                , analysisForm = analysis
+                }
+            in
+              ( model', fxMap ) --analysisFxMap
           _ ->
             ( { model |
                 loginForm = newUser
@@ -152,6 +154,7 @@ update action model =
               }
             , Effects.none
             )
+    --superfluous
     NoOp ->
       ( model, Effects.none )
 

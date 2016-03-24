@@ -1,6 +1,6 @@
 module Forms.AnalysisForm where
 
-import Html exposing (a, text, Html, div, hr)
+import Html exposing (a, text, Html, div, hr, span)
 import Html.Attributes exposing (href, id)
 import Html.Events exposing (targetChecked, on, onClick)
 
@@ -35,33 +35,40 @@ defaultRow : Row
 defaultRow = (,) (Date.fromTime 0) 0
 
 type alias Model = {
-      source : SelectInput.Model
-    , ticker : InputField.Model
-    , yield : Yield.Model
-    , newData : List Row
-    , frequency : SelectInput.Model
-    , startDate : InputField.Model
-    , endDate : InputField.Model
-    , progressMsg : String
-    , plots : List PlotConfig
-    }
+    source : SelectInput.Model
+  , ticker : InputField.Model
+  , yield : Yield.Model
+  , newData : List Row
+  , frequency : SelectInput.Model
+  , startDate : InputField.Model
+  , endDate : InputField.Model
+  , progressMsg : String
+  , plot_id : Int
+  , plots : List PlotConfig
+  }
 
-init : List PlotConfig -> (Model, Effects Action)
-init plots =
+sourceOptions : List Option
+sourceOptions = [ Option "YAHOO" "Yahoo", Option "GOOG" "Google", Option "CBOE" "Chicago Board of Options Exchange", Option "SPDJ" "S&P Dow Jones" ]
+
+frequencyOptions : List Option
+frequencyOptions = [ Option "1" "Daily", Option "5" "Weekly", Option "21" "Monthly", Option "63" "Quarterly" ]
+
+init : List PlotConfig -> Int -> (Model, Effects Action)
+init plots plot_id =
   let
-    sourceOptions = [ Option "YAHOO" "Yahoo", Option "GOOG" "Google", Option "CBOE" "Chicago Board of Options Exchange", Option "SPDJ" "S&P Dow Jones" ]
-    frequencyOptions = [ Option "1" "Daily", Option "5" "Weekly", Option "21" "Monthly", Option "63" "Quarterly" ]
+    initPlot = Maybe.withDefault defaultPlotConfig (List.head (List.filter (\a -> a.id == plot_id) plots))
   in
     (
-      { startDate = InputField.init "" "Start Date" "date" True
-      , endDate = InputField.init "" "End Date" "date" True
-      , ticker = InputField.init "INDEX_VIX" "Ticker" "text" False
-      , yield = Yield.init False
+      { startDate = InputField.init initPlot.startDate "Start Date" "date" True
+      , endDate = InputField.init initPlot.endDate "End Date" "date" True
+      , ticker = InputField.init initPlot.ticker "Ticker" "text" False
+      , yield = Yield.init initPlot.y
       --start with useful default data? instead of useless data
       , newData =  [ defaultRow ]
-      , source = SelectInput.init "YAHOO" sourceOptions False
+      , source = SelectInput.init initPlot.source sourceOptions False
       , frequency = SelectInput.init "21" frequencyOptions True
       , progressMsg = ""
+      , plot_id = initPlot.id
       , plots = plots
       }
     , Effects.none
@@ -80,6 +87,7 @@ type Action
     | Request
     | NewData ( Maybe ( List (Row) ) )
     | NoOp
+    | LoadNewPlot PlotConfig
 
 update : Action -> Model -> (Model, Effects Action)
 update action model =
@@ -129,6 +137,21 @@ update action model =
     --remove this
     NoOp ->
       ( model, Effects.none )
+    LoadNewPlot p ->
+      let
+        model' = { model |
+          startDate = InputField.init p.startDate "Start Date" "date" False
+        , endDate = InputField.init p.endDate "End Date" "date" False
+        , ticker = InputField.init p.ticker "Ticker" "text" False
+        , yield = Yield.init p.y
+        , source = SelectInput.init p.source sourceOptions False
+        , frequency = SelectInput.init "21" frequencyOptions False
+        , plot_id = p.id
+        }
+      in
+        (model', Effects.none)
+
+
     --Send data to JS
     NewData maybeList ->
       let
@@ -155,7 +178,6 @@ update action model =
           model'
         , sendDataToPlot model'
         )
-
 
 --on change send data to plot
 --send data to server
@@ -185,15 +207,38 @@ view address model =
     , div [] [
         text "Start Date"
       , InputField.view (Signal.forwardTo address UpdateStartDate) model.startDate
-
       , text "End Date"
       , InputField.view (Signal.forwardTo address UpdateEndDate) model.endDate
       ]
     --saved plots
-    , div [] (List.foldl ( \p a -> (text p.source) :: a ) [] model.plots )--["1","2","3","4","5","6"])
+    , div [] ( generateSavedPlotConfigTable address model.plots )
 
     ]
 
+generateSavedPlotConfigTable : Signal.Address Action -> List PlotConfig -> List Html
+generateSavedPlotConfigTable address plots =
+  [   text "Source"
+    , text "Ticker"
+    , text "Frequency"
+    , text "Start Date"
+    , text "End Date"
+    ]
+  ++
+  List.map
+    ( \p ->
+      (
+        div [] [
+          a [ href "#", onClick address (LoadNewPlot p) ] [
+              text p.source
+            , text p.ticker
+            , text (toString p.frequency)
+            , text p.startDate
+            , text p.endDate
+            ]
+          ]
+        )
+      )
+    plots
 
 
 --********************************************************************************
@@ -228,7 +273,6 @@ getData model =
     |> Effects.task
 
 --OUTGOING DATA
-
 --filter new data appropriately before plotting it
 sendDataToPlot : Model -> Effects Action
 sendDataToPlot model =
@@ -267,15 +311,6 @@ sendToPlotMailBox :
   }
 sendToPlotMailBox = Signal.mailbox [ ("",0) ]
 
-
-
-
-
-
-
-
-
-
 --^^^^^^^^^^^^^^^^^^^°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 --^^^^^^^^^^^^^^^^^^^°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 ---Utils
@@ -310,7 +345,7 @@ type alias PlotConfig = {
     }
 
 defaultPlotConfig : PlotConfig
-defaultPlotConfig = PlotConfig "" "" "" False "" 21 -1
+defaultPlotConfig = PlotConfig "" "" "INDEX_VIX" False "Yahoo" 21 -1
 
 type alias PortableModel = {
       endDate : String
