@@ -24,20 +24,29 @@ channel.on("save_data",
 channel.on("new_msg",
   payload => {
     const {token: token, response_text: response_text, action: action, fullname: fullname, plots: plots} = payload.body;
-    const message = {token: token, response: response_text, fullname: fullname};
 
-    console.log("message");
-    console.log(message);
+    //convert plots to elm format
+    const elmPlots = plots.map(
+      p =>
+        ({endDate:p.endDate, startDate: p.startDate, ticker:p.ticker, y:p.y, source:p.source, frequency:p.frequency, id:p.id})
+      );
 
-    console.log('plots');
-    console.log(plots);
+    console.log("elmPlots");
+    console.log(elmPlots);
+
+    const loginResponse = {token: token, response: response_text, fullname: fullname, plots: elmPlots};
+    const registerResponse = {token: token, response: response_text, fullname: fullname};
+
+
+
+
 
     action === "login" ?
-      app.ports.loginResponse.send(message)
-    : (action === "register" ?
-        app.ports.registerResponse.send(message)
-      :
-        null)
+      app.ports.loginResponse.send(loginResponse)
+      : (action === "register" ?
+        app.ports.registerResponse.send(registerResponse)
+        :
+          null)
     }
   )
 
@@ -49,7 +58,11 @@ channel.join()
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //Elm setup
 
-const initMesssage = {token: "", response: "", fullname: ""}
+const initMesssage = {token: "", response: "", fullname: ""
+  , plots: [
+      {endDate:"", startDate:"", ticker:"", y:false, source:"", frequency:21, id:-1}
+    ]
+  }
 
 const div = document.getElementById('elm');
 const app = Elm.embed(

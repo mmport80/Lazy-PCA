@@ -4,6 +4,8 @@ import Html exposing (a, text, Html, div)
 import Html.Attributes exposing (href)
 import Html.Events exposing (targetChecked, on, onClick)
 
+import Forms.AnalysisForm as AnalysisForm exposing (PlotConfig)
+
 import Http exposing (get, url)
 
 import Task exposing (toMaybe, andThen)
@@ -27,7 +29,6 @@ type alias Model = {
     , token : String
     }
 
-
 init : String -> String -> (Model, Effects Action)
 init username password =
     (
@@ -38,7 +39,6 @@ init username password =
       }
     , Effects.none
     )
-
 
 --********************************************************************************
 --********************************************************************************
@@ -54,7 +54,9 @@ type Action
 type alias ResponseMessage = {
     response: String
   , token: String
-  , fullname : String}
+  , fullname : String
+  , plots : List AnalysisForm.PlotConfig
+  }
 
 update : Action -> Model -> (Model, Effects Action)
 update action model =
@@ -88,7 +90,6 @@ update action model =
       , Effects.none
       )
 
-
 --********************************************************************************
 --********************************************************************************
 -- VIEW
@@ -101,7 +102,6 @@ view address model =
       , a [ href "#", onClick address Request ] [ text "Login" ]
       , text model.response
       ]
-
 
 --********************************************************************************
 --********************************************************************************

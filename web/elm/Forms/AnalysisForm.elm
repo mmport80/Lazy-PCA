@@ -43,10 +43,11 @@ type alias Model = {
     , startDate : InputField.Model
     , endDate : InputField.Model
     , progressMsg : String
+    , plots : List PlotConfig
     }
 
-init : (Model, Effects Action)
-init =
+init : List PlotConfig -> (Model, Effects Action)
+init plots =
   let
     sourceOptions = [ Option "YAHOO" "Yahoo", Option "GOOG" "Google", Option "CBOE" "Chicago Board of Options Exchange", Option "SPDJ" "S&P Dow Jones" ]
     frequencyOptions = [ Option "1" "Daily", Option "5" "Weekly", Option "21" "Monthly", Option "63" "Quarterly" ]
@@ -61,6 +62,7 @@ init =
       , source = SelectInput.init "YAHOO" sourceOptions False
       , frequency = SelectInput.init "21" frequencyOptions True
       , progressMsg = ""
+      , plots = plots
       }
     , Effects.none
     )
@@ -187,7 +189,12 @@ view address model =
       , text "End Date"
       , InputField.view (Signal.forwardTo address UpdateEndDate) model.endDate
       ]
-  ]
+    --saved plots
+    , div [] (List.foldl ( \p a -> (text p.source) :: a ) [] model.plots )--["1","2","3","4","5","6"])
+
+    ]
+
+
 
 --********************************************************************************
 --********************************************************************************
@@ -292,10 +299,18 @@ fromDateToInteger d =
   >> Result.toMaybe
   >> Maybe.withDefault d
 
+type alias PlotConfig = {
+      endDate : String
+    , startDate : String
+    , ticker : String
+    , y : Bool
+    , source : String
+    , frequency : Int
+    , id : Int
+    }
 
-
-
-
+defaultPlotConfig : PlotConfig
+defaultPlotConfig = PlotConfig "" "" "" False "" 21 -1
 
 type alias PortableModel = {
       endDate : String

@@ -27,9 +27,10 @@ type alias Model =
       analysisForm : AnalysisForm.Model
     , loginForm : LoginForm.Model
     , registerForm : RegisterForm.Model
-    , locationLinks: LocationLinks.Model
-    , user: User
+    , locationLinks : LocationLinks.Model
+    , user : User
     , data : AnalysisForm.PortableModel
+    , plots : List AnalysisForm.PlotConfig
     }
 
 type alias User = {
@@ -49,12 +50,13 @@ init =
     --later call init using plot config from db
     --called when analysis.response comes thru
     --works like a reset
-    (analysis, analysisFx) = AnalysisForm.init
+    plots = [ AnalysisForm.defaultPlotConfig ]
+    (analysis, analysisFx) = AnalysisForm.init plots
     (login, loginFx) = LoginForm.init "" ""
     (register, registerFx) = RegisterForm.init "" "" ""
     locationLinks = LocationLinks.init ""
   in
-    ( Model analysis login register locationLinks (User "" "" "") AnalysisForm.defaultPortableModel
+    ( Model analysis login register locationLinks (User "" "" "") AnalysisForm.defaultPortableModel plots
     , Effects.batch
         [ Effects.map Login loginFx
         , Effects.map Analysis analysisFx
@@ -101,7 +103,6 @@ update action model =
           AnalysisForm.UpdateTicker i ->
             ( model', Effects.map Analysis fx )
           _ ->
-            --
             ( model', Effects.batch [sd, Effects.map Analysis fx] )
     Register input ->
       let
@@ -117,22 +118,25 @@ update action model =
     Login input ->
       let
         (newUser, fx) = LoginForm.update input model.loginForm
+        locationLinks = forwardOnLogin newUser.response model.locationLinks
+        fxMap = Effects.map Login fx
       in
         case input of
           LoginForm.Response i ->
             ( { model |
                 loginForm = newUser
-              , locationLinks = forwardOnLogin newUser.response model.locationLinks
+              , locationLinks = locationLinks
               , user = User i.fullname newUser.username.value newUser.token
+              , plots = i.plots
               }
-            , Effects.map Login fx
+            , fxMap
             )
           _ ->
             ( { model |
                 loginForm = newUser
-              , locationLinks = forwardOnLogin newUser.response model.locationLinks
+              , locationLinks = locationLinks
               }
-            , Effects.map Login fx
+            , fxMap
             )
     ChangeLocation input ->
       let

@@ -11464,6 +11464,8 @@ Elm.Forms.AnalysisForm.make = function (_elm) {
    var _op = {};
    var PortableModel = F7(function (a,b,c,d,e,f,g) {    return {endDate: a,startDate: b,ticker: c,y: d,source: e,frequency: f,newData: g};});
    var defaultPortableModel = A7(PortableModel,"","","",false,"","",_U.list([{ctor: "_Tuple2",_0: "",_1: 0}]));
+   var PlotConfig = F7(function (a,b,c,d,e,f,g) {    return {endDate: a,startDate: b,ticker: c,y: d,source: e,frequency: f,id: g};});
+   var defaultPlotConfig = A7(PlotConfig,"","","",false,"",21,-1);
    var fromDateToInteger = function (d) {    return function (_p0) {    return A2($Maybe.withDefault,d,$Result.toMaybe($String.toInt(_p0)));};};
    var toDate = function (d) {    return function (_p1) {    return A2($Result.withDefault,d,$Date.fromString(_p1));};};
    var toInteger = function (d) {    return function (_p2) {    return A2($Maybe.withDefault,d,$Result.toMaybe($String.toInt(_p2)));};};
@@ -11595,11 +11597,14 @@ Elm.Forms.AnalysisForm.make = function (_elm) {
               _U.list([$Html.text("Start Date")
                       ,A2($Forms$Components$InputField.view,A2($Signal.forwardTo,address,UpdateStartDate),model.startDate)
                       ,$Html.text("End Date")
-                      ,A2($Forms$Components$InputField.view,A2($Signal.forwardTo,address,UpdateEndDate),model.endDate)]))]));
+                      ,A2($Forms$Components$InputField.view,A2($Signal.forwardTo,address,UpdateEndDate),model.endDate)]))
+              ,A2($Html.div,_U.list([]),A3($List.foldl,F2(function (p,a) {    return A2($List._op["::"],$Html.text(p.source),a);}),_U.list([]),model.plots))]));
    });
-   var Model = F8(function (a,b,c,d,e,f,g,h) {    return {source: a,ticker: b,$yield: c,newData: d,frequency: e,startDate: f,endDate: g,progressMsg: h};});
+   var Model = F9(function (a,b,c,d,e,f,g,h,i) {
+      return {source: a,ticker: b,$yield: c,newData: d,frequency: e,startDate: f,endDate: g,progressMsg: h,plots: i};
+   });
    var defaultRow = A2(F2(function (v0,v1) {    return {ctor: "_Tuple2",_0: v0,_1: v1};}),$Date.fromTime(0),0);
-   var init = function () {
+   var init = function (plots) {
       var frequencyOptions = _U.list([A2($Forms$Components$SelectInput.Option,"1","Daily")
                                      ,A2($Forms$Components$SelectInput.Option,"5","Weekly")
                                      ,A2($Forms$Components$SelectInput.Option,"21","Monthly")
@@ -11616,9 +11621,10 @@ Elm.Forms.AnalysisForm.make = function (_elm) {
                   ,newData: _U.list([defaultRow])
                   ,source: A3($Forms$Components$SelectInput.init,"YAHOO",sourceOptions,false)
                   ,frequency: A3($Forms$Components$SelectInput.init,"21",frequencyOptions,true)
-                  ,progressMsg: ""}
+                  ,progressMsg: ""
+                  ,plots: plots}
              ,_1: $Effects.none};
-   }();
+   };
    return _elm.Forms.AnalysisForm.values = {_op: _op
                                            ,defaultRow: defaultRow
                                            ,Model: Model
@@ -11645,6 +11651,8 @@ Elm.Forms.AnalysisForm.make = function (_elm) {
                                            ,toInteger: toInteger
                                            ,toDate: toDate
                                            ,fromDateToInteger: fromDateToInteger
+                                           ,PlotConfig: PlotConfig
+                                           ,defaultPlotConfig: defaultPlotConfig
                                            ,PortableModel: PortableModel
                                            ,defaultPortableModel: defaultPortableModel
                                            ,convertElmModelToPortableFormat: convertElmModelToPortableFormat};
@@ -11659,6 +11667,7 @@ Elm.Forms.LoginForm.make = function (_elm) {
    $Basics = Elm.Basics.make(_elm),
    $Debug = Elm.Debug.make(_elm),
    $Effects = Elm.Effects.make(_elm),
+   $Forms$AnalysisForm = Elm.Forms.AnalysisForm.make(_elm),
    $Forms$Components$InputField = Elm.Forms.Components.InputField.make(_elm),
    $Html = Elm.Html.make(_elm),
    $Html$Attributes = Elm.Html.Attributes.make(_elm),
@@ -11671,7 +11680,7 @@ Elm.Forms.LoginForm.make = function (_elm) {
    var _op = {};
    var LoginRequest = F2(function (a,b) {    return {username: a,password: b};});
    var loginRequestMailBox = $Signal.mailbox(A2(LoginRequest,"",""));
-   var ResponseMessage = F3(function (a,b,c) {    return {response: a,token: b,fullname: c};});
+   var ResponseMessage = F4(function (a,b,c,d) {    return {response: a,token: b,fullname: c,plots: d};});
    var NoOp = {ctor: "NoOp"};
    var sendData = function (data) {
       return $Effects.task(A2($Task.andThen,A2($Signal.send,loginRequestMailBox.address,data),function (_p0) {    return $Task.succeed(NoOp);}));
@@ -11929,7 +11938,7 @@ Elm.Router.make = function (_elm) {
    var saveData = function (model) {
       return $Effects.task(A2($Task.andThen,A2($Signal.send,saveToDBMailBox.address,model),function (_p2) {    return $Task.succeed(NoOp);}));
    };
-   var Model = F6(function (a,b,c,d,e,f) {    return {analysisForm: a,loginForm: b,registerForm: c,locationLinks: d,user: e,data: f};});
+   var Model = F7(function (a,b,c,d,e,f,g) {    return {analysisForm: a,loginForm: b,registerForm: c,locationLinks: d,user: e,data: f,plots: g};});
    var init = function () {
       var locationLinks = $LocationLinks.init("");
       var _p3 = A3($Forms$RegisterForm.init,"","","");
@@ -11938,11 +11947,12 @@ Elm.Router.make = function (_elm) {
       var _p4 = A2($Forms$LoginForm.init,"","");
       var login = _p4._0;
       var loginFx = _p4._1;
-      var _p5 = $Forms$AnalysisForm.init;
+      var plots = _U.list([$Forms$AnalysisForm.defaultPlotConfig]);
+      var _p5 = $Forms$AnalysisForm.init(plots);
       var analysis = _p5._0;
       var analysisFx = _p5._1;
       return {ctor: "_Tuple2"
-             ,_0: A6(Model,analysis,login,register,locationLinks,A3(User,"","",""),$Forms$AnalysisForm.defaultPortableModel)
+             ,_0: A7(Model,analysis,login,register,locationLinks,A3(User,"","",""),$Forms$AnalysisForm.defaultPortableModel,plots)
              ,_1: $Effects.batch(_U.list([A2($Effects.map,Login,loginFx),A2($Effects.map,Analysis,analysisFx),A2($Effects.map,Register,registerFx)]))};
    }();
    var update = F2(function (action,model) {
@@ -11970,26 +11980,25 @@ Elm.Router.make = function (_elm) {
                   ,locationLinks: A2(forwardOnLogin,newUser.response,model.locationLinks)
                   ,user: A3(User,newUser.username.value,newUser.fullname.value,newUser.token)})
                   ,_1: A2($Effects.map,Register,fx)};
-         case "Login": var _p13 = _p6._0;
-           var _p11 = A2($Forms$LoginForm.update,_p13,model.loginForm);
+         case "Login": var _p14 = _p6._0;
+           var _p11 = A2($Forms$LoginForm.update,_p14,model.loginForm);
            var newUser = _p11._0;
            var fx = _p11._1;
-           var _p12 = _p13;
+           var locationLinks = A2(forwardOnLogin,newUser.response,model.locationLinks);
+           var fxMap = A2($Effects.map,Login,fx);
+           var _p12 = _p14;
            if (_p12.ctor === "Response") {
+                 var _p13 = _p12._0;
                  return {ctor: "_Tuple2"
                         ,_0: _U.update(model,
-                        {loginForm: newUser
-                        ,locationLinks: A2(forwardOnLogin,newUser.response,model.locationLinks)
-                        ,user: A3(User,_p12._0.fullname,newUser.username.value,newUser.token)})
-                        ,_1: A2($Effects.map,Login,fx)};
+                        {loginForm: newUser,locationLinks: locationLinks,user: A3(User,_p13.fullname,newUser.username.value,newUser.token),plots: _p13.plots})
+                        ,_1: fxMap};
               } else {
-                 return {ctor: "_Tuple2"
-                        ,_0: _U.update(model,{loginForm: newUser,locationLinks: A2(forwardOnLogin,newUser.response,model.locationLinks)})
-                        ,_1: A2($Effects.map,Login,fx)};
+                 return {ctor: "_Tuple2",_0: _U.update(model,{loginForm: newUser,locationLinks: locationLinks}),_1: fxMap};
               }
          case "ChangeLocation": var newLocation = $LocationLinks.update(_p6._0);
-           var _p14 = newLocation;
-           if (_p14 === "logout") {
+           var _p15 = newLocation;
+           if (_p15 === "logout") {
                  return init;
               } else {
                  return {ctor: "_Tuple2",_0: _U.update(model,{locationLinks: newLocation}),_1: $Effects.none};
@@ -12071,13 +12080,32 @@ Elm.Main.make = function (_elm) {
    var loginResponse = Elm.Native.Port.make(_elm).inboundSignal("loginResponse",
    "Forms.LoginForm.ResponseMessage",
    function (v) {
-      return typeof v === "object" && "response" in v && "token" in v && "fullname" in v ? {_: {}
-                                                                                           ,response: typeof v.response === "string" || typeof v.response === "object" && v.response instanceof String ? v.response : _U.badPort("a string",
-                                                                                           v.response)
-                                                                                           ,token: typeof v.token === "string" || typeof v.token === "object" && v.token instanceof String ? v.token : _U.badPort("a string",
-                                                                                           v.token)
-                                                                                           ,fullname: typeof v.fullname === "string" || typeof v.fullname === "object" && v.fullname instanceof String ? v.fullname : _U.badPort("a string",
-                                                                                           v.fullname)} : _U.badPort("an object with fields `response`, `token`, `fullname`",
+      return typeof v === "object" && "response" in v && "token" in v && "fullname" in v && "plots" in v ? {_: {}
+                                                                                                           ,response: typeof v.response === "string" || typeof v.response === "object" && v.response instanceof String ? v.response : _U.badPort("a string",
+                                                                                                           v.response)
+                                                                                                           ,token: typeof v.token === "string" || typeof v.token === "object" && v.token instanceof String ? v.token : _U.badPort("a string",
+                                                                                                           v.token)
+                                                                                                           ,fullname: typeof v.fullname === "string" || typeof v.fullname === "object" && v.fullname instanceof String ? v.fullname : _U.badPort("a string",
+                                                                                                           v.fullname)
+                                                                                                           ,plots: typeof v.plots === "object" && v.plots instanceof Array ? Elm.Native.List.make(_elm).fromArray(v.plots.map(function (v) {
+                                                                                                              return typeof v === "object" && "endDate" in v && "startDate" in v && "ticker" in v && "y" in v && "source" in v && "frequency" in v && "id" in v ? {_: {}
+                                                                                                                                                                                                                                                                  ,endDate: typeof v.endDate === "string" || typeof v.endDate === "object" && v.endDate instanceof String ? v.endDate : _U.badPort("a string",
+                                                                                                                                                                                                                                                                  v.endDate)
+                                                                                                                                                                                                                                                                  ,startDate: typeof v.startDate === "string" || typeof v.startDate === "object" && v.startDate instanceof String ? v.startDate : _U.badPort("a string",
+                                                                                                                                                                                                                                                                  v.startDate)
+                                                                                                                                                                                                                                                                  ,ticker: typeof v.ticker === "string" || typeof v.ticker === "object" && v.ticker instanceof String ? v.ticker : _U.badPort("a string",
+                                                                                                                                                                                                                                                                  v.ticker)
+                                                                                                                                                                                                                                                                  ,y: typeof v.y === "boolean" ? v.y : _U.badPort("a boolean (true or false)",
+                                                                                                                                                                                                                                                                  v.y)
+                                                                                                                                                                                                                                                                  ,source: typeof v.source === "string" || typeof v.source === "object" && v.source instanceof String ? v.source : _U.badPort("a string",
+                                                                                                                                                                                                                                                                  v.source)
+                                                                                                                                                                                                                                                                  ,frequency: typeof v.frequency === "number" && isFinite(v.frequency) && Math.floor(v.frequency) === v.frequency ? v.frequency : _U.badPort("an integer",
+                                                                                                                                                                                                                                                                  v.frequency)
+                                                                                                                                                                                                                                                                  ,id: typeof v.id === "number" && isFinite(v.id) && Math.floor(v.id) === v.id ? v.id : _U.badPort("an integer",
+                                                                                                                                                                                                                                                                  v.id)} : _U.badPort("an object with fields `endDate`, `startDate`, `ticker`, `y`, `source`, `frequency`, `id`",
+                                                                                                              v);
+                                                                                                           })) : _U.badPort("an array",
+                                                                                                           v.plots)} : _U.badPort("an object with fields `response`, `token`, `fullname`, `plots`",
       v);
    });
    var incomingLoginActions = A2($Signal.map,$Router.Login,A2($Signal.map,$Forms$LoginForm.Response,loginResponse));

@@ -32,7 +32,7 @@ port loginRequest : Signal LoginForm.LoginRequest
 port loginRequest = loginRequestMailBox.signal
 
 --incoming login responses
---now with data also
+--now with data also   jhjh
 --jump to analysis if OK
 --load config after jumping
 --load config means calling init

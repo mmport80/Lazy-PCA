@@ -57,7 +57,8 @@ type Action
 type alias ResponseMessage = {
     response: String
   , token: String
-  , fullname : String}
+  , fullname : String
+  }
 
 update : Action -> Model -> (Model, Effects Action)
 update action model =
