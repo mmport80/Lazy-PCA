@@ -1,7 +1,7 @@
 module Forms.AnalysisForm where
 
 import Html exposing (a, text, Html, div, hr, span)
-import Html.Attributes exposing (href, id)
+import Html.Attributes exposing (href, id, class)
 import Html.Events exposing (targetChecked, on, onClick)
 
 import Http exposing (get, url)
@@ -211,34 +211,40 @@ view address model =
       , InputField.view (Signal.forwardTo address UpdateEndDate) model.endDate
       ]
     --saved plots
-    , div [] ( generateSavedPlotConfigTable address model.plots )
+    , div [ class "table" ] (generateSavedPlotConfigTable address model.plots)
 
     ]
 
 generateSavedPlotConfigTable : Signal.Address Action -> List PlotConfig -> List Html
 generateSavedPlotConfigTable address plots =
-  [   text "Source"
-    , text "Ticker"
-    , text "Frequency"
-    , text "Start Date"
-    , text "End Date"
-    ]
+  [
+    div [ class "header" ]
+      [   div [ class "cell" ] [ text "Source" ]
+        , div [ class "cell" ] [ text "Ticker" ]
+        , div [ class "cell" ] [ text "Frequency" ]
+        , div [ class "cell" ] [ text "Start Date" ]
+        , div [ class "cell" ] [ text "End Date" ]
+        ]
+  ]
   ++
   List.map
     ( \p ->
       (
-        div [] [
-          a [ href "#", onClick address (LoadNewPlot p) ] [
-              text p.source
-            , text p.ticker
-            , text (toString p.frequency)
-            , text p.startDate
-            , text p.endDate
+          div [ class "rowGroup", onClick address (LoadNewPlot p) ] [
+            div [ class "row" ] [
+                div [ class "cell" ] [ text p.source ]
+              , div [ class "cell" ] [ text p.ticker ]
+              , div [ class "cell" ] [ text (toString p.frequency) ]
+              , div [ class "cell" ] [ text p.startDate ]
+              , div [ class "cell" ] [ text p.endDate ]
+              ]
             ]
-          ]
         )
       )
     plots
+
+
+
 
 
 --********************************************************************************
