@@ -33,16 +33,41 @@ defmodule Backend.RoomChannel do
     #get user data
     #IO.inspect params
 
-    %{"data" => data, "user" => user} = params
+    %{"plot" => plot, "user" => user} = params
 
-    cond do
+    IO.inspect plot
+
+    case Phoenix.Token.verify(socket, "user", user["token"] ) do
       #check that id is owned by user
-      Phoenix.Token.verify(socket, "user", user["token"] ) ->
-        #save here not insert
+      {:ok, user_id } ->
+        #get user
+        #make sure user owns plot
         #p = save_plot user data
         #return ok
-        r = "ok"
-      true ->
+
+        #changeset which checks whether orig and new plot have same user_id
+
+        user = Repo.get_by(Backend.User, id: user_id )
+
+        IO.inspect user
+
+        orig_Plot = Repo.get_by(Backend.Plot, id: plot["id"] )
+
+        #orig owner id matches logged in user
+        if orig_Plot.user_id == user_id do
+          p = %{source: plot["source"], ticker: plot["ticker"], frequency: plot["frequency"], startDate: plot["startDate"], endDate: plot["endDate"], y: plot["y"], deleted: false, user_id: user.id}
+          changeset = Plot.changeset(%Plot{},p)
+          #update plot
+          case Repo.update ( Ecto.Changeset.change post = MyRepo.get!(Plot, 42), p ) do
+            {:ok, o} ->
+              IO.inspect o
+            {:error, e} ->
+              IO.inspect e
+          end
+          r = "oke"
+        end
+        r = "error"
+      _ ->
         #don't save
         #return error
         r = "error"

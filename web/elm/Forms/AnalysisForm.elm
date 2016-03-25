@@ -27,13 +27,12 @@ import Time exposing (every, millisecond)
 --********************************************************************************
 -- MODEL
 --a row of the data file
---how to approach with files from different sources?
---type alias Row = (String, Float, Float, Float, Float, Float, Float)
 type alias Row = (Date.Date, Float)
 
 defaultRow : Row
 defaultRow = (,) (Date.fromTime 0) 0
 
+--description of form
 type alias Model = {
     source : SelectInput.Model
   , ticker : InputField.Model
@@ -47,26 +46,27 @@ type alias Model = {
   , plots : List PlotConfig
   }
 
+--select field values
 sourceOptions : List Option
 sourceOptions = [ Option "YAHOO" "Yahoo", Option "GOOG" "Google", Option "CBOE" "Chicago Board of Options Exchange", Option "SPDJ" "S&P Dow Jones" ]
 
 frequencyOptions : List Option
 frequencyOptions = [ Option "1" "Daily", Option "5" "Weekly", Option "21" "Monthly", Option "63" "Quarterly" ]
 
-init : List PlotConfig -> Int -> (Model, Effects Action)
-init plots plot_id =
+--initilise form
+init : List PlotConfig -> (Model, Effects Action)
+init plots =
   let
-    initPlot = Maybe.withDefault defaultPlotConfig (List.head (List.filter (\a -> a.id == plot_id) plots))
+    initPlot = Maybe.withDefault defaultPlotConfig (List.head plots)
   in
     (
       { startDate = InputField.init initPlot.startDate "Start Date" "date" True
       , endDate = InputField.init initPlot.endDate "End Date" "date" True
       , ticker = InputField.init initPlot.ticker "Ticker" "text" False
       , yield = Yield.init initPlot.y
-      --start with useful default data? instead of useless data
       , newData =  [ defaultRow ]
       , source = SelectInput.init initPlot.source sourceOptions False
-      , frequency = SelectInput.init "21" frequencyOptions True
+      , frequency = SelectInput.init (toString initPlot.frequency) frequencyOptions True
       , progressMsg = ""
       , plot_id = initPlot.id
       , plots = plots
@@ -77,6 +77,7 @@ init plots plot_id =
 --********************************************************************************
 --********************************************************************************
 -- UPDATE
+--all the actions available for this form
 type Action
     = UpdateSource SelectInput.Action
     | UpdateFrequency SelectInput.Action
@@ -84,14 +85,19 @@ type Action
     | UpdateYield Bool
     | UpdateStartDate InputField.Action
     | UpdateEndDate InputField.Action
+    --request data from quandl
     | Request
+    --once we receive data then, send it to the scatter plot
     | NewData ( Maybe ( List (Row) ) )
+    --get rid of this, superfluous
     | NoOp
+    --load plot when from saved configurations
     | LoadNewPlot PlotConfig
 
 update : Action -> Model -> (Model, Effects Action)
 update action model =
   case action of
+    --update plot configs as they are updated in the ui
     UpdateSource input ->
       ( { model | source = SelectInput.update input model.source }
       , Effects.none
@@ -131,7 +137,7 @@ update action model =
           frequency = SelectInput.update SelectInput.Enable model.frequency
         , startDate = InputField.update InputField.Enable model.startDate
         , endDate = InputField.update InputField.Enable model.endDate
-        , progressMsg = "Please Wait..."
+        , progressMsg = "Downloading Data..."
         }
       , getData model )
     --remove this
@@ -145,11 +151,12 @@ update action model =
         , ticker = InputField.init p.ticker "Ticker" "text" False
         , yield = Yield.init p.y
         , source = SelectInput.init p.source sourceOptions False
-        , frequency = SelectInput.init "21" frequencyOptions False
+        , frequency = SelectInput.init (toString p.frequency) frequencyOptions False
         , plot_id = p.id
+        , progressMsg = "Downloading Data..."
         }
       in
-        (model', Effects.none)
+        (model', getData model')
 
 
     --Send data to JS
@@ -210,13 +217,13 @@ view address model =
       , text "End Date"
       , InputField.view (Signal.forwardTo address UpdateEndDate) model.endDate
       ]
+    , hr [] []
     --saved plots
-    , div [ class "table" ] (generateSavedPlotConfigTable address model.plots)
-
+    , div [ class "table" ] ( generateSavedPlotConfigTable address model.plots model.plot_id )
     ]
 
-generateSavedPlotConfigTable : Signal.Address Action -> List PlotConfig -> List Html
-generateSavedPlotConfigTable address plots =
+generateSavedPlotConfigTable : Signal.Address Action -> List PlotConfig -> Int -> List Html
+generateSavedPlotConfigTable address plots plotId =
   [
     div [ class "header" ]
       [   div [ class "cell" ] [ text "Source" ]
@@ -241,7 +248,7 @@ generateSavedPlotConfigTable address plots =
             ]
         )
       )
-    plots
+    ( List.filter ( \p -> p.id /= plotId ) plots )
 
 
 
@@ -351,7 +358,7 @@ type alias PlotConfig = {
     }
 
 defaultPlotConfig : PlotConfig
-defaultPlotConfig = PlotConfig "" "" "INDEX_VIX" False "Yahoo" 21 -1
+defaultPlotConfig = PlotConfig "" "" "INDEX_GSPC" False "Yahoo" 21 -1
 
 type alias PortableModel = {
       endDate : String
@@ -366,13 +373,13 @@ type alias PortableModel = {
 defaultPortableModel : PortableModel
 defaultPortableModel = PortableModel "" "" "" False "" "" [("",0)]
 
-convertElmModelToPortableFormat : Model -> PortableModel
-convertElmModelToPortableFormat model =
+convertElmModelToPlotConfig : Model -> PlotConfig
+convertElmModelToPlotConfig model =
   { endDate = model.endDate.value
   , startDate = model.startDate.value
   , ticker = model.ticker.value
   , y = model.yield
   , source = model.source.value
-  , frequency = model.frequency.value
-  , newData =  model.newData |> List.map (\ (a,b) -> (dateToISOFormat a,b) )
+  , frequency = toInteger 21 model.frequency.value
+  , id =  model.plot_id
   }

@@ -124,6 +124,7 @@ app.ports.sendToScatterPlot.subscribe(draw);
 //new
 const save = request =>
   {
+  console.log("to be saved");
   console.log(request);
   channel.push("save_data", {body: request});
   };

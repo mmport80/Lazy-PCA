@@ -45,7 +45,7 @@ defaultUser = User "" "" ""
 init : (Model, Effects Action)
 init =
   let
-    (analysis, analysisFx) = AnalysisForm.init plots 0
+    (analysis, analysisFx) = AnalysisForm.init plots
     (login, loginFx) = LoginForm.init "" ""
     (register, registerFx) = RegisterForm.init "" "" ""
     locationLinks = LocationLinks.init ""
@@ -66,11 +66,11 @@ init =
 
 type alias ExportData = {
     user : User
-  , data : AnalysisForm.PortableModel
+  , plot : AnalysisForm.PlotConfig
   }
 
 defaultExportData : ExportData
-defaultExportData = ExportData defaultUser AnalysisForm.defaultPortableModel
+defaultExportData = ExportData defaultUser AnalysisForm.defaultPlotConfig
 
 type Action
     = Login LoginForm.Action
@@ -85,18 +85,33 @@ update action model =
     Analysis input ->
       let
         (newData, fx) = AnalysisForm.update input model.analysisForm
-        pModel = AnalysisForm.convertElmModelToPortableFormat newData
-        sd = saveData (ExportData model.user pModel)
-        analysisForm' = { newData | plots = model.plots }
-        model' = { model | analysisForm = analysisForm' }
+        --extract plot config from current analysis form
+        plot = AnalysisForm.convertElmModelToPlotConfig newData
+        plots = plot
+          ::
+          ( model.plots |> List.filter (\p -> p.id /= plot.id) )
+        --only save user & plot config
+        sd = saveData (ExportData model.user plot)
+        --update plots with current plot config
+        --filter out plot from plots
+        --add plot to head
+        analysisForm' = { newData | plots = plots }
+        model' = { model | analysisForm = analysisForm', plots = plots }
       in
         --how to write one case to catch all 3?
+        --don't save when setting up initial request
+        --save when we get data backup
+        --or when frequcy or dates have been changed
         case input of
           AnalysisForm.UpdateSource i ->
             ( model', Effects.map Analysis fx )
           AnalysisForm.UpdateYield i ->
             ( model', Effects.map Analysis fx )
           AnalysisForm.UpdateTicker i ->
+            ( model', Effects.map Analysis fx )
+          AnalysisForm.LoadNewPlot p ->
+            ( model', Effects.map Analysis fx )
+          AnalysisForm.Request ->
             ( model', Effects.map Analysis fx )
           _ ->
             ( model', Effects.batch [sd, Effects.map Analysis fx] )
@@ -121,7 +136,7 @@ update action model =
         case input of
           LoginForm.Response i ->
             let
-              (analysis, analysisFx) = AnalysisForm.init i.plots 0
+              (analysis, analysisFx) = AnalysisForm.init i.plots
               analysisFxMap = Effects.map Analysis analysisFx
               model' =
                 { model |
