@@ -37,10 +37,6 @@ channel.on("new_msg",
     const loginResponse = {token: token, response: response_text, fullname: fullname, plots: elmPlots};
     const registerResponse = {token: token, response: response_text, fullname: fullname};
 
-
-
-
-
     action === "login" ?
       app.ports.loginResponse.send(loginResponse)
       : (action === "register" ?

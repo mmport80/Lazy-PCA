@@ -63,5 +63,11 @@ port sendToScatterPlot = sendToPlotMailBox.signal
 --save data
 --need a response also - confirming save
 
-port saveToDB : Signal Router.ExportData --{user: User, data: AnalysisForm.PortableModel}
+--request new plotconfig
+--user plotid is -1, that is a flag to not update but insert
+
+port saveToDB : Signal Router.ExportData
 port saveToDB = saveToDBMailBox.signal
+
+
+--^^^^^^^^^^^^^^^^^^^°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°

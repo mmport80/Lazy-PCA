@@ -96,6 +96,8 @@ type Action
     --load plot when from saved configurations
     | LoadNewPlot PlotConfig
     | Hover Int
+    | ReceiveNewPlot PlotConfig
+    | RequestNewPlot
     --new plot
     --send request to db
     --send back default plotconfig with id
@@ -163,8 +165,6 @@ update action model =
         }
       in
         (model', getData model')
-
-
     --Send data to JS
     NewData maybeList ->
       let
@@ -196,6 +196,22 @@ update action model =
           hoverId = id
           }
         , Effects.none )
+    --send new plot request
+    --
+    RequestNewPlot ->
+      --need to get id /and then/ LoadNewPlot
+
+      --request new plot
+        --send "new request" with user id
+      --insert row in db
+        --send back
+      --receive plot
+        --get back a plot config
+      --load plot
+        --call LoadNewPlot
+      ( model, Effects.none )
+    ReceiveNewPlot p ->
+      ( model, Effects.none )
 
 --on change send data to plot
 --send data to server
@@ -207,6 +223,11 @@ view : Signal.Address Action -> Model -> Html
 view address model =
   div [] [
       div []
+        [
+          a [ href "#", onClick address RequestNewPlot ] [ text "New" ]
+        ]
+    , hr [] []
+    , div []
         [
           SelectInput.view (Signal.forwardTo address UpdateSource) model.source
         , InputField.view (Signal.forwardTo address UpdateTicker) model.ticker
@@ -237,11 +258,11 @@ view address model =
 generateSavedPlotConfigTable : Signal.Address Action -> Model -> List Html
 generateSavedPlotConfigTable address model =
   [ div [ class "header" ]
-      [   div [ class "cell" ] [ text "Source" ]
-        , div [ class "cell" ] [ text "Ticker" ]
-        , div [ class "cell" ] [ text "Frequency" ]
-        , div [ class "cell" ] [ text "Start Date" ]
-        , div [ class "cell" ] [ text "End Date" ]
+      [   div [ class "cell" ] [ text "SOURCE" ]
+        , div [ class "cell" ] [ text "TICKER" ]
+        , div [ class "cell" ] [ text "FREQUENCY" ]
+        , div [ class "cell" ] [ text "START DATE" ]
+        , div [ class "cell" ] [ text "END DATE" ]
         ]
   ]
   ++

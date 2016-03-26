@@ -92,6 +92,8 @@ update action model =
           ( model.plots |> List.filter (\p -> p.id /= plot.id) )
         --only save user & plot config
         sd = saveData (ExportData model.user plot)
+        --requestNewPlot
+        np = saveData (ExportData model.user AnalysisForm.defaultPlotConfig)
         --update plots with current plot config
         --filter out plot from plots
         --add plot to head
@@ -112,9 +114,11 @@ update action model =
           AnalysisForm.LoadNewPlot p ->
             ( model', Effects.map Analysis fx )
           AnalysisForm.Request ->
-            ( model', Effects.map Analysis fx )          
+            ( model', Effects.map Analysis fx )
           AnalysisForm.Hover i ->
             ( model', Effects.map Analysis fx )
+          AnalysisForm.RequestNewPlot ->
+            ( model', Effects.batch [np, Effects.map Analysis fx] )
           _ ->
             ( model', Effects.batch [sd, Effects.map Analysis fx] )
     Register input ->

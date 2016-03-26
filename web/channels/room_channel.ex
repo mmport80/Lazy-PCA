@@ -29,58 +29,72 @@ defmodule Backend.RoomChannel do
   #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
   #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 
-  def handle_in("save_data", %{"body" => params}, socket) do
-    #get user data
-    #IO.inspect params
 
+  #Response struct to send back to client
+  #token is the auth required to pull down data
+  defmodule Response do
+    defstruct response_text: "", token: "", action: "", fullname: "", plots: []
+  end
+
+
+  def handle_in("save_data", %{"body" => params}, socket) do
     %{"plot" => plot, "user" => user} = params
 
-    IO.inspect plot
+    rr =
+      #find user_id from token
+      case Phoenix.Token.verify(socket, "user", user["token"] ) do
+        {:ok, user_id } ->
+          user = Repo.get_by(Backend.User, id: user_id )
+          cond do
+            #---------------------*********************************
+            #-----insert new plot
+            #if sent plot with -1 plot_id, then insert rather than update
+            plot["id"] == -1 ->
+              #insert default plot
+              {:ok, p} = insert_new_plot(user)
+              %Response{ action: "new", plots: [ p |> convertPlotToJsonFormat ] }
+            #---------------------*********************************
+            #-----save existing plot
+            True ->
+              r = save_existing_plot(user, plot, user_id)
+              %Response{ response_text: r }
+            end
+        _ ->
+          #don't save
+          #return error
+          %Response{ response_text: "error" }
+      end
 
-    case Phoenix.Token.verify(socket, "user", user["token"] ) do
-      #check that id is owned by user
-      {:ok, user_id } ->
-        #get user
-        #make sure user owns plot
-        #p = save_plot user data
-        #return ok
-
-        #changeset which checks whether orig and new plot have same user_id
-
-        user = Repo.get_by(Backend.User, id: user_id )
-
-        orig_Plot = Repo.get_by(Backend.Plot, id: plot["id"] )
-
-        #orig owner id matches logged in user
-        if orig_Plot.user_id == user_id do
-          {:ok, sd} = Ecto.Date.cast(plot["startDate"])
-          {:ok, ed} = Ecto.Date.cast(plot["endDate"])
-
-          p = %{source: plot["source"], ticker: plot["ticker"], frequency: plot["frequency"], startDate: sd, endDate: ed, y: plot["y"], deleted: false, user_id: user.id}
-          changeset = Plot.changeset(%Plot{},p)
-          #update plot
-          case Repo.update ( Ecto.Changeset.change Repo.get!(Plot, plot["id"]), p ) do
-            {:ok, o} ->
-              r = "oke"
-            _ ->
-              r = "error"
-          end
-        else
-          r = "error"
-        end
-      _ ->
-        #don't save
-        #return error
-        r = "error"
-    end
-
-    push socket, "save_data", %{body: r}
+    push socket, "save_data", %{body: rr}
     {:noreply, socket}
   end
 
   def handle_out("save_data", payload, socket) do
     push socket, "save_data", payload
     {:noreply, socket}
+  end
+
+
+
+  def save_existing_plot(user, plot, user_id) do
+    orig_Plot = Repo.get_by(Backend.Plot, id: plot["id"] )
+    #make sure owner owns plot
+    #orig plot owner id matches logged in user
+    if orig_Plot.user_id == user_id do
+      {:ok, sd} = Ecto.Date.cast(plot["startDate"])
+      {:ok, ed} = Ecto.Date.cast(plot["endDate"])
+      p = %{source: plot["source"], ticker: plot["ticker"], frequency: plot["frequency"], startDate: sd, endDate: ed, y: plot["y"], deleted: false, user_id: user.id}
+      changeset = Plot.changeset(%Plot{},p)
+      #update plot
+      case Repo.update ( Ecto.Changeset.change Repo.get!(Plot, plot["id"]), p ) do
+        {:ok, o} ->
+          "oke"
+        _ ->
+          "error"
+      end
+    else
+      "error"
+    end
   end
 
   #insert plot is always default
@@ -103,11 +117,6 @@ defmodule Backend.RoomChannel do
 #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 
-  #Response struct to send back to client
-  #token is the auth required to pull down data
-  defmodule Response do
-    defstruct response_text: "", token: "", action: "", fullname: "", plots: []
-  end
 
   #all incoming connections go here
   def handle_in("new_msg", %{"body" => params}, socket) do
@@ -144,6 +153,10 @@ defmodule Backend.RoomChannel do
     {:noreply, socket}
   end
 
+  def convertPlotToJsonFormat(p) do
+    %{ source: p.source, ticker: p.ticker, frequency: p.frequency, startDate: p.startDate, endDate: p.endDate, y: p.y, deleted: p.deleted, user_id: p.user_id, id: p.id }
+  end
+
   #handles login auth
   def login_by_username_and_pass( socket, username, password ) do
     user = Repo.get_by(Backend.User, username: username)
@@ -157,7 +170,7 @@ defmodule Backend.RoomChannel do
           #convert back into json-isable format
           |> Enum.map(
             fn(p) ->
-              %{ source: p.source, ticker: p.ticker, frequency: p.frequency, startDate: p.startDate, endDate: p.endDate, y: p.y, deleted: p.deleted, user_id: p.user_id, id: p.id }
+              convertPlotToJsonFormat(p)
             end)
 
         token = Phoenix.Token.sign(socket, "user", user.id)
