@@ -1,8 +1,8 @@
 module Forms.AnalysisForm where
 
 import Html exposing (a, text, Html, div, hr, span)
-import Html.Attributes exposing (href, id, class)
-import Html.Events exposing (targetChecked, on, onClick)
+import Html.Attributes exposing (href, id, class, classList)
+import Html.Events exposing (targetChecked, on, onClick, onMouseOver)
 
 import Http exposing (get, url)
 
@@ -44,6 +44,7 @@ type alias Model = {
   , progressMsg : String
   , plot_id : Int
   , plots : List PlotConfig
+  , hoverId : Int
   }
 
 --select field values
@@ -70,6 +71,7 @@ init plots =
       , progressMsg = ""
       , plot_id = initPlot.id
       , plots = plots
+      , hoverId = 0
       }
     , Effects.none
     )
@@ -93,6 +95,10 @@ type Action
     | NoOp
     --load plot when from saved configurations
     | LoadNewPlot PlotConfig
+    | Hover Int
+    --new plot
+    --send request to db
+    --send back default plotconfig with id
 
 update : Action -> Model -> (Model, Effects Action)
 update action model =
@@ -185,6 +191,11 @@ update action model =
           model'
         , sendDataToPlot model'
         )
+    Hover id ->
+      ( { model |
+          hoverId = id
+          }
+        , Effects.none )
 
 --on change send data to plot
 --send data to server
@@ -219,13 +230,13 @@ view address model =
       ]
     , hr [] []
     --saved plots
-    , div [ class "table" ] ( generateSavedPlotConfigTable address model.plots model.plot_id )
+    , div [ class "table" ] ( generateSavedPlotConfigTable address model )
     ]
 
-generateSavedPlotConfigTable : Signal.Address Action -> List PlotConfig -> Int -> List Html
-generateSavedPlotConfigTable address plots plotId =
-  [
-    div [ class "header" ]
+--send to its own component?
+generateSavedPlotConfigTable : Signal.Address Action -> Model -> List Html
+generateSavedPlotConfigTable address model =
+  [ div [ class "header" ]
       [   div [ class "cell" ] [ text "Source" ]
         , div [ class "cell" ] [ text "Ticker" ]
         , div [ class "cell" ] [ text "Frequency" ]
@@ -236,20 +247,38 @@ generateSavedPlotConfigTable address plots plotId =
   ++
   List.map
     ( \p ->
-      (
-          div [ class "rowGroup", onClick address (LoadNewPlot p) ] [
-            div [ class "row" ] [
-                div [ class "cell" ] [ text p.source ]
-              , div [ class "cell" ] [ text p.ticker ]
-              , div [ class "cell" ] [ text (toString p.frequency) ]
-              , div [ class "cell" ] [ text p.startDate ]
-              , div [ class "cell" ] [ text p.endDate ]
-              ]
+      ( div [
+          classList [
+              ("rowGroup", True)
+            , ("hover"
+              , if p.id == model.hoverId then
+                  True
+                else
+                  False
+              )
             ]
-        )
+          , onClick address (LoadNewPlot p)
+          , onMouseOver address (Hover p.id)
+          ]
+          [ div [ class "row" ] [
+              div [ class "cell" ] [ text p.source ]
+            , div [ class "cell" ] [ text p.ticker ]
+            , div [ class "cell" ]
+              [ text
+                (
+                --convert value to text
+                List.filter ( \o -> o.value == toString(p.frequency) ) frequencyOptions
+                |> List.head
+                |> Maybe.withDefault (Option "21" "Monthly")
+                |> (\o -> o.text)
+                )
+              ]
+            , div [ class "cell" ] [ text p.startDate ]
+            , div [ class "cell" ] [ text p.endDate ]
+            ]
+          ] )
       )
-    ( List.filter ( \p -> p.id /= plotId ) plots )
-
+    ( List.filter ( \p -> p.id /= model.plot_id ) model.plots )
 
 
 

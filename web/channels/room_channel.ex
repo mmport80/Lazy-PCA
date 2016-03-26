@@ -49,33 +49,30 @@ defmodule Backend.RoomChannel do
 
         user = Repo.get_by(Backend.User, id: user_id )
 
-        IO.inspect user
-
         orig_Plot = Repo.get_by(Backend.Plot, id: plot["id"] )
 
         #orig owner id matches logged in user
         if orig_Plot.user_id == user_id do
-          p = %{source: plot["source"], ticker: plot["ticker"], frequency: plot["frequency"], startDate: plot["startDate"], endDate: plot["endDate"], y: plot["y"], deleted: false, user_id: user.id}
+          {:ok, sd} = Ecto.Date.cast(plot["startDate"])
+          {:ok, ed} = Ecto.Date.cast(plot["endDate"])
+
+          p = %{source: plot["source"], ticker: plot["ticker"], frequency: plot["frequency"], startDate: sd, endDate: ed, y: plot["y"], deleted: false, user_id: user.id}
           changeset = Plot.changeset(%Plot{},p)
           #update plot
-          case Repo.update ( Ecto.Changeset.change post = MyRepo.get!(Plot, 42), p ) do
+          case Repo.update ( Ecto.Changeset.change Repo.get!(Plot, plot["id"]), p ) do
             {:ok, o} ->
-              IO.inspect o
-            {:error, e} ->
-              IO.inspect e
+              r = "oke"
+            _ ->
+              r = "error"
           end
-          r = "oke"
+        else
+          r = "error"
         end
-        r = "error"
       _ ->
         #don't save
         #return error
         r = "error"
     end
-
-    #if auth checks out, save down, report success
-    #save down settings not data
-    #if not report back failure
 
     push socket, "save_data", %{body: r}
     {:noreply, socket}
@@ -84,27 +81,6 @@ defmodule Backend.RoomChannel do
   def handle_out("save_data", payload, socket) do
     push socket, "save_data", payload
     {:noreply, socket}
-  end
-
-
-  def save_plot(user, data) do
-    %{ "source" => source, "frequency" => frequency, "y" => y, "ticker" => ticker, "startDate" => startDate, "endDate" => endDate, "newData" => newData } = data
-    %{ "username" => username, "fullname" => fullname, "token" => token } = user
-
-    u = Repo.get_by(Backend.User, username: username )
-
-    {:ok, sd} = Ecto.Date.cast(startDate)
-    {:ok, ed} = Ecto.Date.cast(endDate)
-
-    {f,_} = Integer.parse(frequency)
-
-    #save report
-    p = %Plot{source: source, ticker: ticker, frequency: f, startDate: sd, endDate: ed, y: y, deleted: false, user_id: u.id}
-
-    r = Repo.insert p
-
-    #return plot id
-    r["id"]
   end
 
   #insert plot is always default
@@ -176,6 +152,7 @@ defmodule Backend.RoomChannel do
       user && checkpw(password, user.password_hash) ->
         plots = Plot
           |> where( [a], a.user_id == ^user.id )
+          |> order_by( [c], desc: c.updated_at )
           |> Backend.Repo.all
           #convert back into json-isable format
           |> Enum.map(

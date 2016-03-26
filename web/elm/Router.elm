@@ -112,6 +112,8 @@ update action model =
           AnalysisForm.LoadNewPlot p ->
             ( model', Effects.map Analysis fx )
           AnalysisForm.Request ->
+            ( model', Effects.map Analysis fx )          
+          AnalysisForm.Hover i ->
             ( model', Effects.map Analysis fx )
           _ ->
             ( model', Effects.batch [sd, Effects.map Analysis fx] )

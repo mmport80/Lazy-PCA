@@ -58,7 +58,11 @@
         stroke:black;
         stroke-width:0.5em;
         }
-
+      .hover{
+        font-weight: bolder;
+        cursor: pointer;
+        cursor: hand;
+        }
 
 
       .table {
