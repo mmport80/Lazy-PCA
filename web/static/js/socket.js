@@ -117,10 +117,18 @@ app.ports.loginRequest.subscribe(loginCallback);
 
 const draw = z =>
   {
-  const {data:data,result:result} = elmProcessData(z);
 
-  getScatterPlot(data,result);
+  console.log("//////////////////////////////////777");
+  console.log(z);
+  console.log(z.length);
 
+  if (z.length != 0) {
+    const {data:data,result:result} = elmProcessData(z);
+    getScatterPlot(data,result);
+    }
+  else {
+    console.log("!");
+    }
   return null;
   };
 

@@ -11466,7 +11466,7 @@ Elm.Forms.AnalysisForm.make = function (_elm) {
    var PortableModel = F7(function (a,b,c,d,e,f,g) {    return {endDate: a,startDate: b,ticker: c,y: d,source: e,frequency: f,newData: g};});
    var defaultPortableModel = A7(PortableModel,"","","",false,"","",_U.list([{ctor: "_Tuple2",_0: "",_1: 0}]));
    var PlotConfig = F7(function (a,b,c,d,e,f,g) {    return {endDate: a,startDate: b,ticker: c,y: d,source: e,frequency: f,id: g};});
-   var defaultPlotConfig = A7(PlotConfig,"","","INDEX_GSPC",false,"Yahoo",21,-1);
+   var defaultPlotConfig = A7(PlotConfig,"1950-01-03","2016-03-24","INDEX_GSPC",false,"Yahoo",21,-1);
    var fromDateToInteger = function (d) {    return function (_p1) {    return A2($Maybe.withDefault,d,$Result.toMaybe($String.toInt(_p1)));};};
    var toDate = function (d) {    return function (_p2) {    return A2($Result.withDefault,d,$Date.fromString(_p2));};};
    var toInteger = function (d) {    return function (_p3) {    return A2($Maybe.withDefault,d,$Result.toMaybe($String.toInt(_p3)));};};
@@ -11504,6 +11504,7 @@ Elm.Forms.AnalysisForm.make = function (_elm) {
       A2($Basics._op["++"],model.source.value,A2($Basics._op["++"],"/",A2($Basics._op["++"],model.ticker.value,".json")))),
       _U.list([A2(_op["=>"],"auth_token","Fp6cFhibc5xvL2pN3dnu")]));
    };
+   var Bold = {ctor: "Bold"};
    var Delete = function (a) {    return {ctor: "Delete",_0: a};};
    var RequestNewPlot = {ctor: "RequestNewPlot"};
    var ReceiveNewPlot = function (a) {    return {ctor: "ReceiveNewPlot",_0: a};};
@@ -11549,6 +11550,7 @@ Elm.Forms.AnalysisForm.make = function (_elm) {
                                   ,A2($Forms$Components$SelectInput.Option,"21","Monthly")
                                   ,A2($Forms$Components$SelectInput.Option,"63","Quarterly")]);
    var generateSavedPlotConfigTable = F2(function (address,model) {
+      var bold = model.bold ? $Html$Attributes.$class("bold") : $Html$Attributes.$class("normal");
       var underline = function (id) {
          return _U.eq(id,model.hoverId) ? $Html$Attributes.classList(_U.list([{ctor: "_Tuple2",_0: "underline",_1: true}
                                                                              ,{ctor: "_Tuple2"
@@ -11562,7 +11564,7 @@ Elm.Forms.AnalysisForm.make = function (_elm) {
       };
       var load = function (p) {    return A2($Html$Events.onClick,address,LoadNewPlot(p));};
       var onHover = function (id) {    return A2($Html$Events.onMouseOver,address,Hover(id));};
-      var $default = function (p) {    return _U.list([underline(p.id),onHover(p.id),load(p)]);};
+      var $default = function (p) {    return _U.list([underline(p.id),onHover(p.id),A2($Html$Events.onMouseOut,address,Hover(-1)),load(p)]);};
       var cell = $Html$Attributes.$class("cell");
       return A2($Basics._op["++"],
       _U.list([A2($Html.div,
@@ -11591,8 +11593,12 @@ Elm.Forms.AnalysisForm.make = function (_elm) {
                  $default(p),
                  _U.list([$Html.text(A2($Basics._op["++"],A2($String.left,4,p.startDate),A2($Basics._op["++"]," - ",A2($String.left,4,p.endDate))))]))
                  ,_U.eq(p.id,model.hoverId) ? A2($Html.div,
-                 _U.list([cell,$Html$Attributes.$class("delete"),onHover(p.id),A2($Html$Events.onClick,address,Delete(p))]),
-                 _U.list([$Html.text("X")])) : A2($Html.div,_U.list([cell,$Html$Attributes.$class("delete"),onHover(p.id)]),_U.list([]))]))]));
+                 _U.list([cell,$Html$Attributes.$class("delete"),onHover(p.id),A2($Html$Events.onMouseOut,address,Hover(-1))]),
+                 _U.list([A2($Html.span,
+                 _U.list([bold,A2($Html$Events.onClick,address,Delete(p)),A2($Html$Events.onMouseOver,address,Bold),A2($Html$Events.onMouseOut,address,Bold)]),
+                 _U.list([$Html.text("X")]))])) : A2($Html.div,
+                 _U.list([cell,$Html$Attributes.$class("delete"),onHover(p.id)]),
+                 _U.list([$Html.text(" ")]))]))]));
       },
       A2($List.filter,function (p) {    return !_U.eq(p.id,model.plot_id);},model.plots)));
    });
@@ -11600,10 +11606,6 @@ Elm.Forms.AnalysisForm.make = function (_elm) {
       return A2($Html.div,
       _U.list([]),
       _U.list([A2($Html.div,
-              _U.list([]),
-              _U.list([A2($Html.a,_U.list([$Html$Attributes.href("#"),A2($Html$Events.onClick,address,RequestNewPlot)]),_U.list([$Html.text("New")]))]))
-              ,A2($Html.hr,_U.list([]),_U.list([]))
-              ,A2($Html.div,
               _U.list([]),
               _U.list([A2($Forms$Components$SelectInput.view,A2($Signal.forwardTo,address,UpdateSource),model.source)
                       ,A2($Forms$Components$InputField.view,A2($Signal.forwardTo,address,UpdateTicker),model.ticker)
@@ -11622,6 +11624,10 @@ Elm.Forms.AnalysisForm.make = function (_elm) {
                       ,A2($Forms$Components$InputField.view,A2($Signal.forwardTo,address,UpdateStartDate),model.startDate)
                       ,$Html.text("End Date")
                       ,A2($Forms$Components$InputField.view,A2($Signal.forwardTo,address,UpdateEndDate),model.endDate)]))
+              ,A2($Html.hr,_U.list([]),_U.list([]))
+              ,A2($Html.div,
+              _U.list([]),
+              _U.list([A2($Html.a,_U.list([$Html$Attributes.href("#"),A2($Html$Events.onClick,address,RequestNewPlot)]),_U.list([$Html.text("New")]))]))
               ,A2($Html.hr,_U.list([]),_U.list([]))
               ,A2($Html.div,_U.list([$Html$Attributes.$class("table")]),A2(generateSavedPlotConfigTable,address,model))]));
    });
@@ -11645,15 +11651,7 @@ Elm.Forms.AnalysisForm.make = function (_elm) {
            return {ctor: "_Tuple2",_0: model$,_1: sendDataToPlot(model$)};
          case "UpdateEndDate": var endDate = A2($Forms$Components$InputField.update,_p16._0,model.endDate);
            var model$ = _U.update(model,{endDate: endDate});
-           var m = function () {
-              var _p17 = $Date.fromString(endDate.value);
-              if (_p17.ctor === "Ok") {
-                    return _U.update(model,{endDate: endDate});
-                 } else {
-                    return model;
-                 }
-           }();
-           return {ctor: "_Tuple2",_0: model$,_1: sendDataToPlot(m)};
+           return {ctor: "_Tuple2",_0: model$,_1: sendDataToPlot(model$)};
          case "Request": return {ctor: "_Tuple2"
                                 ,_0: _U.update(model,
                                 {frequency: A2($Forms$Components$SelectInput.update,$Forms$Components$SelectInput.Enable,model.frequency)
@@ -11662,22 +11660,22 @@ Elm.Forms.AnalysisForm.make = function (_elm) {
                                 ,progressMsg: "Downloading Data..."})
                                 ,_1: getData(model)};
          case "NoOp": return {ctor: "_Tuple2",_0: model,_1: $Effects.none};
-         case "LoadNewPlot": var _p18 = _p16._0;
+         case "LoadNewPlot": var _p17 = _p16._0;
            var model$ = _U.update(model,
-           {startDate: A4($Forms$Components$InputField.init,_p18.startDate,"Start Date","date",false)
-           ,endDate: A4($Forms$Components$InputField.init,_p18.endDate,"End Date","date",false)
-           ,ticker: A4($Forms$Components$InputField.init,_p18.ticker,"Ticker","text",false)
-           ,$yield: $Forms$Components$Yield.init(_p18.y)
-           ,source: A3($Forms$Components$SelectInput.init,_p18.source,sourceOptions,false)
-           ,frequency: A3($Forms$Components$SelectInput.init,$Basics.toString(_p18.frequency),frequencyOptions,false)
-           ,plot_id: _p18.id
+           {startDate: A4($Forms$Components$InputField.init,_p17.startDate,"Start Date","date",false)
+           ,endDate: A4($Forms$Components$InputField.init,_p17.endDate,"End Date","date",false)
+           ,ticker: A4($Forms$Components$InputField.init,_p17.ticker,"Ticker","text",false)
+           ,$yield: $Forms$Components$Yield.init(_p17.y)
+           ,source: A3($Forms$Components$SelectInput.init,_p17.source,sourceOptions,false)
+           ,frequency: A3($Forms$Components$SelectInput.init,$Basics.toString(_p17.frequency),frequencyOptions,false)
+           ,plot_id: _p17.id
            ,progressMsg: "Downloading Data..."});
            return {ctor: "_Tuple2",_0: model$,_1: getData(model$)};
-         case "NewData": var _p22 = _p16._0;
-           var progressMsg = _U.eq(_p22,$Maybe.Nothing) ? "Could not find data" : "";
-           var data = A2($Maybe.withDefault,model.newData,_p22);
-           var onlyDates = A2($List.map,function (_p19) {    var _p20 = _p19;return _p20._0;},data);
-           var maybeToDate = function (_p21) {    return A2($Date$Format.format,"%Y-%m-%d",A2($Maybe.withDefault,$Date.fromTime(0),_p21));};
+         case "NewData": var _p21 = _p16._0;
+           var progressMsg = _U.eq(_p21,$Maybe.Nothing) ? "Could not find data" : "";
+           var data = A2($Maybe.withDefault,model.newData,_p21);
+           var onlyDates = A2($List.map,function (_p18) {    var _p19 = _p18;return _p19._0;},data);
+           var maybeToDate = function (_p20) {    return A2($Date$Format.format,"%Y-%m-%d",A2($Maybe.withDefault,$Date.fromTime(0),_p20));};
            var newEndDate = maybeToDate($List.head(onlyDates));
            var newStartDate = maybeToDate($List.head($List.reverse(onlyDates)));
            var model$ = _U.update(model,
@@ -11688,19 +11686,21 @@ Elm.Forms.AnalysisForm.make = function (_elm) {
            return {ctor: "_Tuple2",_0: model$,_1: sendDataToPlot(model$)};
          case "Hover": return {ctor: "_Tuple2",_0: _U.update(model,{hoverId: _p16._0}),_1: $Effects.none};
          case "RequestNewPlot": return {ctor: "_Tuple2",_0: model,_1: $Effects.none};
-         case "ReceiveNewPlot": var _p23 = _p16._0;
+         case "ReceiveNewPlot": var _p22 = _p16._0;
            var model$ = _U.update(model,
-           {startDate: A4($Forms$Components$InputField.init,_p23.startDate,"Start Date","date",false)
-           ,endDate: A4($Forms$Components$InputField.init,_p23.endDate,"End Date","date",false)
-           ,ticker: A4($Forms$Components$InputField.init,_p23.ticker,"Ticker","text",false)
-           ,$yield: $Forms$Components$Yield.init(_p23.y)
-           ,source: A3($Forms$Components$SelectInput.init,_p23.source,sourceOptions,false)
-           ,frequency: A3($Forms$Components$SelectInput.init,$Basics.toString(_p23.frequency),frequencyOptions,false)
-           ,plot_id: _p23.id
+           {startDate: A4($Forms$Components$InputField.init,_p22.startDate,"Start Date","date",false)
+           ,endDate: A4($Forms$Components$InputField.init,_p22.endDate,"End Date","date",false)
+           ,ticker: A4($Forms$Components$InputField.init,_p22.ticker,"Ticker","text",false)
+           ,$yield: $Forms$Components$Yield.init(_p22.y)
+           ,source: A3($Forms$Components$SelectInput.init,_p22.source,sourceOptions,false)
+           ,frequency: A3($Forms$Components$SelectInput.init,$Basics.toString(_p22.frequency),frequencyOptions,false)
+           ,plot_id: _p22.id
            ,progressMsg: "Downloading Data..."
-           ,plots: A2($List._op["::"],_p23,model.plots)});
+           ,plots: A2($List._op["::"],_p22,model.plots)});
            return {ctor: "_Tuple2",_0: model$,_1: getData(model$)};
-         default: return {ctor: "_Tuple2",_0: model,_1: $Effects.none};}
+         case "Delete": return {ctor: "_Tuple2",_0: model,_1: $Effects.none};
+         default: var bold = _U.eq(model.bold,true) ? false : true;
+           return {ctor: "_Tuple2",_0: _U.update(model,{bold: bold}),_1: $Effects.none};}
    });
    var Model = function (a) {
       return function (b) {
@@ -11713,17 +11713,20 @@ Elm.Forms.AnalysisForm.make = function (_elm) {
                            return function (i) {
                               return function (j) {
                                  return function (k) {
-                                    return {source: a
-                                           ,ticker: b
-                                           ,$yield: c
-                                           ,newData: d
-                                           ,frequency: e
-                                           ,startDate: f
-                                           ,endDate: g
-                                           ,progressMsg: h
-                                           ,plot_id: i
-                                           ,plots: j
-                                           ,hoverId: k};
+                                    return function (l) {
+                                       return {source: a
+                                              ,ticker: b
+                                              ,$yield: c
+                                              ,newData: d
+                                              ,frequency: e
+                                              ,startDate: f
+                                              ,endDate: g
+                                              ,progressMsg: h
+                                              ,plot_id: i
+                                              ,plots: j
+                                              ,hoverId: k
+                                              ,bold: l};
+                                    };
                                  };
                               };
                            };
@@ -11738,19 +11741,19 @@ Elm.Forms.AnalysisForm.make = function (_elm) {
    var defaultRow = A2(F2(function (v0,v1) {    return {ctor: "_Tuple2",_0: v0,_1: v1};}),$Date.fromTime(0),0);
    var init = function (plots) {
       var initPlot = A2($Maybe.withDefault,defaultPlotConfig,$List.head(plots));
-      return {ctor: "_Tuple2"
-             ,_0: {startDate: A4($Forms$Components$InputField.init,initPlot.startDate,"Start","date",true)
-                  ,endDate: A4($Forms$Components$InputField.init,initPlot.endDate,"End","date",true)
+      var model = {startDate: A4($Forms$Components$InputField.init,initPlot.startDate,"Start","date",false)
+                  ,endDate: A4($Forms$Components$InputField.init,initPlot.endDate,"End","date",false)
                   ,ticker: A4($Forms$Components$InputField.init,initPlot.ticker,"Ticker","text",false)
                   ,$yield: $Forms$Components$Yield.init(initPlot.y)
                   ,newData: _U.list([defaultRow])
                   ,source: A3($Forms$Components$SelectInput.init,initPlot.source,sourceOptions,false)
-                  ,frequency: A3($Forms$Components$SelectInput.init,$Basics.toString(initPlot.frequency),frequencyOptions,true)
-                  ,progressMsg: ""
+                  ,frequency: A3($Forms$Components$SelectInput.init,$Basics.toString(initPlot.frequency),frequencyOptions,false)
+                  ,progressMsg: "Downloading Data"
                   ,plot_id: initPlot.id
                   ,plots: plots
-                  ,hoverId: 0}
-             ,_1: $Effects.none};
+                  ,hoverId: 0
+                  ,bold: false};
+      return {ctor: "_Tuple2",_0: model,_1: getData(model)};
    };
    return _elm.Forms.AnalysisForm.values = {_op: _op
                                            ,defaultRow: defaultRow
@@ -11772,6 +11775,7 @@ Elm.Forms.AnalysisForm.make = function (_elm) {
                                            ,ReceiveNewPlot: ReceiveNewPlot
                                            ,RequestNewPlot: RequestNewPlot
                                            ,Delete: Delete
+                                           ,Bold: Bold
                                            ,update: update
                                            ,view: view
                                            ,generateSavedPlotConfigTable: generateSavedPlotConfigTable
@@ -12101,12 +12105,12 @@ Elm.Router.make = function (_elm) {
       {case "Analysis": var _p11 = _p7._0;
            var np = saveData(A2(ExportData,model.user,$Forms$AnalysisForm.defaultPlotConfig));
            var _p8 = A2($Forms$AnalysisForm.update,_p11,model.analysisForm);
-           var newData = _p8._0;
+           var analysisForm = _p8._0;
            var fx = _p8._1;
-           var plot = $Forms$AnalysisForm.convertElmModelToPlotConfig(newData);
+           var plot = $Forms$AnalysisForm.convertElmModelToPlotConfig(analysisForm);
            var plots = A2($List._op["::"],plot,A2($List.filter,function (p) {    return !_U.eq(p.id,plot.id);},model.plots));
            var sd = saveData(A2(ExportData,model.user,plot));
-           var analysisForm$ = _U.update(newData,{plots: plots});
+           var analysisForm$ = _U.update(analysisForm,{plots: plots});
            var model$ = _U.update(model,{analysisForm: analysisForm$,plots: plots});
            var _p9 = _p11;
            switch (_p9.ctor)
@@ -12115,6 +12119,7 @@ Elm.Router.make = function (_elm) {
               case "UpdateTicker": return {ctor: "_Tuple2",_0: model$,_1: A2($Effects.map,Analysis,fx)};
               case "Request": return {ctor: "_Tuple2",_0: model$,_1: A2($Effects.map,Analysis,fx)};
               case "Hover": return {ctor: "_Tuple2",_0: model$,_1: A2($Effects.map,Analysis,fx)};
+              case "Bold": return {ctor: "_Tuple2",_0: model$,_1: A2($Effects.map,Analysis,fx)};
               case "RequestNewPlot": return {ctor: "_Tuple2",_0: model$,_1: $Effects.batch(_U.list([np,A2($Effects.map,Analysis,fx)]))};
               case "Delete": var _p10 = _p9._0;
                 return {ctor: "_Tuple2"
@@ -12149,7 +12154,7 @@ Elm.Router.make = function (_elm) {
                  ,user: A3(User,_p16.fullname,newUser.username.value,newUser.token)
                  ,plots: _p16.plots
                  ,analysisForm: analysis});
-                 return {ctor: "_Tuple2",_0: model$,_1: fxMap};
+                 return {ctor: "_Tuple2",_0: model$,_1: $Effects.batch(_U.list([fxMap,analysisFxMap]))};
               } else {
                  return {ctor: "_Tuple2",_0: _U.update(model,{loginForm: newUser,locationLinks: locationLinks}),_1: fxMap};
               }

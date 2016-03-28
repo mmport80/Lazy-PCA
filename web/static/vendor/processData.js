@@ -21,6 +21,10 @@ const getReturns = d => {
   const returns = numeric.log(
     numeric['/'](after, before)
     );
+
+  console.log("returns");
+  console.log(returns);
+
   return returns;
   }
 

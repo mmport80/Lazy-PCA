@@ -18,6 +18,9 @@ import Forms.Components.InputField as InputField exposing (view, update)
 
 import List
 
+import Keyboard
+
+
 --********************************************************************************
 --********************************************************************************
 -- MODEL
@@ -69,6 +72,7 @@ update action model =
       ( { model | password = InputField.update input model.password }
       , Effects.none
       )
+    --remove superfluous
     NoOp ->
       ( model
       , Effects.none
@@ -77,7 +81,7 @@ update action model =
     --and also send to port
     Request ->
       ( { model |
-          response = "Please Wait..." }
+          response = "Checking login details..." }
         , sendData (LoginRequest model.username.value model.password.value)
       )
     Response input ->

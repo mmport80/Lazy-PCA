@@ -84,9 +84,9 @@ update action model =
   case action of
     Analysis input ->
       let
-        (newData, fx) = AnalysisForm.update input model.analysisForm
+        (analysisForm, fx) = AnalysisForm.update input model.analysisForm
         --extract plot config from current analysis form
-        plot = AnalysisForm.convertElmModelToPlotConfig newData
+        plot = AnalysisForm.convertElmModelToPlotConfig analysisForm
         --add current plot to top
         plots = plot
           ::
@@ -96,16 +96,15 @@ update action model =
         sd = saveData (ExportData model.user plot)
         --requestNewPlot
         np = saveData (ExportData model.user AnalysisForm.defaultPlotConfig)
-        --update plots with current plot config
-        --filter out plot from plots
-        --add plot to head
-        analysisForm' = { newData | plots = plots }
+
+        analysisForm' = { analysisForm | plots = plots }
+
         model' = { model | analysisForm = analysisForm', plots = plots }
       in
         --how to write one case to catch all 3?
         --don't save when setting up initial request
         --save when we get data backup
-        --or when frequcy or dates have been changed
+        --or when frequency or dates have been changed
         case input of
           AnalysisForm.UpdateSource i ->
             ( model', Effects.map Analysis fx )
@@ -117,13 +116,14 @@ update action model =
             ( model', Effects.map Analysis fx )
           AnalysisForm.Hover i ->
             ( model', Effects.map Analysis fx )
+          AnalysisForm.Bold ->
+            ( model', Effects.map Analysis fx )
           AnalysisForm.RequestNewPlot ->
             ( model', Effects.batch [np, Effects.map Analysis fx] )
           AnalysisForm.Delete plot ->
             ( { model | plots = plots |> List.filter (\p -> p.id /= plot.id) }
             , Effects.batch
-              [
-                deleteData (ExportData model.user plot)
+              [ deleteData (ExportData model.user plot)
               , Effects.map Analysis fx
               ]
             )
@@ -161,7 +161,7 @@ update action model =
                 , analysisForm = analysis
                 }
             in
-              ( model', fxMap ) --analysisFxMap
+              ( model',Effects.batch [fxMap, analysisFxMap] ) --analysisFxMap
           _ ->
             ( { model |
                 loginForm = newUser

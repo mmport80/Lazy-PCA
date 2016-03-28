@@ -2,7 +2,7 @@ module Forms.AnalysisForm where
 
 import Html exposing (a, text, Html, div, hr, span, br)
 import Html.Attributes exposing (href, id, class, classList)
-import Html.Events exposing (targetChecked, on, onClick, onMouseOver)
+import Html.Events exposing (targetChecked, on, onClick, onMouseOver, onMouseOut)
 
 import Http exposing (get, url)
 
@@ -39,13 +39,12 @@ type alias Model = {
   , newData : List Row
   , frequency : SelectInput.Model
   , startDate : InputField.Model
-  , verifiedStartDate : String
   , endDate : InputField.Model
-  , verifiedEndDate : String
   , progressMsg : String
   , plot_id : Int
   , plots : List PlotConfig
   , hoverId : Int
+  , bold : Bool
   }
 
 --select field values
@@ -60,21 +59,23 @@ init : List PlotConfig -> (Model, Effects Action)
 init plots =
   let
     initPlot = Maybe.withDefault defaultPlotConfig (List.head plots)
-  in
-    (
-      { startDate = InputField.init initPlot.startDate "Start" "date" True
-      , endDate = InputField.init initPlot.endDate "End" "date" True
+    model =
+      { startDate = InputField.init initPlot.startDate "Start" "date" False
+      , endDate = InputField.init initPlot.endDate "End" "date" False
       , ticker = InputField.init initPlot.ticker "Ticker" "text" False
       , yield = Yield.init initPlot.y
       , newData =  [ defaultRow ]
       , source = SelectInput.init initPlot.source sourceOptions False
-      , frequency = SelectInput.init (toString initPlot.frequency) frequencyOptions True
-      , progressMsg = ""
+      , frequency = SelectInput.init (toString initPlot.frequency) frequencyOptions False
+      , progressMsg = "Downloading Data..."
       , plot_id = initPlot.id
       , plots = plots
       , hoverId = 0
+      , bold = False
       }
-    , Effects.none
+  in
+    ( model
+    , getData model
     )
 
 --********************************************************************************
@@ -100,6 +101,7 @@ type Action
     | ReceiveNewPlot PlotConfig
     | RequestNewPlot
     | Delete PlotConfig
+    | Bold
 
 update : Action -> Model -> (Model, Effects Action)
 update action model =
@@ -202,6 +204,7 @@ update action model =
       ( model, Effects.none )
     --add new plot to top of array
     --v similar to load new plot
+    --should make function from this
     ReceiveNewPlot p ->
       let
         model' = { model |
@@ -222,7 +225,18 @@ update action model =
       ( model
       , Effects.none
       )
-
+    Bold ->
+      let
+        bold =
+          if (model.bold == True) then
+            False
+          else
+            True
+      in
+        (
+        {model | bold = bold}
+        , Effects.none
+        )
 
 --on change send data to plot
 --send data to server
@@ -234,11 +248,6 @@ view : Signal.Address Action -> Model -> Html
 view address model =
   div [] [
       div []
-        [
-          a [ href "#", onClick address RequestNewPlot ] [ text "New" ]
-        ]
-    , hr [] []
-    , div []
         [
           SelectInput.view (Signal.forwardTo address UpdateSource) model.source
         , InputField.view (Signal.forwardTo address UpdateTicker) model.ticker
@@ -261,11 +270,16 @@ view address model =
       , InputField.view (Signal.forwardTo address UpdateEndDate) model.endDate
       ]
     , hr [] []
+    , div []
+        [
+          a [ href "#", onClick address RequestNewPlot ] [ text "New" ]
+        ]
+    , hr [] []
     --saved plots
     , div [ class "table" ] ( generateSavedPlotConfigTable address model )
     ]
 
---make this a standalone component?
+--make this table a standalone component?
 generateSavedPlotConfigTable : Signal.Address Action -> Model -> List Html
 generateSavedPlotConfigTable address model =
   let
@@ -277,7 +291,12 @@ generateSavedPlotConfigTable address model =
         classList [("underline", True),("cell",True)]
       else
         classList [("normal", True),("cell",True)]
-    default p = [underline p.id, onHover p.id, load p]
+    bold =
+      if model.bold then
+        class "bold"
+      else
+        class "normal"
+    default p = [underline p.id, onHover p.id, onMouseOut address (Hover -1), load p]
   in
     [ div [ class "header" ]
         [   div [ cell ] [ text "Source"]
@@ -315,9 +334,10 @@ generateSavedPlotConfigTable address model =
               --remove from plots list
               --remove from db
               , if p.id == model.hoverId then
-                  div [ cell, class "delete", onHover p.id, onClick address (Delete p) ] [ text "X" ]
+                  div [ cell, class "delete", onHover p.id, onMouseOut address (Hover -1) ]
+                    [ span[ bold, onClick address (Delete p), onMouseOver address Bold, onMouseOut address Bold ] [text "X"] ]
                 else
-                  div [ cell, class "delete", onHover p.id ] []
+                  div [ cell, class "delete", onHover p.id ] [ text " " ]
             ]
           ]
 
