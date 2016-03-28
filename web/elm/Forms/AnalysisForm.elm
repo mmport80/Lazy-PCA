@@ -39,7 +39,9 @@ type alias Model = {
   , newData : List Row
   , frequency : SelectInput.Model
   , startDate : InputField.Model
+  , verifiedStartDate : String
   , endDate : InputField.Model
+  , verifiedEndDate : String
   , progressMsg : String
   , plot_id : Int
   , plots : List PlotConfig
@@ -134,17 +136,9 @@ update action model =
       let
         endDate = InputField.update input model.endDate
         model' = { model | endDate = endDate }
-        m =
-          case Date.fromString endDate.value of
-            --update
-            Ok _ ->
-              { model | endDate = endDate }
-            --don't update
-            Err _ ->
-              model
       in
         ( model'
-        , sendDataToPlot m
+        , sendDataToPlot model'
         )
     --get data from quandl
     Request ->
@@ -285,7 +279,6 @@ generateSavedPlotConfigTable address model =
         classList [("normal", True),("cell",True)]
     default p = [underline p.id, onHover p.id, load p]
   in
-
     [ div [ class "header" ]
         [   div [ cell ] [ text "Source"]
           , div [ cell ] [ text "Ticker"]
@@ -438,7 +431,7 @@ type alias PlotConfig = {
     }
 
 defaultPlotConfig : PlotConfig
-defaultPlotConfig = PlotConfig "" "" "INDEX_GSPC" False "Yahoo" 21 -1
+defaultPlotConfig = PlotConfig "1950-01-03" "2016-03-24" "INDEX_GSPC" False "Yahoo" 21 -1
 
 type alias PortableModel = {
       endDate : String
