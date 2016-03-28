@@ -6,6 +6,9 @@ import Html.Events exposing (targetValue, on)
 
 import Signal exposing (Address)
 
+
+import Date
+
 -- MODEL
 --add disabled option
 type alias Model = {
@@ -22,7 +25,6 @@ init input placeHolder inputType disabled =
 -- UPDATE
 type Action = Update String | Enable | Disable | Reset
 
-
 update : Action -> Model -> Model
 update action model =
   case action of
@@ -30,7 +32,9 @@ update action model =
       { model | value = "" }
     --if date then validate first
     Update input ->
-      { model | value = input }
+      { model |
+        value = input
+      }
     Enable ->
       { model | disabled = False }
     Disable ->

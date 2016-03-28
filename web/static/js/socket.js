@@ -18,6 +18,25 @@ channel.on("save_data",
     //send ok or error back
     console.log("payload");
     console.log(payload);
+
+    payload.body.plots.length === 0 ?
+      console.log( payload.body.response_text )
+      :
+      app.ports.newPlotResponse.send( payload.body.plots[0] );
+    }
+  )
+
+channel.on("delete_data",
+  payload => {
+    //send ok or error back
+    console.log("delete response");
+    console.log(payload);
+
+    //payload.body.plots.length === 0 ?
+    //  console.log( payload.body.response_text )
+    //  :
+    //  app.ports.newPlotResponse.send( payload.body.plots[0] );
+
     }
   )
 
@@ -54,7 +73,9 @@ channel.join()
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //Elm setup
 
-const initMesssage = {token: "", response: "", fullname: ""
+const initPlot = {endDate:"", startDate:"", ticker:"", y:false, source:"", frequency:21, id:-1};
+
+const initLogRegResponse = {token: "", response: "", fullname: ""
   , plots: [
       {endDate:"", startDate:"", ticker:"", y:false, source:"", frequency:21, id:-1}
     ]
@@ -65,8 +86,9 @@ const app = Elm.embed(
     Elm.Main
   , div
   , {
-      loginResponse: initMesssage
-    , registerResponse: initMesssage
+      loginResponse: initLogRegResponse
+    , registerResponse: initLogRegResponse
+    , newPlotResponse: initPlot
     }
   );
 
@@ -123,9 +145,31 @@ const save = request =>
   console.log("to be saved");
   console.log(request);
   channel.push("save_data", {body: request});
-  };
+  }
 
 app.ports.saveToDB.subscribe(save);
+
+//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//send to serverside
+//save down
+//
+
+//loading other stuff is seperate
+//new ui module which shows user's saved projects
+//show latest projects with same parameters
+
+
+//delete
+//load
+//new
+const delete_ = request =>
+  {
+  console.log("to be deleted");
+  console.log(request);
+  channel.push("delete_data", {body: request});
+  }
+
+app.ports.deleteFromDB.subscribe(delete_);
 
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

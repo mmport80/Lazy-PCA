@@ -1,6 +1,6 @@
 module Forms.AnalysisForm where
 
-import Html exposing (a, text, Html, div, hr, span)
+import Html exposing (a, text, Html, div, hr, span, br)
 import Html.Attributes exposing (href, id, class, classList)
 import Html.Events exposing (targetChecked, on, onClick, onMouseOver)
 
@@ -21,7 +21,6 @@ import String
 
 import Date
 import Date.Format
-import Time exposing (every, millisecond)
 
 --********************************************************************************
 --********************************************************************************
@@ -61,8 +60,8 @@ init plots =
     initPlot = Maybe.withDefault defaultPlotConfig (List.head plots)
   in
     (
-      { startDate = InputField.init initPlot.startDate "Start Date" "date" True
-      , endDate = InputField.init initPlot.endDate "End Date" "date" True
+      { startDate = InputField.init initPlot.startDate "Start" "date" True
+      , endDate = InputField.init initPlot.endDate "End" "date" True
       , ticker = InputField.init initPlot.ticker "Ticker" "text" False
       , yield = Yield.init initPlot.y
       , newData =  [ defaultRow ]
@@ -98,9 +97,7 @@ type Action
     | Hover Int
     | ReceiveNewPlot PlotConfig
     | RequestNewPlot
-    --new plot
-    --send request to db
-    --send back default plotconfig with id
+    | Delete PlotConfig
 
 update : Action -> Model -> (Model, Effects Action)
 update action model =
@@ -125,6 +122,7 @@ update action model =
       ( { model | yield = Yield.update input model.yield }
       , Effects.none
       )
+    --only update dates if they are actually dates
     UpdateStartDate input ->
       let
         model' = { model | startDate = InputField.update input model.startDate }
@@ -134,10 +132,19 @@ update action model =
         )
     UpdateEndDate input ->
       let
-        model' = { model | endDate = InputField.update input model.endDate }
+        endDate = InputField.update input model.endDate
+        model' = { model | endDate = endDate }
+        m =
+          case Date.fromString endDate.value of
+            --update
+            Ok _ ->
+              { model | endDate = endDate }
+            --don't update
+            Err _ ->
+              model
       in
         ( model'
-        , sendDataToPlot model'
+        , sendDataToPlot m
         )
     --get data from quandl
     Request ->
@@ -187,8 +194,7 @@ update action model =
           , progressMsg = progressMsg
           }
       in
-        (
-          model'
+        ( model'
         , sendDataToPlot model'
         )
     Hover id ->
@@ -197,21 +203,32 @@ update action model =
           }
         , Effects.none )
     --send new plot request
-    --
     RequestNewPlot ->
-      --need to get id /and then/ LoadNewPlot
-
-      --request new plot
-        --send "new request" with user id
-      --insert row in db
-        --send back
-      --receive plot
-        --get back a plot config
-      --load plot
-        --call LoadNewPlot
+      --plot's requested in Router
       ( model, Effects.none )
+    --add new plot to top of array
+    --v similar to load new plot
     ReceiveNewPlot p ->
-      ( model, Effects.none )
+      let
+        model' = { model |
+          startDate = InputField.init p.startDate "Start Date" "date" False
+        , endDate = InputField.init p.endDate "End Date" "date" False
+        , ticker = InputField.init p.ticker "Ticker" "text" False
+        , yield = Yield.init p.y
+        , source = SelectInput.init p.source sourceOptions False
+        , frequency = SelectInput.init (toString p.frequency) frequencyOptions False
+        , plot_id = p.id
+        , progressMsg = "Downloading Data..."
+        , plots = p :: model.plots
+        }
+      in
+        (model', getData model')
+    Delete p ->
+      --done at 'router' level
+      ( model
+      , Effects.none
+      )
+
 
 --on change send data to plot
 --send data to server
@@ -234,9 +251,9 @@ view address model =
         , Yield.view (Signal.forwardTo address UpdateYield) model.yield
         , text "Yield"
         , a [ href "#", onClick address Request ] [ text "Pull" ]
-        , text model.progressMsg
         ]
     , hr [] []
+    , div [] [ text model.progressMsg ]
     , div [id "plot"] []
     , hr [] []
     , div [] [
@@ -254,52 +271,65 @@ view address model =
     , div [ class "table" ] ( generateSavedPlotConfigTable address model )
     ]
 
---send to its own component?
+--make this a standalone component?
 generateSavedPlotConfigTable : Signal.Address Action -> Model -> List Html
 generateSavedPlotConfigTable address model =
-  [ div [ class "header" ]
-      [   div [ class "cell" ] [ text "SOURCE" ]
-        , div [ class "cell" ] [ text "TICKER" ]
-        , div [ class "cell" ] [ text "FREQUENCY" ]
-        , div [ class "cell" ] [ text "START DATE" ]
-        , div [ class "cell" ] [ text "END DATE" ]
-        ]
-  ]
-  ++
-  List.map
-    ( \p ->
-      ( div [
-          classList [
-              ("rowGroup", True)
-            , ("hover"
-              , if p.id == model.hoverId then
-                  True
-                else
-                  False
-              )
-            ]
-          , onClick address (LoadNewPlot p)
-          , onMouseOver address (Hover p.id)
+  let
+    cell = class "cell"
+    onHover id = onMouseOver address (Hover id)
+    load p = onClick address (LoadNewPlot p)
+    underline id =
+      if id == model.hoverId then
+        classList [("underline", True),("cell",True)]
+      else
+        classList [("normal", True),("cell",True)]
+    default p = [underline p.id, onHover p.id, load p]
+  in
+
+    [ div [ class "header" ]
+        [   div [ cell ] [ text "Source"]
+          , div [ cell ] [ text "Ticker"]
+          , div [ cell ] [ text "Sampling"]
+          , div [ cell ] [ text "Period" ]
+          , div [ cell ] [ text "DELETE" ]
           ]
-          [ div [ class "row" ] [
-              div [ class "cell" ] [ text p.source ]
-            , div [ class "cell" ] [ text p.ticker ]
-            , div [ class "cell" ]
-              [ text
-                (
-                --convert value to text
-                List.filter ( \o -> o.value == toString(p.frequency) ) frequencyOptions
-                |> List.head
-                |> Maybe.withDefault (Option "21" "Monthly")
-                |> (\o -> o.text)
-                )
+    ]
+    ++
+    List.map
+      ( \p ->
+        div [
+            classList [
+                ("rowGroup", True)
               ]
-            , div [ class "cell" ] [ text p.startDate ]
-            , div [ class "cell" ] [ text p.endDate ]
             ]
-          ] )
-      )
-    ( List.filter ( \p -> p.id /= model.plot_id ) model.plots )
+            --group everything but delete together
+            --have only one LoadNewPlot reference
+            [ div [ classList [("row", True),("hover",True)] ] [
+                div (default p) [ text (String.left 1 p.source) ]
+              , div (default p) [ text p.ticker ]
+              , div (default p)
+                [ text
+                  (--convert value to text
+                  List.filter ( \o -> o.value == toString(p.frequency) ) frequencyOptions
+                  |> List.head
+                  |> Maybe.withDefault (Option "21" "Monthly")
+                  |> (\o -> String.left 1 o.text)
+                  )
+                ]
+              , div (default p)
+                  [ text ((String.left 4 p.startDate) ++ " - " ++ (String.left 4 p.endDate)) ]
+              --delete plot from DB
+              --remove from plots list
+              --remove from db
+              , if p.id == model.hoverId then
+                  div [ cell, class "delete", onHover p.id, onClick address (Delete p) ] [ text "X" ]
+                else
+                  div [ cell, class "delete", onHover p.id ] []
+            ]
+          ]
+
+        )
+      ( List.filter ( \p -> p.id /= model.plot_id ) model.plots )
 
 
 
@@ -422,6 +452,16 @@ type alias PortableModel = {
 
 defaultPortableModel : PortableModel
 defaultPortableModel = PortableModel "" "" "" False "" "" [("",0)]
+
+dateValidate : String -> String -> String
+dateValidate orig input =
+  case Date.fromString input of
+    --update
+    Ok _ ->
+      input
+    --don't update
+    Err _ ->
+      orig
 
 convertElmModelToPlotConfig : Model -> PlotConfig
 convertElmModelToPlotConfig model =

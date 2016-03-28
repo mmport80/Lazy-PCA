@@ -1,6 +1,6 @@
 import StartApp
 
-import Router exposing (init, update, view, saveToDBMailBox)
+import Router exposing (init, update, view, saveToDBMailBox, deleteFromDBMailBox)
 import Forms.LoginForm as LoginForm exposing (Action(Response), loginRequestMailBox)
 import Forms.RegisterForm as RegisterForm exposing (Action(Response), registerRequestMailBox)
 import Forms.AnalysisForm as AnalysisForm exposing (Row, sendToPlotMailBox)
@@ -17,7 +17,7 @@ app =
     , update = update
     , view = view
     --actions get forwards to correct update function
-    , inputs = [ incomingLoginActions, incomingRegisterActions ]
+    , inputs = [ incomingLoginActions, incomingRegisterActions, incomingNewPlots ]
     }
 
 main = app.html
@@ -71,3 +71,14 @@ port saveToDB = saveToDBMailBox.signal
 
 
 --^^^^^^^^^^^^^^^^^^^°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+--receive new plot, after requesting
+port newPlotResponse : Signal AnalysisForm.PlotConfig
+
+incomingNewPlots : Signal (Router.Action)
+incomingNewPlots = Signal.map Router.Analysis (Signal.map AnalysisForm.ReceiveNewPlot newPlotResponse)
+
+--^^^^^^^^^^^^^^^^^^^°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+--send delete requests
+
+port deleteFromDB : Signal Router.ExportData
+port deleteFromDB = deleteFromDBMailBox.signal

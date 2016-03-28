@@ -11,7 +11,7 @@ defmodule Backend.RoomChannel do
 
   use Phoenix.Channel
 
-  intercept ["new_msg", "save_data"]
+  intercept ["new_msg", "save_data", "delete_data"]
 
   #public room
   #can create rooms to group users in
@@ -25,10 +25,6 @@ defmodule Backend.RoomChannel do
     {:error, %{reason: "unauthorized"}}
   end
 
-  #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
-  #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
-  #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
-
 
   #Response struct to send back to client
   #token is the auth required to pull down data
@@ -36,6 +32,50 @@ defmodule Backend.RoomChannel do
     defstruct response_text: "", token: "", action: "", fullname: "", plots: []
   end
 
+
+
+  #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+  #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+  #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+
+  def handle_in("delete_data", %{"body" => params}, socket) do
+    %{"plot" => plot, "user" => user} = params
+
+    rr =
+      #find user_id from token
+      case Phoenix.Token.verify(socket, "user", user["token"] ) do
+        {:ok, user_id } ->
+          user = Repo.get_by(Backend.User, id: user_id )
+          orig_Plot = Repo.get_by(Backend.Plot, id: plot["id"] )
+          if orig_Plot.user_id == user_id do
+            [p] = Repo.all(from(p in Plot, where: p.id == ^plot["id"]))
+            case Repo.delete p do
+              {:ok, model}        -> # Deleted with success
+                %Response{ response_text: "ok" }
+              {:error, changeset} -> # Something went wrong
+                %Response{ response_text: "error" }
+            end
+          else
+            %Response{ response_text: "error" }
+          end
+        _ ->
+          #don't save
+          #return error
+          %Response{ response_text: "error" }
+      end
+
+    push socket, "delete_data", %{body: rr}
+    {:noreply, socket}
+  end
+
+  def handle_out("delete_data", payload, socket) do
+    push socket, "delete_data", payload
+    {:noreply, socket}
+  end
+
+  #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+  #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+  #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 
   def handle_in("save_data", %{"body" => params}, socket) do
     %{"plot" => plot, "user" => user} = params
@@ -74,8 +114,6 @@ defmodule Backend.RoomChannel do
     {:noreply, socket}
   end
 
-
-
   def save_existing_plot(user, plot, user_id) do
     orig_Plot = Repo.get_by(Backend.Plot, id: plot["id"] )
     #make sure owner owns plot
@@ -97,7 +135,7 @@ defmodule Backend.RoomChannel do
     end
   end
 
-  #insert plot is always default
+  #insert plot always inserts default plot
   def insert_new_plot(user) do
     {:ok, sd} = Ecto.Date.cast("1990-01-02")
     today = Date.utc()
@@ -116,7 +154,6 @@ defmodule Backend.RoomChannel do
 
 #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
-
 
   #all incoming connections go here
   def handle_in("new_msg", %{"body" => params}, socket) do

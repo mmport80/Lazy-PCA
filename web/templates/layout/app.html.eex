@@ -16,7 +16,7 @@
 
     <style>
       body {
-        font: 1em;
+        font-size: 1em;
         }
       .axis path,
       .axis line {
@@ -59,11 +59,26 @@
         stroke-width:0.5em;
         }
       .hover{
-        font-weight: bolder;
+        font-weight: normal;
         cursor: pointer;
         cursor: hand;
         }
-
+      .delete{
+        font-weight: normal;
+        cursor: pointer;
+        cursor: hand;
+        text-decoration: none;
+        color: red;
+        }
+      .underline{
+        text-decoration: underline;
+        }
+      .normal{
+        text-decoration: normal;
+        }
+      .bold{
+        font-weight: bold;
+        }
 
       .table {
         display:table;
@@ -79,10 +94,15 @@
       .row {
         display:table-row;
         }
+      .small {
+        display:table-cell;
+        width:5%;
+        }
       .cell {
         display:table-cell;
         width:20%;
         }
+
 
     </style>
 

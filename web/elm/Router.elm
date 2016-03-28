@@ -87,8 +87,10 @@ update action model =
         (newData, fx) = AnalysisForm.update input model.analysisForm
         --extract plot config from current analysis form
         plot = AnalysisForm.convertElmModelToPlotConfig newData
+        --add current plot to top
         plots = plot
           ::
+          --filter out current plot from lower down in the array
           ( model.plots |> List.filter (\p -> p.id /= plot.id) )
         --only save user & plot config
         sd = saveData (ExportData model.user plot)
@@ -111,14 +113,20 @@ update action model =
             ( model', Effects.map Analysis fx )
           AnalysisForm.UpdateTicker i ->
             ( model', Effects.map Analysis fx )
-          AnalysisForm.LoadNewPlot p ->
-            ( model', Effects.map Analysis fx )
           AnalysisForm.Request ->
             ( model', Effects.map Analysis fx )
           AnalysisForm.Hover i ->
             ( model', Effects.map Analysis fx )
           AnalysisForm.RequestNewPlot ->
             ( model', Effects.batch [np, Effects.map Analysis fx] )
+          AnalysisForm.Delete plot ->
+            ( { model | plots = plots |> List.filter (\p -> p.id /= plot.id) }
+            , Effects.batch
+              [
+                deleteData (ExportData model.user plot)
+              , Effects.map Analysis fx
+              ]
+            )
           _ ->
             ( model', Effects.batch [sd, Effects.map Analysis fx] )
     Register input ->
@@ -252,3 +260,20 @@ saveToDBMailBox :
   , signal : Signal ExportData
   }
 saveToDBMailBox = Signal.mailbox defaultExportData
+
+
+--^^^^^^^^^^^^^^^^^^^°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+
+
+
+deleteData : ExportData -> Effects Action
+deleteData model =
+  Signal.send deleteFromDBMailBox.address model
+    `Task.andThen` (\_ -> Task.succeed NoOp)
+  |> Effects.task
+
+deleteFromDBMailBox :
+  { address : Signal.Address ExportData
+  , signal : Signal ExportData
+  }
+deleteFromDBMailBox = Signal.mailbox defaultExportData
