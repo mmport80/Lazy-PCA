@@ -60,8 +60,8 @@ init plots =
   let
     initPlot = Maybe.withDefault defaultPlotConfig (List.head plots)
     model =
-      { startDate = InputField.init initPlot.startDate "Start" "date" False "*" "" initPlot.endDate
-      , endDate = InputField.init initPlot.endDate "End" "date" False "*" initPlot.startDate ""
+      { startDate = InputField.init initPlot.startDate "Start" "date" False "*" "1900-01-01" initPlot.endDate
+      , endDate = InputField.init initPlot.endDate "End" "date" False "*" initPlot.startDate "2100-01-01"
       , ticker = InputField.init initPlot.ticker "Ticker" "text" False "*" "" ""
       , yield = Checkbox.init initPlot.y
       , newData =  [ defaultRow ]
@@ -157,8 +157,8 @@ update action model =
     LoadNewPlot p ->
       let
         model' = { model |
-          startDate = InputField.init p.startDate "Start" "date" False "*" "" p.endDate
-        , endDate = InputField.init p.endDate "End" "date" False "*" p.startDate ""
+          startDate = InputField.init p.startDate "Start" "date" False "*" "1900-01-01" p.endDate
+        , endDate = InputField.init p.endDate "End" "date" False "*" p.startDate "2100-01-01"
         , ticker = InputField.init p.ticker "Ticker" "text" False "*" "" ""
         , yield = Checkbox.init p.y
         , source = SelectInput.init p.source sourceOptions False
@@ -208,8 +208,8 @@ update action model =
     ReceiveNewPlot p ->
       let
         model' = { model |
-          startDate = InputField.init p.startDate "Start Date" "date" False "*" "" p.endDate
-        , endDate = InputField.init p.endDate "End Date" "date" False "*" p.startDate ""
+          startDate = InputField.init p.startDate "Start Date" "date" False "*" "1900-01-01" p.endDate
+        , endDate = InputField.init p.endDate "End Date" "date" False "*" p.startDate "2100-01-01"
         , ticker = InputField.init p.ticker "Ticker" "text" False "*" "" ""
         , yield = Checkbox.init p.y
         , source = SelectInput.init p.source sourceOptions False
@@ -295,8 +295,8 @@ view address model =
         div [ class "row" ] [
             div [ class "cell2" ] [ text "End"]
           , div [ class "cell2" ] [
-            InputField.view (Signal.forwardTo address UpdateEndDate) model.endDate
-            ]
+              InputField.view (Signal.forwardTo address UpdateEndDate) model.endDate
+              ]
           ]
       ]
     , hr [] []

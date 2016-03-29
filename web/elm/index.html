@@ -11551,10 +11551,12 @@ Elm.Forms.Components.InputField.make = function (_elm) {
               ,$Html$Attributes.disabled(model.disabled)
               ,$Html$Attributes.placeholder(model.placeHolder)
               ,$Html$Attributes.required(true)
+              ,$Html$Attributes.min(model.min)
+              ,$Html$Attributes.max(model.max)
               ,$Html$Attributes.pattern(model.pattern)]),
       _U.list([]));
    });
-   var Model = F7(function (a,b,c,d,e,f,g) {    return {value: a,placeHolder: b,inputType: c,disabled: d,pattern: e,max: f,min: g};});
+   var Model = F7(function (a,b,c,d,e,f,g) {    return {value: a,placeHolder: b,inputType: c,disabled: d,pattern: e,min: f,max: g};});
    var init = F7(function (input,placeHolder,inputType,disabled,pattern,min,max) {    return A7(Model,input,placeHolder,inputType,disabled,pattern,min,max);});
    return _elm.Forms.Components.InputField.values = {_op: _op
                                                     ,Model: Model
@@ -11856,8 +11858,8 @@ Elm.Forms.AnalysisForm.make = function (_elm) {
          case "NoOp": return {ctor: "_Tuple2",_0: model,_1: $Effects.none};
          case "LoadNewPlot": var _p20 = _p19._0;
            var model$ = _U.update(model,
-           {startDate: A7($Forms$Components$InputField.init,_p20.startDate,"Start","date",false,"*","",_p20.endDate)
-           ,endDate: A7($Forms$Components$InputField.init,_p20.endDate,"End","date",false,"*",_p20.startDate,"")
+           {startDate: A7($Forms$Components$InputField.init,_p20.startDate,"Start","date",false,"*","1900-01-01",_p20.endDate)
+           ,endDate: A7($Forms$Components$InputField.init,_p20.endDate,"End","date",false,"*",_p20.startDate,"2100-01-01")
            ,ticker: A7($Forms$Components$InputField.init,_p20.ticker,"Ticker","text",false,"*","","")
            ,$yield: $Forms$Components$Checkbox.init(_p20.y)
            ,source: A3($Forms$Components$SelectInput.init,_p20.source,sourceOptions,false)
@@ -11882,8 +11884,8 @@ Elm.Forms.AnalysisForm.make = function (_elm) {
          case "RequestNewPlot": return {ctor: "_Tuple2",_0: model,_1: $Effects.none};
          case "ReceiveNewPlot": var _p25 = _p19._0;
            var model$ = _U.update(model,
-           {startDate: A7($Forms$Components$InputField.init,_p25.startDate,"Start Date","date",false,"*","",_p25.endDate)
-           ,endDate: A7($Forms$Components$InputField.init,_p25.endDate,"End Date","date",false,"*",_p25.startDate,"")
+           {startDate: A7($Forms$Components$InputField.init,_p25.startDate,"Start Date","date",false,"*","1900-01-01",_p25.endDate)
+           ,endDate: A7($Forms$Components$InputField.init,_p25.endDate,"End Date","date",false,"*",_p25.startDate,"2100-01-01")
            ,ticker: A7($Forms$Components$InputField.init,_p25.ticker,"Ticker","text",false,"*","","")
            ,$yield: $Forms$Components$Checkbox.init(_p25.y)
            ,source: A3($Forms$Components$SelectInput.init,_p25.source,sourceOptions,false)
@@ -11935,8 +11937,8 @@ Elm.Forms.AnalysisForm.make = function (_elm) {
    var defaultRow = A2(F2(function (v0,v1) {    return {ctor: "_Tuple2",_0: v0,_1: v1};}),$Date.fromTime(0),0);
    var init = function (plots) {
       var initPlot = A2($Maybe.withDefault,defaultPlotConfig,$List.head(plots));
-      var model = {startDate: A7($Forms$Components$InputField.init,initPlot.startDate,"Start","date",false,"*","",initPlot.endDate)
-                  ,endDate: A7($Forms$Components$InputField.init,initPlot.endDate,"End","date",false,"*",initPlot.startDate,"")
+      var model = {startDate: A7($Forms$Components$InputField.init,initPlot.startDate,"Start","date",false,"*","1900-01-01",initPlot.endDate)
+                  ,endDate: A7($Forms$Components$InputField.init,initPlot.endDate,"End","date",false,"*",initPlot.startDate,"2100-01-01")
                   ,ticker: A7($Forms$Components$InputField.init,initPlot.ticker,"Ticker","text",false,"*","","")
                   ,$yield: $Forms$Components$Checkbox.init(initPlot.y)
                   ,newData: _U.list([defaultRow])

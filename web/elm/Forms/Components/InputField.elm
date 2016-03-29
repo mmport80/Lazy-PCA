@@ -17,8 +17,8 @@ type alias Model = {
   , inputType : String
   , disabled : Bool
   , pattern : String
-  , max : String
   , min : String
+  , max : String
   }
 
 init : String -> String -> String -> Bool -> String -> String -> String -> Model
@@ -54,7 +54,7 @@ view address model =
     , disabled model.disabled
     , placeholder model.placeHolder
     , required True
+    , Html.Attributes.min model.min
+    , Html.Attributes.max model.max
     , pattern model.pattern
-    , min model.min
-    , max model.max
     ] []
