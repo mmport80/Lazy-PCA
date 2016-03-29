@@ -11549,11 +11549,13 @@ Elm.Forms.Components.InputField.make = function (_elm) {
               ,$Html$Attributes.type$(model.inputType)
               ,A3($Html$Events.on,"input",$Html$Events.targetValue,function (_p1) {    return A2($Signal.message,address,Update(_p1));})
               ,$Html$Attributes.disabled(model.disabled)
-              ,$Html$Attributes.placeholder(model.placeHolder)]),
+              ,$Html$Attributes.placeholder(model.placeHolder)
+              ,$Html$Attributes.required(true)
+              ,$Html$Attributes.pattern(model.pattern)]),
       _U.list([]));
    });
-   var Model = F4(function (a,b,c,d) {    return {value: a,placeHolder: b,inputType: c,disabled: d};});
-   var init = F4(function (input,placeHolder,inputType,disabled) {    return A4(Model,input,placeHolder,inputType,disabled);});
+   var Model = F7(function (a,b,c,d,e,f,g) {    return {value: a,placeHolder: b,inputType: c,disabled: d,pattern: e,max: f,min: g};});
+   var init = F7(function (input,placeHolder,inputType,disabled,pattern,min,max) {    return A7(Model,input,placeHolder,inputType,disabled,pattern,min,max);});
    return _elm.Forms.Components.InputField.values = {_op: _op
                                                     ,Model: Model
                                                     ,init: init
@@ -11585,7 +11587,9 @@ Elm.Forms.Components.Checkbox.make = function (_elm) {
    var _op = {};
    var view = F2(function (address,model) {
       return A2($Html.input,
-      _U.list([$Html$Attributes.type$("checkbox"),A3($Html$Events.on,"change",$Html$Events.targetChecked,$Signal.message(address))]),
+      _U.list([$Html$Attributes.type$("checkbox")
+              ,$Html$Attributes.checked(model)
+              ,A3($Html$Events.on,"change",$Html$Events.targetChecked,$Signal.message(address))]),
       _U.list([]));
    });
    var update = F2(function (newYield,model) {    return newYield;});
@@ -11644,7 +11648,7 @@ Elm.Forms.AnalysisForm.make = function (_elm) {
       return {ctor: "_Tuple2",_0: A2(toDate,$Date.fromTime(0),_p5._0),_1: _p5._1};
    },
    A3($Json$Decode.tuple2,F2(function (v0,v1) {    return {ctor: "_Tuple2",_0: v0,_1: v1};}),$Json$Decode.string,$Json$Decode.$float));
-   var decodeData = A2($Json$Decode.at,_U.list(["dataset","data"]),$Json$Decode.list(csvRow));
+   var decodeData = A2($Json$Decode.at,_U.list(["data"]),$Json$Decode.list(csvRow));
    _op["=>"] = F2(function (v0,v1) {    return {ctor: "_Tuple2",_0: v0,_1: v1};});
    var sourceToColumn = function (s) {
       var _p6 = s;
@@ -11776,7 +11780,9 @@ Elm.Forms.AnalysisForm.make = function (_elm) {
               ,A2($Html.br,_U.list([]),_U.list([]))
               ,A2($Html.div,
               _U.list([]),
-              _U.list([A2($Forms$Components$SelectInput.view,A2($Signal.forwardTo,address,UpdateSource),model.source)
+              _U.list([A2($Html.span,
+                      _U.list([$Html$Attributes.$class("redBorder")]),
+                      _U.list([A2($Forms$Components$SelectInput.view,A2($Signal.forwardTo,address,UpdateSource),model.source)]))
                       ,A2($Forms$Components$InputField.view,A2($Signal.forwardTo,address,UpdateTicker),model.ticker)
                       ,A2($Forms$Components$Checkbox.view,A2($Signal.forwardTo,address,UpdateYield),model.$yield)
                       ,$Html.text("Yield")]))
@@ -11795,11 +11801,21 @@ Elm.Forms.AnalysisForm.make = function (_elm) {
               ,A2($Html.hr,_U.list([]),_U.list([]))
               ,A2($Html.h2,_U.list([]),_U.list([$Html.text("Filter by date")]))
               ,A2($Html.div,
-              _U.list([]),
-              _U.list([$Html.text("Start Date"),A2($Forms$Components$InputField.view,A2($Signal.forwardTo,address,UpdateStartDate),model.startDate)]))
+              _U.list([$Html$Attributes.$class("rowGroup")]),
+              _U.list([A2($Html.div,
+              _U.list([$Html$Attributes.$class("row")]),
+              _U.list([A2($Html.div,_U.list([$Html$Attributes.$class("cell2")]),_U.list([$Html.text("Start")]))
+                      ,A2($Html.div,
+                      _U.list([$Html$Attributes.$class("cell2")]),
+                      _U.list([A2($Forms$Components$InputField.view,A2($Signal.forwardTo,address,UpdateStartDate),model.startDate)]))]))]))
               ,A2($Html.div,
-              _U.list([]),
-              _U.list([$Html.text("End Date"),A2($Forms$Components$InputField.view,A2($Signal.forwardTo,address,UpdateEndDate),model.endDate)]))
+              _U.list([$Html$Attributes.$class("rowGroup")]),
+              _U.list([A2($Html.div,
+              _U.list([$Html$Attributes.$class("row")]),
+              _U.list([A2($Html.div,_U.list([$Html$Attributes.$class("cell2")]),_U.list([$Html.text("End")]))
+                      ,A2($Html.div,
+                      _U.list([$Html$Attributes.$class("cell2")]),
+                      _U.list([A2($Forms$Components$InputField.view,A2($Signal.forwardTo,address,UpdateEndDate),model.endDate)]))]))]))
               ,A2($Html.hr,_U.list([]),_U.list([]))
               ,A2($Html.h2,_U.list([]),_U.list([$Html.text("Saved Plots")]))
               ,A2($Html.p,
@@ -11840,9 +11856,9 @@ Elm.Forms.AnalysisForm.make = function (_elm) {
          case "NoOp": return {ctor: "_Tuple2",_0: model,_1: $Effects.none};
          case "LoadNewPlot": var _p20 = _p19._0;
            var model$ = _U.update(model,
-           {startDate: A4($Forms$Components$InputField.init,_p20.startDate,"Start","date",false)
-           ,endDate: A4($Forms$Components$InputField.init,_p20.endDate,"End","date",false)
-           ,ticker: A4($Forms$Components$InputField.init,_p20.ticker,"Ticker","text",false)
+           {startDate: A7($Forms$Components$InputField.init,_p20.startDate,"Start","date",false,"*","",_p20.endDate)
+           ,endDate: A7($Forms$Components$InputField.init,_p20.endDate,"End","date",false,"*",_p20.startDate,"")
+           ,ticker: A7($Forms$Components$InputField.init,_p20.ticker,"Ticker","text",false,"*","","")
            ,$yield: $Forms$Components$Checkbox.init(_p20.y)
            ,source: A3($Forms$Components$SelectInput.init,_p20.source,sourceOptions,false)
            ,frequency: A3($Forms$Components$SelectInput.init,$Basics.toString(_p20.frequency),frequencyOptions,false)
@@ -11866,9 +11882,9 @@ Elm.Forms.AnalysisForm.make = function (_elm) {
          case "RequestNewPlot": return {ctor: "_Tuple2",_0: model,_1: $Effects.none};
          case "ReceiveNewPlot": var _p25 = _p19._0;
            var model$ = _U.update(model,
-           {startDate: A4($Forms$Components$InputField.init,_p25.startDate,"Start Date","date",false)
-           ,endDate: A4($Forms$Components$InputField.init,_p25.endDate,"End Date","date",false)
-           ,ticker: A4($Forms$Components$InputField.init,_p25.ticker,"Ticker","text",false)
+           {startDate: A7($Forms$Components$InputField.init,_p25.startDate,"Start Date","date",false,"*","",_p25.endDate)
+           ,endDate: A7($Forms$Components$InputField.init,_p25.endDate,"End Date","date",false,"*",_p25.startDate,"")
+           ,ticker: A7($Forms$Components$InputField.init,_p25.ticker,"Ticker","text",false,"*","","")
            ,$yield: $Forms$Components$Checkbox.init(_p25.y)
            ,source: A3($Forms$Components$SelectInput.init,_p25.source,sourceOptions,false)
            ,frequency: A3($Forms$Components$SelectInput.init,$Basics.toString(_p25.frequency),frequencyOptions,false)
@@ -11919,9 +11935,9 @@ Elm.Forms.AnalysisForm.make = function (_elm) {
    var defaultRow = A2(F2(function (v0,v1) {    return {ctor: "_Tuple2",_0: v0,_1: v1};}),$Date.fromTime(0),0);
    var init = function (plots) {
       var initPlot = A2($Maybe.withDefault,defaultPlotConfig,$List.head(plots));
-      var model = {startDate: A4($Forms$Components$InputField.init,initPlot.startDate,"Start","date",false)
-                  ,endDate: A4($Forms$Components$InputField.init,initPlot.endDate,"End","date",false)
-                  ,ticker: A4($Forms$Components$InputField.init,initPlot.ticker,"Ticker","text",false)
+      var model = {startDate: A7($Forms$Components$InputField.init,initPlot.startDate,"Start","date",false,"*","",initPlot.endDate)
+                  ,endDate: A7($Forms$Components$InputField.init,initPlot.endDate,"End","date",false,"*",initPlot.startDate,"")
+                  ,ticker: A7($Forms$Components$InputField.init,initPlot.ticker,"Ticker","text",false,"*","","")
                   ,$yield: $Forms$Components$Checkbox.init(initPlot.y)
                   ,newData: _U.list([defaultRow])
                   ,source: A3($Forms$Components$SelectInput.init,initPlot.source,sourceOptions,false)
@@ -12037,8 +12053,8 @@ Elm.Forms.LoginForm.make = function (_elm) {
    });
    var init = F2(function (username,password) {
       return {ctor: "_Tuple2"
-             ,_0: {username: A4($Forms$Components$InputField.init,username,"Username","text",false)
-                  ,password: A4($Forms$Components$InputField.init,password,"Password","password",false)
+             ,_0: {username: A7($Forms$Components$InputField.init,username,"Username","text",false,".{1,20}","","")
+                  ,password: A7($Forms$Components$InputField.init,password,"Password","password",false,".{6,100}","","")
                   ,response: ""
                   ,token: ""}
              ,_1: $Effects.none};
@@ -12124,9 +12140,9 @@ Elm.Forms.RegisterForm.make = function (_elm) {
    });
    var init = F3(function (username,password,fullname) {
       return {ctor: "_Tuple2"
-             ,_0: {username: A4($Forms$Components$InputField.init,username,"Username","text",false)
-                  ,fullname: A4($Forms$Components$InputField.init,fullname,"Full Name","text",false)
-                  ,password: A4($Forms$Components$InputField.init,password,"Password","password",false)
+             ,_0: {username: A7($Forms$Components$InputField.init,username,"Username","text",false,".{1,20}","","")
+                  ,fullname: A7($Forms$Components$InputField.init,fullname,"Full Name","text",false,"*","","")
+                  ,password: A7($Forms$Components$InputField.init,password,"Password","password",false,".{6,100}","","")
                   ,response: ""
                   ,token: ""}
              ,_1: $Effects.none};

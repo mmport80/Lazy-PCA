@@ -1,7 +1,7 @@
 module Forms.Components.InputField where
 
 import Html exposing (Html, input)
-import Html.Attributes exposing (value, placeholder, type', disabled)
+import Html.Attributes exposing (value, placeholder, type', disabled, required, pattern, min, max)
 import Html.Events exposing (targetValue, on)
 
 import Signal exposing (Address)
@@ -16,11 +16,14 @@ type alias Model = {
   , placeHolder : String
   , inputType : String
   , disabled : Bool
+  , pattern : String
+  , max : String
+  , min : String
   }
 
-init : String -> String -> String -> Bool -> Model
-init input placeHolder inputType disabled =
-  Model input placeHolder inputType disabled
+init : String -> String -> String -> Bool -> String -> String -> String -> Model
+init input placeHolder inputType disabled pattern min max =
+  Model input placeHolder inputType disabled pattern min max
 
 -- UPDATE
 type Action = Update String | Enable | Disable | Reset
@@ -50,4 +53,8 @@ view address model =
     , on "input" targetValue ( Update >> Signal.message address )
     , disabled model.disabled
     , placeholder model.placeHolder
+    , required True
+    , pattern model.pattern
+    , min model.min
+    , max model.max
     ] []

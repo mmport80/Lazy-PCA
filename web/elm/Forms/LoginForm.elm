@@ -35,8 +35,8 @@ type alias Model = {
 init : String -> String -> (Model, Effects Action)
 init username password =
   (
-    { username = InputField.init username "Username" "text" False
-    , password = InputField.init password "Password" "password" False
+    { username = InputField.init username "Username" "text" False ".{1,20}" "" ""
+    , password = InputField.init password "Password" "password" False ".{6,100}" "" ""
     , response = ""
     , token = ""
     }

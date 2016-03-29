@@ -60,9 +60,9 @@ init plots =
   let
     initPlot = Maybe.withDefault defaultPlotConfig (List.head plots)
     model =
-      { startDate = InputField.init initPlot.startDate "Start" "date" False
-      , endDate = InputField.init initPlot.endDate "End" "date" False
-      , ticker = InputField.init initPlot.ticker "Ticker" "text" False
+      { startDate = InputField.init initPlot.startDate "Start" "date" False "*" "" initPlot.endDate
+      , endDate = InputField.init initPlot.endDate "End" "date" False "*" initPlot.startDate ""
+      , ticker = InputField.init initPlot.ticker "Ticker" "text" False "*" "" ""
       , yield = Checkbox.init initPlot.y
       , newData =  [ defaultRow ]
       , source = SelectInput.init initPlot.source sourceOptions False
@@ -157,9 +157,9 @@ update action model =
     LoadNewPlot p ->
       let
         model' = { model |
-          startDate = InputField.init p.startDate "Start" "date" False
-        , endDate = InputField.init p.endDate "End" "date" False
-        , ticker = InputField.init p.ticker "Ticker" "text" False
+          startDate = InputField.init p.startDate "Start" "date" False "*" "" p.endDate
+        , endDate = InputField.init p.endDate "End" "date" False "*" p.startDate ""
+        , ticker = InputField.init p.ticker "Ticker" "text" False "*" "" ""
         , yield = Checkbox.init p.y
         , source = SelectInput.init p.source sourceOptions False
         , frequency = SelectInput.init (toString p.frequency) frequencyOptions False
@@ -208,9 +208,9 @@ update action model =
     ReceiveNewPlot p ->
       let
         model' = { model |
-          startDate = InputField.init p.startDate "Start Date" "date" False
-        , endDate = InputField.init p.endDate "End Date" "date" False
-        , ticker = InputField.init p.ticker "Ticker" "text" False
+          startDate = InputField.init p.startDate "Start Date" "date" False "*" "" p.endDate
+        , endDate = InputField.init p.endDate "End Date" "date" False "*" p.startDate ""
+        , ticker = InputField.init p.ticker "Ticker" "text" False "*" "" ""
         , yield = Checkbox.init p.y
         , source = SelectInput.init p.source sourceOptions False
         , frequency = SelectInput.init (toString p.frequency) frequencyOptions False
@@ -255,7 +255,8 @@ view address model =
     , br [] []
     , div []
         [
-          SelectInput.view (Signal.forwardTo address UpdateSource) model.source
+          span [ class "redBorder" ]
+            [ SelectInput.view (Signal.forwardTo address UpdateSource) model.source ]
         , InputField.view (Signal.forwardTo address UpdateTicker) model.ticker
         , Checkbox.view (Signal.forwardTo address UpdateYield) model.yield
         , text "Yield"
@@ -282,13 +283,21 @@ view address model =
     , h2 [] [
       text "Filter by date"
       ]
-    , div [] [
-        text "Start Date"
-      , InputField.view (Signal.forwardTo address UpdateStartDate) model.startDate
+    , div [ class "rowGroup" ] [
+        div [ class "row" ] [
+            div [ class "cell2" ] [ text "Start"]
+          , div [ class "cell2" ] [
+              InputField.view (Signal.forwardTo address UpdateStartDate) model.startDate
+              ]
+          ]
       ]
-    , div [] [
-        text "End Date"
-      , InputField.view (Signal.forwardTo address UpdateEndDate) model.endDate
+    , div [ class "rowGroup" ] [
+        div [ class "row" ] [
+            div [ class "cell2" ] [ text "End"]
+          , div [ class "cell2" ] [
+            InputField.view (Signal.forwardTo address UpdateEndDate) model.endDate
+            ]
+          ]
       ]
     , hr [] []
     --saved plots
@@ -394,7 +403,7 @@ sourceToColumn s =
 
 --change name to something like 'decodeList'
 decodeData : Json.Decoder (List (Date.Date, Float))
-decodeData = Json.at ["dataset", "data"] (Json.list csvRow)
+decodeData = Json.at ["data"] (Json.list csvRow)
 
 --
 csvRow : Json.Decoder (Date.Date, Float)
@@ -417,7 +426,7 @@ sendDataToPlot model =
     fInt = toInteger 21 model.frequency.value
     sd = model.startDate.value |> toDate (Date.fromTime 0) |> Date.toTime
     ed = model.endDate.value |> toDate (Date.fromTime 0) |> Date.toTime
-    --if yield is true then convert to yields
+    --if yield is true then convert yields to dsfcts
     dataToExport =
       if model.yield == True then
         List.map (\(a,b) -> ( a, e^(-b/100) ) ) model.newData

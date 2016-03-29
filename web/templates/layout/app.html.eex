@@ -9,7 +9,7 @@
 
 
 
-    <title>Hello Backend!</title>
+    <title>Lazy PCA</title>
     <!--
       <link rel="stylesheet" href="<%= static_path(@conn, "/css/app.css") %>">
     -->
@@ -82,6 +82,15 @@
         font-weight: bold;
         }
 
+      input:invalid {
+        border: 1px solid red;
+        }
+
+      input:valid {
+        border: 1px solid green;
+        }
+
+
       .table {
         display:table;
         width: 100%;
@@ -96,14 +105,15 @@
       .row {
         display:table-row;
         }
-      .small {
-        display:table-cell;
-        width:5%;
-        }
       .cell {
         display:table-cell;
         width:20%;
         }
+      .cell2 {
+        display:table-cell;
+        width:50%;
+        }
+
 
 
     </style>
