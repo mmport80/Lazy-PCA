@@ -99,7 +99,7 @@ update action model =
 -- VIEW
 view : Signal.Address Action -> Model -> Html
 view address model =
-    div []
+    div [  ]
       [
         InputField.view (Signal.forwardTo address UpdateUsername) model.username
       , InputField.view (Signal.forwardTo address UpdatePassword) model.password
