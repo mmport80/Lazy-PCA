@@ -8357,6 +8357,163 @@ Elm.Json.Decode.make = function (_elm) {
                                     ,andThen: andThen
                                     ,value: value
                                     ,customDecoder: customDecoder};
+};Elm.Set = Elm.Set || {};
+Elm.Set.make = function (_elm) {
+   "use strict";
+   _elm.Set = _elm.Set || {};
+   if (_elm.Set.values) return _elm.Set.values;
+   var _U = Elm.Native.Utils.make(_elm),$Basics = Elm.Basics.make(_elm),$Dict = Elm.Dict.make(_elm),$List = Elm.List.make(_elm);
+   var _op = {};
+   var foldr = F3(function (f,b,_p0) {    var _p1 = _p0;return A3($Dict.foldr,F3(function (k,_p2,b) {    return A2(f,k,b);}),b,_p1._0);});
+   var foldl = F3(function (f,b,_p3) {    var _p4 = _p3;return A3($Dict.foldl,F3(function (k,_p5,b) {    return A2(f,k,b);}),b,_p4._0);});
+   var toList = function (_p6) {    var _p7 = _p6;return $Dict.keys(_p7._0);};
+   var size = function (_p8) {    var _p9 = _p8;return $Dict.size(_p9._0);};
+   var member = F2(function (k,_p10) {    var _p11 = _p10;return A2($Dict.member,k,_p11._0);});
+   var isEmpty = function (_p12) {    var _p13 = _p12;return $Dict.isEmpty(_p13._0);};
+   var Set_elm_builtin = function (a) {    return {ctor: "Set_elm_builtin",_0: a};};
+   var empty = Set_elm_builtin($Dict.empty);
+   var singleton = function (k) {    return Set_elm_builtin(A2($Dict.singleton,k,{ctor: "_Tuple0"}));};
+   var insert = F2(function (k,_p14) {    var _p15 = _p14;return Set_elm_builtin(A3($Dict.insert,k,{ctor: "_Tuple0"},_p15._0));});
+   var fromList = function (xs) {    return A3($List.foldl,insert,empty,xs);};
+   var map = F2(function (f,s) {    return fromList(A2($List.map,f,toList(s)));});
+   var remove = F2(function (k,_p16) {    var _p17 = _p16;return Set_elm_builtin(A2($Dict.remove,k,_p17._0));});
+   var union = F2(function (_p19,_p18) {    var _p20 = _p19;var _p21 = _p18;return Set_elm_builtin(A2($Dict.union,_p20._0,_p21._0));});
+   var intersect = F2(function (_p23,_p22) {    var _p24 = _p23;var _p25 = _p22;return Set_elm_builtin(A2($Dict.intersect,_p24._0,_p25._0));});
+   var diff = F2(function (_p27,_p26) {    var _p28 = _p27;var _p29 = _p26;return Set_elm_builtin(A2($Dict.diff,_p28._0,_p29._0));});
+   var filter = F2(function (p,_p30) {    var _p31 = _p30;return Set_elm_builtin(A2($Dict.filter,F2(function (k,_p32) {    return p(k);}),_p31._0));});
+   var partition = F2(function (p,_p33) {
+      var _p34 = _p33;
+      var _p35 = A2($Dict.partition,F2(function (k,_p36) {    return p(k);}),_p34._0);
+      var p1 = _p35._0;
+      var p2 = _p35._1;
+      return {ctor: "_Tuple2",_0: Set_elm_builtin(p1),_1: Set_elm_builtin(p2)};
+   });
+   return _elm.Set.values = {_op: _op
+                            ,empty: empty
+                            ,singleton: singleton
+                            ,insert: insert
+                            ,remove: remove
+                            ,isEmpty: isEmpty
+                            ,member: member
+                            ,size: size
+                            ,foldl: foldl
+                            ,foldr: foldr
+                            ,map: map
+                            ,filter: filter
+                            ,partition: partition
+                            ,union: union
+                            ,intersect: intersect
+                            ,diff: diff
+                            ,toList: toList
+                            ,fromList: fromList};
+};Elm.Native.Keyboard = {};
+
+Elm.Native.Keyboard.make = function(localRuntime) {
+	localRuntime.Native = localRuntime.Native || {};
+	localRuntime.Native.Keyboard = localRuntime.Native.Keyboard || {};
+	if (localRuntime.Native.Keyboard.values)
+	{
+		return localRuntime.Native.Keyboard.values;
+	}
+
+	var NS = Elm.Native.Signal.make(localRuntime);
+
+
+	function keyEvent(event)
+	{
+		return {
+			alt: event.altKey,
+			meta: event.metaKey,
+			keyCode: event.keyCode
+		};
+	}
+
+
+	function keyStream(node, eventName, handler)
+	{
+		var stream = NS.input(eventName, { alt: false, meta: false, keyCode: 0 });
+
+		localRuntime.addListener([stream.id], node, eventName, function(e) {
+			localRuntime.notify(stream.id, handler(e));
+		});
+
+		return stream;
+	}
+
+	var downs = keyStream(document, 'keydown', keyEvent);
+	var ups = keyStream(document, 'keyup', keyEvent);
+	var presses = keyStream(document, 'keypress', keyEvent);
+	var blurs = keyStream(window, 'blur', function() { return null; });
+
+
+	return localRuntime.Native.Keyboard.values = {
+		downs: downs,
+		ups: ups,
+		blurs: blurs,
+		presses: presses
+	};
+};
+Elm.Keyboard = Elm.Keyboard || {};
+Elm.Keyboard.make = function (_elm) {
+   "use strict";
+   _elm.Keyboard = _elm.Keyboard || {};
+   if (_elm.Keyboard.values) return _elm.Keyboard.values;
+   var _U = Elm.Native.Utils.make(_elm),
+   $Basics = Elm.Basics.make(_elm),
+   $Char = Elm.Char.make(_elm),
+   $Native$Keyboard = Elm.Native.Keyboard.make(_elm),
+   $Set = Elm.Set.make(_elm),
+   $Signal = Elm.Signal.make(_elm);
+   var _op = {};
+   var presses = A2($Signal.map,function (_) {    return _.keyCode;},$Native$Keyboard.presses);
+   var toXY = F2(function (_p0,keyCodes) {
+      var _p1 = _p0;
+      var is = function (keyCode) {    return A2($Set.member,keyCode,keyCodes) ? 1 : 0;};
+      return {x: is(_p1.right) - is(_p1.left),y: is(_p1.up) - is(_p1.down)};
+   });
+   var Directions = F4(function (a,b,c,d) {    return {up: a,down: b,left: c,right: d};});
+   var dropMap = F2(function (f,signal) {    return $Signal.dropRepeats(A2($Signal.map,f,signal));});
+   var EventInfo = F3(function (a,b,c) {    return {alt: a,meta: b,keyCode: c};});
+   var Blur = {ctor: "Blur"};
+   var Down = function (a) {    return {ctor: "Down",_0: a};};
+   var Up = function (a) {    return {ctor: "Up",_0: a};};
+   var rawEvents = $Signal.mergeMany(_U.list([A2($Signal.map,Up,$Native$Keyboard.ups)
+                                             ,A2($Signal.map,Down,$Native$Keyboard.downs)
+                                             ,A2($Signal.map,$Basics.always(Blur),$Native$Keyboard.blurs)]));
+   var empty = {alt: false,meta: false,keyCodes: $Set.empty};
+   var update = F2(function (event,model) {
+      var _p2 = event;
+      switch (_p2.ctor)
+      {case "Down": var _p3 = _p2._0;
+           return {alt: _p3.alt,meta: _p3.meta,keyCodes: A2($Set.insert,_p3.keyCode,model.keyCodes)};
+         case "Up": var _p4 = _p2._0;
+           return {alt: _p4.alt,meta: _p4.meta,keyCodes: A2($Set.remove,_p4.keyCode,model.keyCodes)};
+         default: return empty;}
+   });
+   var model = A3($Signal.foldp,update,empty,rawEvents);
+   var alt = A2(dropMap,function (_) {    return _.alt;},model);
+   var meta = A2(dropMap,function (_) {    return _.meta;},model);
+   var keysDown = A2(dropMap,function (_) {    return _.keyCodes;},model);
+   var arrows = A2(dropMap,toXY({up: 38,down: 40,left: 37,right: 39}),keysDown);
+   var wasd = A2(dropMap,toXY({up: 87,down: 83,left: 65,right: 68}),keysDown);
+   var isDown = function (keyCode) {    return A2(dropMap,$Set.member(keyCode),keysDown);};
+   var ctrl = isDown(17);
+   var shift = isDown(16);
+   var space = isDown(32);
+   var enter = isDown(13);
+   var Model = F3(function (a,b,c) {    return {alt: a,meta: b,keyCodes: c};});
+   return _elm.Keyboard.values = {_op: _op
+                                 ,arrows: arrows
+                                 ,wasd: wasd
+                                 ,enter: enter
+                                 ,space: space
+                                 ,ctrl: ctrl
+                                 ,shift: shift
+                                 ,alt: alt
+                                 ,meta: meta
+                                 ,isDown: isDown
+                                 ,keysDown: keysDown
+                                 ,presses: presses};
 };Elm.Native.Regex = {};
 Elm.Native.Regex.make = function(localRuntime) {
 	localRuntime.Native = localRuntime.Native || {};
@@ -11408,13 +11565,13 @@ Elm.Forms.Components.InputField.make = function (_elm) {
                                                     ,view: view};
 };Elm.Forms = Elm.Forms || {};
 Elm.Forms.Components = Elm.Forms.Components || {};
-Elm.Forms.Components.Yield = Elm.Forms.Components.Yield || {};
-Elm.Forms.Components.Yield.make = function (_elm) {
+Elm.Forms.Components.Checkbox = Elm.Forms.Components.Checkbox || {};
+Elm.Forms.Components.Checkbox.make = function (_elm) {
    "use strict";
    _elm.Forms = _elm.Forms || {};
    _elm.Forms.Components = _elm.Forms.Components || {};
-   _elm.Forms.Components.Yield = _elm.Forms.Components.Yield || {};
-   if (_elm.Forms.Components.Yield.values) return _elm.Forms.Components.Yield.values;
+   _elm.Forms.Components.Checkbox = _elm.Forms.Components.Checkbox || {};
+   if (_elm.Forms.Components.Checkbox.values) return _elm.Forms.Components.Checkbox.values;
    var _U = Elm.Native.Utils.make(_elm),
    $Basics = Elm.Basics.make(_elm),
    $Debug = Elm.Debug.make(_elm),
@@ -11428,12 +11585,14 @@ Elm.Forms.Components.Yield.make = function (_elm) {
    var _op = {};
    var view = F2(function (address,model) {
       return A2($Html.input,
-      _U.list([$Html$Attributes.type$("checkbox"),A3($Html$Events.on,"change",$Html$Events.targetChecked,$Signal.message(address))]),
+      _U.list([$Html$Attributes.type$("checkbox")
+              ,$Html$Attributes.checked(model)
+              ,A3($Html$Events.on,"change",$Html$Events.targetChecked,$Signal.message(address))]),
       _U.list([]));
    });
    var update = F2(function (newYield,model) {    return newYield;});
    var init = function ($yield) {    return $yield;};
-   return _elm.Forms.Components.Yield.values = {_op: _op,init: init,update: update,view: view};
+   return _elm.Forms.Components.Checkbox.values = {_op: _op,init: init,update: update,view: view};
 };Elm.Forms = Elm.Forms || {};
 Elm.Forms.AnalysisForm = Elm.Forms.AnalysisForm || {};
 Elm.Forms.AnalysisForm.make = function (_elm) {
@@ -11447,9 +11606,9 @@ Elm.Forms.AnalysisForm.make = function (_elm) {
    $Date$Format = Elm.Date.Format.make(_elm),
    $Debug = Elm.Debug.make(_elm),
    $Effects = Elm.Effects.make(_elm),
+   $Forms$Components$Checkbox = Elm.Forms.Components.Checkbox.make(_elm),
    $Forms$Components$InputField = Elm.Forms.Components.InputField.make(_elm),
    $Forms$Components$SelectInput = Elm.Forms.Components.SelectInput.make(_elm),
-   $Forms$Components$Yield = Elm.Forms.Components.Yield.make(_elm),
    $Html = Elm.Html.make(_elm),
    $Html$Attributes = Elm.Html.Attributes.make(_elm),
    $Html$Events = Elm.Html.Events.make(_elm),
@@ -11515,26 +11674,32 @@ Elm.Forms.AnalysisForm.make = function (_elm) {
       return $Effects.task(A2($Task.andThen,A2($Signal.send,sendToPlotMailBox.address,data),function (_p6) {    return $Task.succeed(NoOp);}));
    };
    var sendDataToPlot = function (model) {
+      var dataToExport = _U.eq(model.$yield,true) ? A2($List.map,
+      function (_p7) {
+         var _p8 = _p7;
+         return {ctor: "_Tuple2",_0: _p8._0,_1: Math.pow($Basics.e,(0 - _p8._1) / 100)};
+      },
+      model.newData) : model.newData;
       var ed = $Date.toTime(A2(toDate,$Date.fromTime(0),model.endDate.value));
       var sd = $Date.toTime(A2(toDate,$Date.fromTime(0),model.startDate.value));
       var fInt = A2(toInteger,21,model.frequency.value);
       return sendData(A2($List.map,
-      function (_p7) {
-         var _p8 = _p7;
-         return {ctor: "_Tuple2",_0: dateToISOFormat(_p8._1),_1: _p8._2};
-      },
-      A2($List.filter,
       function (_p9) {
          var _p10 = _p9;
-         var _p11 = _p10._1;
-         return _U.cmp($Date.toTime(_p11),sd) > -1 && _U.cmp($Date.toTime(_p11),ed) < 1;
+         return {ctor: "_Tuple2",_0: dateToISOFormat(_p10._1),_1: _p10._2};
       },
       A2($List.filter,
-      function (_p12) {
-         var _p13 = _p12;
-         return _U.eq(A2($Basics._op["%"],_p13._0,fInt),0);
+      function (_p11) {
+         var _p12 = _p11;
+         var _p13 = _p12._1;
+         return _U.cmp($Date.toTime(_p13),sd) > -1 && _U.cmp($Date.toTime(_p13),ed) < 1;
       },
-      A2($List.indexedMap,F2(function (i,_p14) {    var _p15 = _p14;return {ctor: "_Tuple3",_0: i,_1: _p15._0,_2: _p15._1};}),model.newData)))));
+      A2($List.filter,
+      function (_p14) {
+         var _p15 = _p14;
+         return _U.eq(A2($Basics._op["%"],_p15._0,fInt),0);
+      },
+      A2($List.indexedMap,F2(function (i,_p16) {    var _p17 = _p16;return {ctor: "_Tuple3",_0: i,_1: _p17._0,_2: _p17._1};}),dataToExport)))));
    };
    var NewData = function (a) {    return {ctor: "NewData",_0: a};};
    var getData = function (model) {    return $Effects.task(A2($Task.map,NewData,$Task.toMaybe(A2($Http.get,decodeData,quandlUrl(model)))));};
@@ -11569,11 +11734,11 @@ Elm.Forms.AnalysisForm.make = function (_elm) {
       return A2($Basics._op["++"],
       _U.list([A2($Html.div,
       _U.list([$Html$Attributes.$class("header")]),
-      _U.list([A2($Html.div,_U.list([cell]),_U.list([$Html.text("Source")]))
-              ,A2($Html.div,_U.list([cell]),_U.list([$Html.text("Ticker")]))
-              ,A2($Html.div,_U.list([cell]),_U.list([$Html.text("Sampling")]))
-              ,A2($Html.div,_U.list([cell]),_U.list([$Html.text("Period")]))
-              ,A2($Html.div,_U.list([cell]),_U.list([$Html.text("DELETE")]))]))]),
+      _U.list([A2($Html.div,_U.list([cell]),_U.list([$Html.text("")]))
+              ,A2($Html.div,_U.list([cell]),_U.list([$Html.text("")]))
+              ,A2($Html.div,_U.list([cell]),_U.list([$Html.text("")]))
+              ,A2($Html.div,_U.list([cell]),_U.list([$Html.text("")]))
+              ,A2($Html.div,_U.list([cell]),_U.list([$Html.text("")]))]))]),
       A2($List.map,
       function (p) {
          return A2($Html.div,
@@ -11607,28 +11772,37 @@ Elm.Forms.AnalysisForm.make = function (_elm) {
       _U.list([]),
       _U.list([A2($Html.div,
               _U.list([]),
+              _U.list([$Html.text("Pull required data down from ")
+                      ,A2($Html.a,_U.list([$Html$Attributes.href("https://www.quandl.com/")]),_U.list([$Html.text("Quandl")]))
+                      ,$Html.text(" by specifying sources and tickers")]))
+              ,A2($Html.br,_U.list([]),_U.list([]))
+              ,A2($Html.div,
+              _U.list([]),
               _U.list([A2($Forms$Components$SelectInput.view,A2($Signal.forwardTo,address,UpdateSource),model.source)
                       ,A2($Forms$Components$InputField.view,A2($Signal.forwardTo,address,UpdateTicker),model.ticker)
-                      ,A2($Forms$Components$Yield.view,A2($Signal.forwardTo,address,UpdateYield),model.$yield)
+                      ,A2($Forms$Components$Checkbox.view,A2($Signal.forwardTo,address,UpdateYield),model.$yield)
                       ,$Html.text("Yield")
-                      ,A2($Html.a,_U.list([$Html$Attributes.href("#"),A2($Html$Events.onClick,address,Request)]),_U.list([$Html.text("Pull")]))]))
+                      ,A2($Html.a,
+                      _U.list([$Html$Attributes.$class("bold"),$Html$Attributes.href("#"),A2($Html$Events.onClick,address,Request)]),
+                      _U.list([$Html.text("Pull")]))]))
               ,A2($Html.hr,_U.list([]),_U.list([]))
-              ,A2($Html.div,_U.list([]),_U.list([$Html.text(model.progressMsg)]))
-              ,A2($Html.div,_U.list([$Html$Attributes.id("plot")]),_U.list([]))
+              ,A2($Html.div,_U.list([$Html$Attributes.id("plot")]),_U.list([$Html.text(model.progressMsg)]))
               ,A2($Html.hr,_U.list([]),_U.list([]))
+              ,A2($Html.h2,_U.list([]),_U.list([$Html.text("Set the horizon")]))
               ,A2($Html.div,_U.list([]),_U.list([A2($Forms$Components$SelectInput.view,A2($Signal.forwardTo,address,UpdateFrequency),model.frequency)]))
               ,A2($Html.hr,_U.list([]),_U.list([]))
+              ,A2($Html.h2,_U.list([]),_U.list([$Html.text("Filter by date")]))
               ,A2($Html.div,
               _U.list([]),
-              _U.list([$Html.text("Start Date")
-                      ,A2($Forms$Components$InputField.view,A2($Signal.forwardTo,address,UpdateStartDate),model.startDate)
-                      ,$Html.text("End Date")
-                      ,A2($Forms$Components$InputField.view,A2($Signal.forwardTo,address,UpdateEndDate),model.endDate)]))
-              ,A2($Html.hr,_U.list([]),_U.list([]))
+              _U.list([$Html.text("Start Date"),A2($Forms$Components$InputField.view,A2($Signal.forwardTo,address,UpdateStartDate),model.startDate)]))
               ,A2($Html.div,
+              _U.list([]),
+              _U.list([$Html.text("End Date"),A2($Forms$Components$InputField.view,A2($Signal.forwardTo,address,UpdateEndDate),model.endDate)]))
+              ,A2($Html.hr,_U.list([]),_U.list([]))
+              ,A2($Html.h2,_U.list([]),_U.list([$Html.text("Saved Plots")]))
+              ,A2($Html.p,
               _U.list([]),
               _U.list([A2($Html.a,_U.list([$Html$Attributes.href("#"),A2($Html$Events.onClick,address,RequestNewPlot)]),_U.list([$Html.text("New")]))]))
-              ,A2($Html.hr,_U.list([]),_U.list([]))
               ,A2($Html.div,_U.list([$Html$Attributes.$class("table")]),A2(generateSavedPlotConfigTable,address,model))]));
    });
    var sourceOptions = _U.list([A2($Forms$Components$SelectInput.Option,"YAHOO","Yahoo")
@@ -11636,20 +11810,22 @@ Elm.Forms.AnalysisForm.make = function (_elm) {
                                ,A2($Forms$Components$SelectInput.Option,"CBOE","Chicago Board of Options Exchange")
                                ,A2($Forms$Components$SelectInput.Option,"SPDJ","S&P Dow Jones")]);
    var update = F2(function (action,model) {
-      var _p16 = action;
-      switch (_p16.ctor)
+      var _p18 = action;
+      switch (_p18.ctor)
       {case "UpdateSource": return {ctor: "_Tuple2"
-                                   ,_0: _U.update(model,{source: A2($Forms$Components$SelectInput.update,_p16._0,model.source)})
+                                   ,_0: _U.update(model,{source: A2($Forms$Components$SelectInput.update,_p18._0,model.source)})
                                    ,_1: $Effects.none};
-         case "UpdateFrequency": var model$ = _U.update(model,{frequency: A2($Forms$Components$SelectInput.update,_p16._0,model.frequency)});
+         case "UpdateFrequency": var model$ = _U.update(model,{frequency: A2($Forms$Components$SelectInput.update,_p18._0,model.frequency)});
            return {ctor: "_Tuple2",_0: model$,_1: sendDataToPlot(model$)};
          case "UpdateTicker": return {ctor: "_Tuple2"
-                                     ,_0: _U.update(model,{ticker: A2($Forms$Components$InputField.update,_p16._0,model.ticker)})
+                                     ,_0: _U.update(model,{ticker: A2($Forms$Components$InputField.update,_p18._0,model.ticker)})
                                      ,_1: $Effects.none};
-         case "UpdateYield": return {ctor: "_Tuple2",_0: _U.update(model,{$yield: A2($Forms$Components$Yield.update,_p16._0,model.$yield)}),_1: $Effects.none};
-         case "UpdateStartDate": var model$ = _U.update(model,{startDate: A2($Forms$Components$InputField.update,_p16._0,model.startDate)});
+         case "UpdateYield": return {ctor: "_Tuple2"
+                                    ,_0: _U.update(model,{$yield: A2($Forms$Components$Checkbox.update,_p18._0,model.$yield)})
+                                    ,_1: $Effects.none};
+         case "UpdateStartDate": var model$ = _U.update(model,{startDate: A2($Forms$Components$InputField.update,_p18._0,model.startDate)});
            return {ctor: "_Tuple2",_0: model$,_1: sendDataToPlot(model$)};
-         case "UpdateEndDate": var endDate = A2($Forms$Components$InputField.update,_p16._0,model.endDate);
+         case "UpdateEndDate": var endDate = A2($Forms$Components$InputField.update,_p18._0,model.endDate);
            var model$ = _U.update(model,{endDate: endDate});
            return {ctor: "_Tuple2",_0: model$,_1: sendDataToPlot(model$)};
          case "Request": return {ctor: "_Tuple2"
@@ -11660,22 +11836,22 @@ Elm.Forms.AnalysisForm.make = function (_elm) {
                                 ,progressMsg: "Downloading Data..."})
                                 ,_1: getData(model)};
          case "NoOp": return {ctor: "_Tuple2",_0: model,_1: $Effects.none};
-         case "LoadNewPlot": var _p17 = _p16._0;
+         case "LoadNewPlot": var _p19 = _p18._0;
            var model$ = _U.update(model,
-           {startDate: A4($Forms$Components$InputField.init,_p17.startDate,"Start Date","date",false)
-           ,endDate: A4($Forms$Components$InputField.init,_p17.endDate,"End Date","date",false)
-           ,ticker: A4($Forms$Components$InputField.init,_p17.ticker,"Ticker","text",false)
-           ,$yield: $Forms$Components$Yield.init(_p17.y)
-           ,source: A3($Forms$Components$SelectInput.init,_p17.source,sourceOptions,false)
-           ,frequency: A3($Forms$Components$SelectInput.init,$Basics.toString(_p17.frequency),frequencyOptions,false)
-           ,plot_id: _p17.id
+           {startDate: A4($Forms$Components$InputField.init,_p19.startDate,"Start Date","date",false)
+           ,endDate: A4($Forms$Components$InputField.init,_p19.endDate,"End Date","date",false)
+           ,ticker: A4($Forms$Components$InputField.init,_p19.ticker,"Ticker","text",false)
+           ,$yield: $Forms$Components$Checkbox.init(_p19.y)
+           ,source: A3($Forms$Components$SelectInput.init,_p19.source,sourceOptions,false)
+           ,frequency: A3($Forms$Components$SelectInput.init,$Basics.toString(_p19.frequency),frequencyOptions,false)
+           ,plot_id: _p19.id
            ,progressMsg: "Downloading Data..."});
            return {ctor: "_Tuple2",_0: model$,_1: getData(model$)};
-         case "NewData": var _p21 = _p16._0;
-           var progressMsg = _U.eq(_p21,$Maybe.Nothing) ? "Could not find data" : "";
-           var data = A2($Maybe.withDefault,model.newData,_p21);
-           var onlyDates = A2($List.map,function (_p18) {    var _p19 = _p18;return _p19._0;},data);
-           var maybeToDate = function (_p20) {    return A2($Date$Format.format,"%Y-%m-%d",A2($Maybe.withDefault,$Date.fromTime(0),_p20));};
+         case "NewData": var _p23 = _p18._0;
+           var progressMsg = _U.eq(_p23,$Maybe.Nothing) ? "Could not find data" : "";
+           var data = A2($Maybe.withDefault,model.newData,_p23);
+           var onlyDates = A2($List.map,function (_p20) {    var _p21 = _p20;return _p21._0;},data);
+           var maybeToDate = function (_p22) {    return A2($Date$Format.format,"%Y-%m-%d",A2($Maybe.withDefault,$Date.fromTime(0),_p22));};
            var newEndDate = maybeToDate($List.head(onlyDates));
            var newStartDate = maybeToDate($List.head($List.reverse(onlyDates)));
            var model$ = _U.update(model,
@@ -11684,19 +11860,19 @@ Elm.Forms.AnalysisForm.make = function (_elm) {
            ,endDate: A2($Forms$Components$InputField.update,$Forms$Components$InputField.Update(newEndDate),model.endDate)
            ,progressMsg: progressMsg});
            return {ctor: "_Tuple2",_0: model$,_1: sendDataToPlot(model$)};
-         case "Hover": return {ctor: "_Tuple2",_0: _U.update(model,{hoverId: _p16._0}),_1: $Effects.none};
+         case "Hover": return {ctor: "_Tuple2",_0: _U.update(model,{hoverId: _p18._0}),_1: $Effects.none};
          case "RequestNewPlot": return {ctor: "_Tuple2",_0: model,_1: $Effects.none};
-         case "ReceiveNewPlot": var _p22 = _p16._0;
+         case "ReceiveNewPlot": var _p24 = _p18._0;
            var model$ = _U.update(model,
-           {startDate: A4($Forms$Components$InputField.init,_p22.startDate,"Start Date","date",false)
-           ,endDate: A4($Forms$Components$InputField.init,_p22.endDate,"End Date","date",false)
-           ,ticker: A4($Forms$Components$InputField.init,_p22.ticker,"Ticker","text",false)
-           ,$yield: $Forms$Components$Yield.init(_p22.y)
-           ,source: A3($Forms$Components$SelectInput.init,_p22.source,sourceOptions,false)
-           ,frequency: A3($Forms$Components$SelectInput.init,$Basics.toString(_p22.frequency),frequencyOptions,false)
-           ,plot_id: _p22.id
+           {startDate: A4($Forms$Components$InputField.init,_p24.startDate,"Start Date","date",false)
+           ,endDate: A4($Forms$Components$InputField.init,_p24.endDate,"End Date","date",false)
+           ,ticker: A4($Forms$Components$InputField.init,_p24.ticker,"Ticker","text",false)
+           ,$yield: $Forms$Components$Checkbox.init(_p24.y)
+           ,source: A3($Forms$Components$SelectInput.init,_p24.source,sourceOptions,false)
+           ,frequency: A3($Forms$Components$SelectInput.init,$Basics.toString(_p24.frequency),frequencyOptions,false)
+           ,plot_id: _p24.id
            ,progressMsg: "Downloading Data..."
-           ,plots: A2($List._op["::"],_p22,model.plots)});
+           ,plots: A2($List._op["::"],_p24,model.plots)});
            return {ctor: "_Tuple2",_0: model$,_1: getData(model$)};
          case "Delete": return {ctor: "_Tuple2",_0: model,_1: $Effects.none};
          default: var bold = _U.eq(model.bold,true) ? false : true;
@@ -11744,11 +11920,11 @@ Elm.Forms.AnalysisForm.make = function (_elm) {
       var model = {startDate: A4($Forms$Components$InputField.init,initPlot.startDate,"Start","date",false)
                   ,endDate: A4($Forms$Components$InputField.init,initPlot.endDate,"End","date",false)
                   ,ticker: A4($Forms$Components$InputField.init,initPlot.ticker,"Ticker","text",false)
-                  ,$yield: $Forms$Components$Yield.init(initPlot.y)
+                  ,$yield: $Forms$Components$Checkbox.init(initPlot.y)
                   ,newData: _U.list([defaultRow])
                   ,source: A3($Forms$Components$SelectInput.init,initPlot.source,sourceOptions,false)
                   ,frequency: A3($Forms$Components$SelectInput.init,$Basics.toString(initPlot.frequency),frequencyOptions,false)
-                  ,progressMsg: "Downloading Data"
+                  ,progressMsg: "Downloading Data..."
                   ,plot_id: initPlot.id
                   ,plots: plots
                   ,hoverId: 0
@@ -11836,7 +12012,7 @@ Elm.Forms.LoginForm.make = function (_elm) {
                                        ,_1: $Effects.none};
          case "NoOp": return {ctor: "_Tuple2",_0: model,_1: $Effects.none};
          case "Request": return {ctor: "_Tuple2"
-                                ,_0: _U.update(model,{response: "Please Wait..."})
+                                ,_0: _U.update(model,{response: "Checking login details..."})
                                 ,_1: sendData(A2(LoginRequest,model.username.value,model.password.value))};
          default: var _p2 = _p1._0;
            return {ctor: "_Tuple2"

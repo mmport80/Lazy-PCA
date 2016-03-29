@@ -122,7 +122,8 @@ const draw = z =>
   console.log(z);
   console.log(z.length);
 
-  if (z.length != 0) {
+  if (z.length > 1) {
+
     const {data:data,result:result} = elmProcessData(z);
     getScatterPlot(data,result);
     }

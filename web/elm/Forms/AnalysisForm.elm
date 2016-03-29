@@ -1,6 +1,6 @@
 module Forms.AnalysisForm where
 
-import Html exposing (a, text, Html, div, hr, span, br)
+import Html exposing (a, text, Html, div, hr, span, br, h2, p)
 import Html.Attributes exposing (href, id, class, classList)
 import Html.Events exposing (targetChecked, on, onClick, onMouseOver, onMouseOut)
 
@@ -14,7 +14,7 @@ import Json.Decode as Json exposing (at, string)
 
 import Forms.Components.SelectInput as SelectInput exposing (init, view, update, Action, Option)
 import Forms.Components.InputField as InputField exposing (view, update)
-import Forms.Components.Yield as Yield exposing (view, update)
+import Forms.Components.Checkbox as Checkbox exposing (view, update)
 
 import List
 import String
@@ -35,7 +35,7 @@ defaultRow = (,) (Date.fromTime 0) 0
 type alias Model = {
     source : SelectInput.Model
   , ticker : InputField.Model
-  , yield : Yield.Model
+  , yield : Checkbox.Model
   , newData : List Row
   , frequency : SelectInput.Model
   , startDate : InputField.Model
@@ -63,7 +63,7 @@ init plots =
       { startDate = InputField.init initPlot.startDate "Start" "date" False
       , endDate = InputField.init initPlot.endDate "End" "date" False
       , ticker = InputField.init initPlot.ticker "Ticker" "text" False
-      , yield = Yield.init initPlot.y
+      , yield = Checkbox.init initPlot.y
       , newData =  [ defaultRow ]
       , source = SelectInput.init initPlot.source sourceOptions False
       , frequency = SelectInput.init (toString initPlot.frequency) frequencyOptions False
@@ -123,7 +123,7 @@ update action model =
       , Effects.none
       )
     UpdateYield input ->
-      ( { model | yield = Yield.update input model.yield }
+      ( { model | yield = Checkbox.update input model.yield }
       , Effects.none
       )
     --only update dates if they are actually dates
@@ -157,10 +157,10 @@ update action model =
     LoadNewPlot p ->
       let
         model' = { model |
-          startDate = InputField.init p.startDate "Start Date" "date" False
-        , endDate = InputField.init p.endDate "End Date" "date" False
+          startDate = InputField.init p.startDate "Start" "date" False
+        , endDate = InputField.init p.endDate "End" "date" False
         , ticker = InputField.init p.ticker "Ticker" "text" False
-        , yield = Yield.init p.y
+        , yield = Checkbox.init p.y
         , source = SelectInput.init p.source sourceOptions False
         , frequency = SelectInput.init (toString p.frequency) frequencyOptions False
         , plot_id = p.id
@@ -211,7 +211,7 @@ update action model =
           startDate = InputField.init p.startDate "Start Date" "date" False
         , endDate = InputField.init p.endDate "End Date" "date" False
         , ticker = InputField.init p.ticker "Ticker" "text" False
-        , yield = Yield.init p.y
+        , yield = Checkbox.init p.y
         , source = SelectInput.init p.source sourceOptions False
         , frequency = SelectInput.init (toString p.frequency) frequencyOptions False
         , plot_id = p.id
@@ -247,35 +247,52 @@ update action model =
 view : Signal.Address Action -> Model -> Html
 view address model =
   div [] [
-      div []
+      div [] [
+          text "Pull required data down from "
+        , a [href "https://www.quandl.com/"] [text "Quandl"]
+        , text " by specifying sources and tickers"
+        ]
+    , br [] []
+    , div []
         [
           SelectInput.view (Signal.forwardTo address UpdateSource) model.source
         , InputField.view (Signal.forwardTo address UpdateTicker) model.ticker
-        , Yield.view (Signal.forwardTo address UpdateYield) model.yield
+        , Checkbox.view (Signal.forwardTo address UpdateYield) model.yield
         , text "Yield"
-        , a [ href "#", onClick address Request ] [ text "Pull" ]
         ]
+    , div [] [
+      p [][
+        a [ class "bold", href "#", onClick address Request ] [ text "Pull" ]
+        ]
+      ]
     , hr [] []
-    , div [] [ text model.progressMsg ]
-    , div [id "plot"] []
+    , div [id "plot"] [ text model.progressMsg ]
     , hr [] []
+    , h2 [] [
+      text "Set the horizon"
+      ]
     , div [] [
         SelectInput.view (Signal.forwardTo address UpdateFrequency) model.frequency
       ]
     , hr [] []
+    , h2 [] [
+      text "Filter by date"
+      ]
     , div [] [
         text "Start Date"
       , InputField.view (Signal.forwardTo address UpdateStartDate) model.startDate
-      , text "End Date"
+      ]
+    , div [] [
+        text "End Date"
       , InputField.view (Signal.forwardTo address UpdateEndDate) model.endDate
       ]
     , hr [] []
-    , div []
+    --saved plots
+    , h2 [] [ text "Saved Plots" ]
+    , p []
         [
           a [ href "#", onClick address RequestNewPlot ] [ text "New" ]
         ]
-    , hr [] []
-    --saved plots
     , div [ class "table" ] ( generateSavedPlotConfigTable address model )
     ]
 
@@ -299,11 +316,11 @@ generateSavedPlotConfigTable address model =
     default p = [underline p.id, onHover p.id, onMouseOut address (Hover -1), load p]
   in
     [ div [ class "header" ]
-        [   div [ cell ] [ text "Source"]
-          , div [ cell ] [ text "Ticker"]
-          , div [ cell ] [ text "Sampling"]
-          , div [ cell ] [ text "Period" ]
-          , div [ cell ] [ text "DELETE" ]
+        [   div [ cell ] [ text ""]
+          , div [ cell ] [ text ""]
+          , div [ cell ] [ text ""]
+          , div [ cell ] [ text "" ]
+          , div [ cell ] [ text "" ]
           ]
     ]
     ++
@@ -340,7 +357,6 @@ generateSavedPlotConfigTable address model =
                   div [ cell, class "delete", onHover p.id ] [ text " " ]
             ]
           ]
-
         )
       ( List.filter ( \p -> p.id /= model.plot_id ) model.plots )
 
@@ -386,8 +402,14 @@ sendDataToPlot model =
     fInt = toInteger 21 model.frequency.value
     sd = model.startDate.value |> toDate (Date.fromTime 0) |> Date.toTime
     ed = model.endDate.value |> toDate (Date.fromTime 0) |> Date.toTime
+    --if yield is true then convert to yields
+    dataToExport =
+      if model.yield == True then
+        List.map (\(a,b) -> ( a, e^(-b/100) ) ) model.newData
+      else
+        model.newData
   in
-    model.newData
+    dataToExport
     |> List.indexedMap (\ i (a,b) -> (i,a,b))
     --filter by frequency
     |> List.filter (\ (i,a,b) -> i % fInt == 0 )
