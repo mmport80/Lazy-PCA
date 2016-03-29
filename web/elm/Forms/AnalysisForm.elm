@@ -266,7 +266,11 @@ view address model =
         ]
       ]
     , hr [] []
-    , div [id "plot"] [ text model.progressMsg ]
+    , div [id "plot"] [
+        div [] [
+          text model.progressMsg
+          ]
+      ]
     , hr [] []
     , h2 [] [
       text "Set the horizon"
@@ -370,8 +374,19 @@ generateSavedPlotConfigTable address model =
 --INCOMING DATA
 quandlUrl : Model -> String
 quandlUrl model =
-  Http.url ("https://www.quandl.com/api/v3/datasets/"++model.source.value++"/"++model.ticker.value++".json")
-    [ "auth_token" => "Fp6cFhibc5xvL2pN3dnu" ]
+  Http.url ("https://www.quandl.com/api/v1/datasets/"++model.source.value++"/"++model.ticker.value++".json")
+    [ "column" => (sourceToColumn model.source.value)
+    , "auth_token" => "Fp6cFhibc5xvL2pN3dnu"
+    ]
+
+sourceToColumn : String -> String
+sourceToColumn s =
+  case s of
+    "GOOG" -> "4"
+    "YAHOO" -> "6"
+    "CBOE" -> "1"
+    _ -> "1" --spdj
+
 
 --remove?
 --don't like new operators that much
@@ -381,11 +396,11 @@ quandlUrl model =
 decodeData : Json.Decoder (List (Date.Date, Float))
 decodeData = Json.at ["dataset", "data"] (Json.list csvRow)
 
+--
 csvRow : Json.Decoder (Date.Date, Float)
-csvRow = (Json.tuple7 (,,,,,,)
-  Json.string Json.float Json.float Json.float Json.float Json.float Json.float
-  )
-  |> Json.map (\ (a,_,_,_,_,_,b) -> ( (toDate (Date.fromTime 0) a), b ) )
+csvRow =
+  ( Json.tuple2 (,) Json.string Json.float )
+    |> Json.map (\ (a,b) -> ( (toDate (Date.fromTime 0) a), b ) )
 
 getData : Model -> Effects Action
 getData model =
