@@ -26,6 +26,7 @@ defmodule Backend.User do
     |> cast(params, @required_fields, @optional_fields)
     |> unique_constraint(:username)
     |> validate_length(:username, min: 1, max: 20)
+    |> validate_length(:fullname, min: 1, max: 20)
   end
 
   def registration_changeset(model, params) do

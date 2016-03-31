@@ -3,7 +3,8 @@
 
 import {Socket} from "phoenix"
 
-
+//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //Phoenix socket setup
 let socket = new Socket("/socket", {params: {token: window.userToken}})
@@ -13,12 +14,18 @@ socket.connect()
 let channel = socket.channel("rooms:lobby", {})
 
 
+channel.join()
+  .receive("ok", resp => { console.log("Joined successfully", resp) })
+  .receive("error", resp => { console.log("Unable to join", resp) })
+
+
+//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//Receive data from server and send to Elm code
+
 channel.on("save_data",
   payload => {
-    //send ok or error back
-    console.log("payload");
-    console.log(payload);
-
     payload.body.plots.length === 0 ?
       console.log( payload.body.response_text )
       :
@@ -26,32 +33,29 @@ channel.on("save_data",
     }
   )
 
+//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 channel.on("delete_data",
   payload => {
-    //send ok or error back
+    //receive ok or error
     console.log("delete response");
     console.log(payload);
-
-    //payload.body.plots.length === 0 ?
-    //  console.log( payload.body.response_text )
-    //  :
-    //  app.ports.newPlotResponse.send( payload.body.plots[0] );
-
     }
   )
 
+//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//change new_msg to something more meaningful
+//reg & login responses from server
 channel.on("new_msg",
   payload => {
-    const {token: token, response_text: response_text, action: action, fullname: fullname, plots: plots} = payload.body;
+    const {token: token, response_text: response_text, action: action, fullname: fullname, plots: plots, errors: errors} = payload.body;
+
+    console.log(payload);
 
     //convert plots to elm format
     const elmPlots = plots.map(
       p =>
         ({endDate:p.endDate, startDate: p.startDate, ticker:p.ticker, y:p.y, source:p.source, frequency:p.frequency, id:p.id})
       );
-
-    console.log("elmPlots");
-    console.log(elmPlots);
 
     const loginResponse = {token: token, response: response_text, fullname: fullname, plots: elmPlots};
     const registerResponse = {token: token, response: response_text, fullname: fullname};
@@ -66,10 +70,10 @@ channel.on("new_msg",
   )
 
 
-channel.join()
-  .receive("ok", resp => { console.log("Joined successfully", resp) })
-  .receive("error", resp => { console.log("Unable to join", resp) })
 
+
+//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //Elm setup
 
@@ -92,8 +96,11 @@ const app = Elm.embed(
     }
   );
 
+
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//push up to server
+//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//push data from Elm up to server / UI
 
 const registerCallback = msg => {
   //change fields, so that clientside and serverside match up
@@ -117,75 +124,40 @@ app.ports.loginRequest.subscribe(loginCallback);
 
 const draw = z =>
   {
-
-  console.log("//////////////////////////////////777");
-  console.log(z);
-  console.log(z.length);
-
   if (z.length > 1) {
-
     const {data:data,result:result} = elmProcessData(z);
     getScatterPlot(data,result);
     }
   else {
-    console.log("!");
+    console.log("Not enough data");
     }
   return null;
   };
 
 app.ports.sendToScatterPlot.subscribe(draw);
 
-
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//send to serverside
-//save down
-//
 
-//loading other stuff is seperate
-//new ui module which shows user's saved projects
-//show latest projects with same parameters
-
-
-//delete
-//load
-//new
 const save = request =>
   {
-  console.log("to be saved");
-  console.log(request);
   channel.push("save_data", {body: request});
   }
 
 app.ports.saveToDB.subscribe(save);
 
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//send to serverside
-//save down
-//
 
-//loading other stuff is seperate
-//new ui module which shows user's saved projects
-//show latest projects with same parameters
-
-
-//delete
-//load
-//new
 const delete_ = request =>
   {
-  console.log("to be deleted");
-  console.log(request);
   channel.push("delete_data", {body: request});
   }
 
 app.ports.deleteFromDB.subscribe(delete_);
 
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 export default socket
 
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//add new component
-//list all stored charts - except the one that's currently being edited
-//
-//save all the info coming

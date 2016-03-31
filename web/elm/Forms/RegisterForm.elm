@@ -15,6 +15,7 @@ import Json.Decode as Json exposing (at, string)
 import Forms.Components.InputField as InputField exposing (view, update)
 
 import List
+import String
 
 --********************************************************************************
 --********************************************************************************
@@ -33,7 +34,7 @@ init : String -> String -> String -> (Model, Effects Action)
 init username password fullname =
     (
       { username = InputField.init username "Username" "text" False ".{1,20}" "" ""
-      , fullname = InputField.init fullname "Full Name" "text" False "*" "" ""
+      , fullname = InputField.init fullname "Full Name" "text" False ".{1,20}" "" ""
       , password = InputField.init password "Password" "password" False ".{6,100}" "" ""
       , response = ""
       , token = ""
@@ -60,21 +61,62 @@ type alias ResponseMessage = {
   , fullname : String
   }
 
+-- type alias Errors = {
+--     fullname : List String
+--   , username : List String
+--   , password : List String
+--   }
+
+
 update : Action -> Model -> (Model, Effects Action)
 update action model =
   case action of
     UpdateFullname input ->
-      ( { model | fullname = InputField.update input model.fullname }
-      , Effects.none
-      )
+      let
+        fullname = InputField.update input model.fullname
+      in
+        (
+          { model |
+            fullname = fullname
+          , response =
+              if String.length fullname.value > 20 then
+                "Greater than 20 characters : ("
+              else
+                ""
+          }
+          , Effects.none
+          )
     UpdateUsername input ->
-      ( { model | username = InputField.update input model.username }
-      , Effects.none
-      )
+      let
+        username = InputField.update input model.username
+      in
+        ( { model |
+            username = username
+          , response =
+              if String.length username.value > 20 then
+                "Greater than 20 characters : ("
+              else
+                ""
+            }
+        , Effects.none
+        )
     UpdatePassword input ->
-      ( { model | password = InputField.update input model.password }
-      , Effects.none
-      )
+      let
+        password = InputField.update input model.password
+      in
+
+        ( { model |
+            password = password
+          , response =
+              if String.length password.value < 6 then
+                "Less than 6 characters long : ("
+              else if String.length password.value > 100 then
+                "More than 100 characters long??"
+              else
+                ""
+          }
+        , Effects.none
+        )
     NoOp ->
       ( model
       , Effects.none
@@ -108,8 +150,15 @@ view address model =
         InputField.view (Signal.forwardTo address UpdateFullname) model.fullname
       , InputField.view (Signal.forwardTo address UpdateUsername) model.username
       , InputField.view (Signal.forwardTo address UpdatePassword) model.password
-      , a [ href "#", onClick address Request ] [ text "Register" ]
-      , text model.response
+      , if
+          String.length model.username.value >= 1 && String.length model.username.value < 20 &&
+          String.length model.fullname.value >= 1 && String.length model.fullname.value < 20 &&
+          String.length model.password.value >= 6 && String.length model.password.value < 100
+        then
+          a [ href "#", onClick address Request ] [ text "Register" ]
+        else
+          text "Register"
+      , div [] [ text model.response ]
       ]
 
 

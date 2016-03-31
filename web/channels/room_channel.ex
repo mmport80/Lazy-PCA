@@ -29,7 +29,7 @@ defmodule Backend.RoomChannel do
   #Response struct to send back to client
   #token is the auth required to pull down data
   defmodule Response do
-    defstruct response_text: "", token: "", action: "", fullname: "", plots: []
+    defstruct response_text: "", token: "", action: "", fullname: "", plots: [], errors: []
   end
 
 
@@ -178,7 +178,16 @@ defmodule Backend.RoomChannel do
             {:error, changeset } ->
               #*-name already taken
               #*-inputs blank or too small --implement client side check
-              %Response{response_text: "Try another username", action: action, fullname: fullname}
+              IO.puts "############################"
+
+              e = Ecto.Changeset.traverse_errors(changeset, fn
+                {msg, opts} -> String.replace(msg, "%{count}", to_string(opts[:count]))
+                msg -> msg
+              end)
+
+              IO.inspect e
+
+              %Response{response_text: "Registration Issues", action: action, fullname: fullname, errors: e}
           end
       #'null' reponse
       true ->

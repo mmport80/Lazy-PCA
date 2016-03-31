@@ -17,6 +17,7 @@ import Json.Decode as Json exposing (at, string)
 import Forms.Components.InputField as InputField exposing (view, update)
 
 import List
+import String
 
 import Keyboard
 
@@ -69,9 +70,22 @@ update action model =
       , Effects.none
       )
     UpdatePassword input ->
-      ( { model | password = InputField.update input model.password }
-      , Effects.none
-      )
+      let
+        password = InputField.update input model.password
+      in
+
+        ( { model |
+            password = password
+          , response =
+              if String.length password.value < 6 then
+                "Less than 6 characters long : ("
+              else if String.length password.value > 100 then
+                "More than 100 characters long??"
+              else
+                ""
+          }
+        , Effects.none
+        )
     --remove superfluous
     NoOp ->
       ( model
@@ -103,8 +117,14 @@ view address model =
       [
         InputField.view (Signal.forwardTo address UpdateUsername) model.username
       , InputField.view (Signal.forwardTo address UpdatePassword) model.password
-      , a [ href "#", onClick address Request ] [ text "Login" ]
-      , text model.response
+      , if
+          String.length model.username.value >= 1 && String.length model.username.value < 20 &&
+          String.length model.password.value >= 6 && String.length model.password.value < 100
+        then
+          a [ href "#", onClick address Request ] [ text "Login" ]
+        else
+          text "Login"
+      , div [] [ text model.response ]
       ]
 
 --********************************************************************************
