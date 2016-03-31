@@ -176,18 +176,14 @@ defmodule Backend.RoomChannel do
               {:ok, p} = insert_new_plot(user)
               login_by_username_and_pass(socket, username, password)
             {:error, changeset } ->
-              #*-name already taken
-              #*-inputs blank or too small --implement client side check
-              IO.puts "############################"
-
+              #remove, not necessary
               e = Ecto.Changeset.traverse_errors(changeset, fn
                 {msg, opts} -> String.replace(msg, "%{count}", to_string(opts[:count]))
                 msg -> msg
               end)
 
-              IO.inspect e
-
-              %Response{response_text: "Registration Issues", action: action, fullname: fullname, errors: e}
+              #Elm deals with every case apart from user name already being taken
+              %Response{response_text: "User name already taken", action: action, fullname: fullname}
           end
       #'null' reponse
       true ->

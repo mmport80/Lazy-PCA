@@ -47,9 +47,7 @@ channel.on("delete_data",
 //reg & login responses from server
 channel.on("new_msg",
   payload => {
-    const {token: token, response_text: response_text, action: action, fullname: fullname, plots: plots, errors: errors} = payload.body;
-
-    console.log(payload);
+    const {token: token, response_text: response_text, action: action, fullname: fullname, plots: plots} = payload.body;
 
     //convert plots to elm format
     const elmPlots = plots.map(
