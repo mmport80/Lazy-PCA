@@ -29,7 +29,6 @@ type alias Model =
     , registerForm : RegisterForm.Model
     , locationLinks : LocationLinks.Model
     , user : User
-    , data : AnalysisForm.PortableModel
     , plots : List AnalysisForm.PlotConfig
     }
 
@@ -51,7 +50,7 @@ init =
     locationLinks = LocationLinks.init ""
     plots = [ AnalysisForm.defaultPlotConfig ]
   in
-    ( Model analysis login register locationLinks (User "" "" "") AnalysisForm.defaultPortableModel plots
+    ( Model analysis login register locationLinks (User "" "" "") plots
     , Effects.batch
         [ Effects.map Login loginFx
         , Effects.map Analysis analysisFx
@@ -202,13 +201,6 @@ forwardOnLogin response currentLocation =
 -- VIEW
 view : Signal.Address Action -> Model -> Html
 view address model =
-  --keep track of location in model
-  --if not logged in, token is blank
-  --  then goto login page
-  --if register link is clicked, go to register form
-  --if login link is click, go to login form
-  --if logout link is clicked, go to login page
-  --default is login
   case model.locationLinks of
     --if page is...
     "analysis" ->
@@ -231,20 +223,10 @@ view address model =
           LocationLinks.view (Signal.forwardTo address ChangeLocation) model.locationLinks
         ]
 
-
-
-
 --********************************************************************************
 --********************************************************************************
 -- EFFECTS
-
-
-
---^^^^^^^^^^^^^^^^^^^°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
---^^^^^^^^^^^^^^^^^^^°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
---one send which sends everything?
-
-
+--one send mailbox which sends everything?
 
 saveData : ExportData -> Effects Action
 saveData model =
@@ -263,8 +245,6 @@ saveToDBMailBox = Signal.mailbox defaultExportData
 
 
 --^^^^^^^^^^^^^^^^^^^°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
-
-
 
 deleteData : ExportData -> Effects Action
 deleteData model =

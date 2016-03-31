@@ -380,6 +380,13 @@ generateSavedPlotConfigTable address model =
 --********************************************************************************
 -- EFFECTS
 
+getData : Model -> Effects Action
+getData model =
+  Http.get decodeData (quandlUrl model)
+    |> Task.toMaybe
+    |> Task.map NewData
+    |> Effects.task
+
 --INCOMING DATA
 quandlUrl : Model -> String
 quandlUrl model =
@@ -388,6 +395,7 @@ quandlUrl model =
     , "auth_token" => "Fp6cFhibc5xvL2pN3dnu"
     ]
 
+--JSON decoding
 sourceToColumn : String -> String
 sourceToColumn s =
   case s of
@@ -396,8 +404,9 @@ sourceToColumn s =
     "CBOE" -> "1"
     _ -> "1" --spdj
 
+--^^^^^^^^^^^^^^^^^^^°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+--JSON decode
 
---remove?
 --don't like new operators that much
 (=>) = (,)
 
@@ -411,13 +420,8 @@ csvRow =
   ( Json.tuple2 (,) Json.string Json.float )
     |> Json.map (\ (a,b) -> ( (toDate (Date.fromTime 0) a), b ) )
 
-getData : Model -> Effects Action
-getData model =
-  Http.get decodeData (quandlUrl model)
-    |> Task.toMaybe
-    |> Task.map NewData
-    |> Effects.task
 
+--^^^^^^^^^^^^^^^^^^^°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 --OUTGOING DATA
 --filter new data appropriately before plotting it
 sendDataToPlot : Model -> Effects Action
@@ -445,9 +449,6 @@ sendDataToPlot model =
     --send data to UI
     |> sendData
 
-dateToISOFormat : Date.Date -> String
-dateToISOFormat = Date.Format.format "%Y-%m-%d"
-
 sendData : List (String, Float) -> Effects Action
 sendData data =
   Signal.send sendToPlotMailBox.address data
@@ -463,16 +464,22 @@ sendToPlotMailBox :
   }
 sendToPlotMailBox = Signal.mailbox [ ("",0) ]
 
+
+--^^^^^^^^^^^^^^^^^^^°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 --^^^^^^^^^^^^^^^^^^^°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 --^^^^^^^^^^^^^^^^^^^°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 ---Utils
 
---convert string to int with default value as backup
+--^^^^^^^^^^^^^^^^^^^°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+--conversions
 toInteger : Int -> String -> Int
 toInteger d =
   String.toInt
   >> Result.toMaybe
   >> Maybe.withDefault d
+
+dateToISOFormat : Date.Date -> String
+dateToISOFormat = Date.Format.format "%Y-%m-%d"
 
 --convert string to int with default value as backup
 toDate : Date.Date -> String -> Date.Date
@@ -480,12 +487,19 @@ toDate d =
   Date.fromString
   >> Result.withDefault d
 
-fromDateToInteger : Int -> String -> Int
-fromDateToInteger d =
-  String.toInt
-  >> Result.toMaybe
-  >> Maybe.withDefault d
+convertElmModelToPlotConfig : Model -> PlotConfig
+convertElmModelToPlotConfig model =
+  { endDate = model.endDate.value
+  , startDate = model.startDate.value
+  , ticker = model.ticker.value
+  , y = model.yield
+  , source = model.source.value
+  , frequency = toInteger 21 model.frequency.value
+  , id =  model.plot_id
+  }
 
+--^^^^^^^^^^^^^^^^^^^°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+--export format
 type alias PlotConfig = {
       endDate : String
     , startDate : String
@@ -498,37 +512,3 @@ type alias PlotConfig = {
 
 defaultPlotConfig : PlotConfig
 defaultPlotConfig = PlotConfig "1950-01-03" "2016-03-24" "INDEX_GSPC" False "Yahoo" 21 -1
-
-type alias PortableModel = {
-      endDate : String
-    , startDate : String
-    , ticker : String
-    , y : Bool
-    , source : String
-    , frequency : String
-    , newData : List (String, Float)
-    }
-
-defaultPortableModel : PortableModel
-defaultPortableModel = PortableModel "" "" "" False "" "" [("",0)]
-
-dateValidate : String -> String -> String
-dateValidate orig input =
-  case Date.fromString input of
-    --update
-    Ok _ ->
-      input
-    --don't update
-    Err _ ->
-      orig
-
-convertElmModelToPlotConfig : Model -> PlotConfig
-convertElmModelToPlotConfig model =
-  { endDate = model.endDate.value
-  , startDate = model.startDate.value
-  , ticker = model.ticker.value
-  , y = model.yield
-  , source = model.source.value
-  , frequency = toInteger 21 model.frequency.value
-  , id =  model.plot_id
-  }
