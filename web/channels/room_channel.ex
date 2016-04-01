@@ -122,16 +122,12 @@ defmodule Backend.RoomChannel do
       {:ok, sd} = Ecto.Date.cast(plot["startDate"])
       {:ok, ed} = Ecto.Date.cast(plot["endDate"])
       p = %{source: plot["source"], ticker: plot["ticker"], frequency: plot["frequency"], startDate: sd, endDate: ed, y: plot["y"], deleted: false, user_id: user.id}
-      changeset = Plot.changeset(%Plot{},p)
       #update plot, force update in order to save order of opened plots
-      case Repo.update
-          Ecto.Changeset.change Repo.get!(Plot, plot["id"]), p
-        , force: true
-        do
-          {:ok, o} ->
-            "oke"
-          _ ->
-            "error"
+      case Repo.update (Ecto.Changeset.change Repo.get!(Plot, plot["id"]), p), force: true do
+        {:ok, o} ->
+          "oke"
+        _ ->
+          "error"
       end
     else
       "error"
