@@ -122,7 +122,9 @@ update action model =
       )
     UpdateFrequency input ->
       let
-        model' = { model | frequency = SelectInput.update input model.frequency }
+        model' = { model |
+          frequency = SelectInput.update input model.frequency
+          }
       in
         ( model'
         , sendDataToPlot model'
@@ -193,12 +195,12 @@ update action model =
       in
         (model', getDataAndDates model')
     Delete plot ->
-      -- let
-      --   plots = model.plots |> List.filter (\p -> p.id /= plot.id)
-      --   model' = { model | plots = plots }
-      -- in
+      let
+        plots = model.plots |> List.filter (\p -> p.id /= plot.id)
+        model' = { model | plots = plots }
+      in
         --done at 'router' level
-        ( model, Effects.none )
+        ( model', Effects.none )
     Bold ->
       let
         bold =
@@ -243,19 +245,24 @@ updateDate model =
 --load plot config into form
 loadPlotConfig : Model -> PlotConfig -> Model
 loadPlotConfig model p =
-  { model |
-    startDate = InputField.init p.startDate "Start Date" "date" False "*" "1900-01-01" p.endDate
-  , endDate = InputField.init p.endDate "End Date" "date" False "*" p.startDate "2100-01-01"
-  , ticker = InputField.init p.ticker "Ticker" "text" False "*" "" ""
-  , yield = Checkbox.init p.y
-  , source = SelectInput.init p.source sourceOptions False
-  , frequency = SelectInput.init (toString p.frequency) frequencyOptions False
-  , plot_id = p.id
-  , progressMsg = "Downloading Data..."
-  --add to existing plots
-  --necessary? this is done at router level also...
-  , plots = p :: ( model.plots |> List.filter (\p' -> p'.id /= p.id) )
-  }
+  let
+    --previous displayed plot
+    pc = convertElmModelToPlotConfig model
+  in
+    { model |
+      startDate = InputField.init p.startDate "Start Date" "date" False "*" "1900-01-01" p.endDate
+    , endDate = InputField.init p.endDate "End Date" "date" False "*" p.startDate "2100-01-01"
+    , ticker = InputField.init p.ticker "Ticker" "text" False "*" "" ""
+    , yield = Checkbox.init p.y
+    , source = SelectInput.init p.source sourceOptions False
+    , frequency = SelectInput.init (toString p.frequency) frequencyOptions False
+    , plot_id = p.id
+    , progressMsg = "Downloading Data..."
+    --add to existing plots
+    , plots = p :: pc :: ( model.plots |> List.filter (\p' -> p'.id /= p.id && p'.id /= pc.id) )
+    }
+
+
 
 --********************************************************************************
 --********************************************************************************
@@ -411,6 +418,7 @@ getDataAndDates model =
     |> Effects.task
 
 --don't like new operators that much
+(=>) : a -> b -> ( a, b )
 (=>) = (,)
 
 --INCOMING DATA

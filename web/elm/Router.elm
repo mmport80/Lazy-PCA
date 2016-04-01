@@ -7,16 +7,10 @@ import Forms.AnalysisForm as AnalysisForm exposing (init, update, view, sendToPl
 import LocationLinks exposing (init, update, view, Action)
 
 import Html exposing (a, text, Html, div, button, span)
---import Html.Attributes exposing (href)
---import Html.Events exposing (targetChecked, on, onClick)
-
---import Http exposing (get, url)
 
 import Task exposing (toMaybe, andThen)
 import Effects exposing (Effects)
 import Signal exposing (Address)
-
-import List
 
 --********************************************************************************
 --********************************************************************************
@@ -29,7 +23,7 @@ type alias Model =
     , registerForm : RegisterForm.Model
     , locationLinks : LocationLinks.Model
     , user : User
-    , plots : List AnalysisForm.PlotConfig
+    --, plots : List AnalysisForm.PlotConfig
     }
 
 type alias User = {
@@ -44,13 +38,13 @@ defaultUser = User "" "" ""
 init : (Model, Effects Action)
 init =
   let
+    plots = [ AnalysisForm.defaultPlotConfig ]
     (analysis, analysisFx) = AnalysisForm.init plots
     (login, loginFx) = LoginForm.init "" ""
     (register, registerFx) = RegisterForm.init "" "" ""
     locationLinks = LocationLinks.init ""
-    plots = [ AnalysisForm.defaultPlotConfig ]
   in
-    ( Model analysis login register locationLinks (User "" "" "") plots
+    ( Model analysis login register locationLinks (User "" "" "")--plots
     , Effects.batch
         [ Effects.map Login loginFx
         , Effects.map Analysis analysisFx
@@ -83,16 +77,12 @@ update action model =
     Analysis input ->
       let
         (analysisForm, fx) = AnalysisForm.update input model.analysisForm
-        --sync - keep where this belong
-        --extract plot config from current analysis form
-        plot = AnalysisForm.convertElmModelToPlotConfig analysisForm
-        --add current plot to top
-        --filter out current plot from lower down in the array
-        plots = plot :: ( model.plots |> List.filter (\p -> p.id /= plot.id) )
-        analysisForm' = { analysisForm | plots = plots }
-        model' = { model | analysisForm = analysisForm', plots = plots }
+        model' = { model | analysisForm = analysisForm }
         noSave = ( model', Effects.map Analysis fx )
       in
+        --only necessary because user is at this level
+        --worth add user to analysis form?
+        --probably not
         case input of
           AnalysisForm.UpdateSource i -> noSave
           AnalysisForm.UpdateYield i -> noSave
@@ -102,40 +92,40 @@ update action model =
           AnalysisForm.Bold -> noSave
           --'new' link
           AnalysisForm.RequestNewPlot ->
-            let
-              np = saveData (ExportData model.user AnalysisForm.defaultPlotConfig)
-            in
-              ( model', Effects.batch [np, Effects.map Analysis fx] )
+            ( model'
+            , Effects.batch [
+                --insert new plot into db
+                saveData (ExportData model.user AnalysisForm.defaultPlotConfig)
+              , Effects.map Analysis fx
+              ]
+            )
           --this can be done at form level?
           AnalysisForm.Delete plot ->
+            ( model'
+            , Effects.batch [
+                deleteData (ExportData model.user plot)
+              , Effects.map Analysis fx
+              ]
+            )
+          --default action is to save down changes
+          AnalysisForm.LoadNewPlot p' ->
+            ( model'
+            , Effects.batch [
+                saveData (ExportData model.user p')
+              , Effects.map Analysis fx
+              ]
+            )
+          --save plot after all other actions
+          _ ->
             let
-              plots = plots |> List.filter (\p -> p.id /= plot.id)
-              m = { model |
-                  analysisForm = { analysisForm | plots = plots }
-                , plots = plots }
+              plot = AnalysisForm.convertElmModelToPlotConfig analysisForm
             in
-              ( m
-              , Effects.batch
-                [ deleteData (ExportData model.user plot)
+              ( model'
+              , Effects.batch [
+                  saveData (ExportData model.user plot)
                 , Effects.map Analysis fx
                 ]
               )
-          --default action is to save down changes
-          AnalysisForm.LoadNewPlot p' ->
-            let
-              plots' = p' :: ( plots |> List.filter (\p -> p.id /= p'.id) )
-              model' = { model |
-                  analysisForm = { analysisForm | plots = plots' }
-                , plots = plots'
-                }
-              sd = saveData (ExportData model.user p')
-            in
-              ( model', Effects.batch [sd, Effects.map Analysis fx] )
-          _ ->
-            let
-              sd = saveData (ExportData model.user plot)
-            in
-              ( model', Effects.batch [sd, Effects.map Analysis fx] )
     Register input ->
       let
         (newUser, fx) = RegisterForm.update input model.registerForm
@@ -163,7 +153,7 @@ update action model =
                   loginForm = newUser
                 , locationLinks = locationLinks
                 , user = User i.fullname newUser.username.value newUser.token
-                , plots = i.plots
+                --, plots = i.plots
                 , analysisForm = analysis
                 }
             in
@@ -192,6 +182,12 @@ update action model =
     --superfluous
     NoOp ->
       ( model, Effects.none )
+
+syncModel : List AnalysisForm.PlotConfig -> AnalysisForm.Model -> Model -> Model
+syncModel plots analysisForm model =
+  { model |
+      analysisForm = { analysisForm | plots = plots }
+    }
 
 forwardOnLogin : String -> String -> LocationLinks.Model
 forwardOnLogin response currentLocation =

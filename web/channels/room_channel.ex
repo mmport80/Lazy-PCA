@@ -25,22 +25,17 @@ defmodule Backend.RoomChannel do
     {:error, %{reason: "unauthorized"}}
   end
 
-
   #Response struct to send back to client
   #token is the auth required to pull down data
   defmodule Response do
     defstruct response_text: "", token: "", action: "", fullname: "", plots: [], errors: []
   end
 
-
-
   #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
   #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
   #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
-
   def handle_in("delete_data", %{"body" => params}, socket) do
     %{"plot" => plot, "user" => user} = params
-
     rr =
       #find user_id from token
       case Phoenix.Token.verify(socket, "user", user["token"] ) do
@@ -76,10 +71,8 @@ defmodule Backend.RoomChannel do
   #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
   #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
   #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
-
   def handle_in("save_data", %{"body" => params}, socket) do
     %{"plot" => plot, "user" => user} = params
-
     rr =
       #find user_id from token
       case Phoenix.Token.verify(socket, "user", user["token"] ) do
@@ -96,15 +89,13 @@ defmodule Backend.RoomChannel do
             #---------------------*********************************
             #-----save existing plot
             True ->
-              r = save_existing_plot(user, plot, user_id)
-              %Response{ response_text: r }
+              %Response{ response_text: save_existing_plot(user, plot, user_id) }
             end
         _ ->
           #don't save
           #return error
           %Response{ response_text: "error" }
       end
-
     push socket, "save_data", %{body: rr}
     {:noreply, socket}
   end

@@ -1,16 +1,25 @@
 import StartApp
 
 import Router exposing (init, update, view, saveToDBMailBox, deleteFromDBMailBox)
+import LocationLinks as LocationLinks exposing (Model)
 import Forms.LoginForm as LoginForm exposing (Action(Response), loginRequestMailBox)
 import Forms.RegisterForm as RegisterForm exposing (Action(Response), registerRequestMailBox)
 import Forms.AnalysisForm as AnalysisForm exposing (Row, sendToPlotMailBox)
 
 import Effects exposing (Never)
-import Task
+import Task exposing (Task)
+import Html exposing (Html)
 
 --^^^^^^^^^^^^^^^^^^^°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 --standardish startapp architecture setup
-
+app : StartApp.App
+  { analysisForm : AnalysisForm.Model
+  , locationLinks : LocationLinks.Model
+  , loginForm : LoginForm.Model
+  --, plots : List AnalysisForm.PlotConfig
+  , registerForm : RegisterForm.Model
+  , user : Router.User
+  }
 app =
   StartApp.start
     { init = Router.init
@@ -20,6 +29,7 @@ app =
     , inputs = [ incomingLoginActions, incomingRegisterActions, incomingNewPlots ]
     }
 
+main: Signal Html.Html
 main = app.html
 
 port tasks : Signal (Task.Task Never ())
