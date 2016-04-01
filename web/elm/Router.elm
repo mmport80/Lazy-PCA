@@ -7,10 +7,10 @@ import Forms.AnalysisForm as AnalysisForm exposing (init, update, view, sendToPl
 import LocationLinks exposing (init, update, view, Action)
 
 import Html exposing (a, text, Html, div, button, span)
-import Html.Attributes exposing (href)
-import Html.Events exposing (targetChecked, on, onClick)
+--import Html.Attributes exposing (href)
+--import Html.Events exposing (targetChecked, on, onClick)
 
-import Http exposing (get, url)
+--import Http exposing (get, url)
 
 import Task exposing (toMaybe, andThen)
 import Effects exposing (Effects)
@@ -90,7 +90,7 @@ update action model =
         --filter out current plot from lower down in the array
         plots = plot :: ( model.plots |> List.filter (\p -> p.id /= plot.id) )
         analysisForm' = { analysisForm | plots = plots }
-        model' = { model | analysisForm = analysisForm, plots = plots }
+        model' = { model | analysisForm = analysisForm', plots = plots }
         noSave = ( model', Effects.map Analysis fx )
       in
         case input of
@@ -110,9 +110,11 @@ update action model =
           AnalysisForm.Delete plot ->
             let
               plots = plots |> List.filter (\p -> p.id /= plot.id)
-              analysisForm' = { analysisForm | plots = plots }
+              m = { model |
+                  analysisForm = { analysisForm | plots = plots }
+                , plots = plots }
             in
-              ( { model | analysisForm = analysisForm', plots = plots }
+              ( m
               , Effects.batch
                 [ deleteData (ExportData model.user plot)
                 , Effects.map Analysis fx
@@ -121,10 +123,11 @@ update action model =
           --default action is to save down changes
           AnalysisForm.LoadNewPlot p' ->
             let
-              plots = p' :: ( model.plots |> List.filter (\p -> p.id /= p'.id) )
-              analysisForm' = { analysisForm | plots = plots }
-              model' = { model | analysisForm = analysisForm', plots = plots }
-              noSave = ( model', Effects.map Analysis fx )
+              plots' = p' :: ( plots |> List.filter (\p -> p.id /= p'.id) )
+              model' = { model |
+                  analysisForm = { analysisForm | plots = plots' }
+                , plots = plots'
+                }
               sd = saveData (ExportData model.user p')
             in
               ( model', Effects.batch [sd, Effects.map Analysis fx] )
@@ -164,7 +167,7 @@ update action model =
                 , analysisForm = analysis
                 }
             in
-              ( model',Effects.batch [fxMap, analysisFxMap] ) --analysisFxMap
+              ( model',Effects.batch [fxMap, analysisFxMap] )
           _ ->
             ( { model |
                 loginForm = newUser

@@ -124,7 +124,9 @@ defmodule Backend.RoomChannel do
       p = %{source: plot["source"], ticker: plot["ticker"], frequency: plot["frequency"], startDate: sd, endDate: ed, y: plot["y"], deleted: false, user_id: user.id}
       changeset = Plot.changeset(%Plot{},p)
       #update plot
-      case Repo.update ( Ecto.Changeset.change Repo.get!(Plot, plot["id"]), p ) do
+      plot = Repo.get!(Plot, plot["id"])
+      c = Ecto.Changeset.change plot, p
+      case Repo.update c, force: true do
         {:ok, o} ->
           "oke"
         _ ->

@@ -72,7 +72,7 @@ port saveToDB = saveToDBMailBox.signal
 
 --^^^^^^^^^^^^^^^^^^^°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 --receive new plot, after requesting
-port newPlotResponse : Signal AnalysisForm.PlotConfig 
+port newPlotResponse : Signal AnalysisForm.PlotConfig
 
 incomingNewPlots : Signal (Router.Action)
 incomingNewPlots = Signal.map Router.Analysis (Signal.map AnalysisForm.ReceiveNewPlot newPlotResponse)
