@@ -23,7 +23,6 @@ type alias Model =
     , registerForm : RegisterForm.Model
     , locationLinks : LocationLinks.Model
     , user : User
-    --, plots : List AnalysisForm.PlotConfig
     }
 
 type alias User = {
@@ -44,7 +43,7 @@ init =
     (register, registerFx) = RegisterForm.init "" "" ""
     locationLinks = LocationLinks.init ""
   in
-    ( Model analysis login register locationLinks (User "" "" "")--plots
+    ( Model analysis login register locationLinks (User "" "" "")
     , Effects.batch
         [ Effects.map Login loginFx
         , Effects.map Analysis analysisFx
@@ -99,7 +98,6 @@ update action model =
               , Effects.map Analysis fx
               ]
             )
-          --this can be done at form level?
           AnalysisForm.Delete plot ->
             ( model'
             , Effects.batch [
@@ -107,7 +105,6 @@ update action model =
               , Effects.map Analysis fx
               ]
             )
-          --default action is to save down changes
           AnalysisForm.LoadNewPlot p' ->
             ( model'
             , Effects.batch [
@@ -153,7 +150,6 @@ update action model =
                   loginForm = newUser
                 , locationLinks = locationLinks
                 , user = User i.fullname newUser.username.value newUser.token
-                --, plots = i.plots
                 , analysisForm = analysis
                 }
             in
@@ -182,12 +178,6 @@ update action model =
     --superfluous
     NoOp ->
       ( model, Effects.none )
-
-syncModel : List AnalysisForm.PlotConfig -> AnalysisForm.Model -> Model -> Model
-syncModel plots analysisForm model =
-  { model |
-      analysisForm = { analysisForm | plots = plots }
-    }
 
 forwardOnLogin : String -> String -> LocationLinks.Model
 forwardOnLogin response currentLocation =

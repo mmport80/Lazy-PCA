@@ -16,7 +16,6 @@ app : StartApp.App
   { analysisForm : AnalysisForm.Model
   , locationLinks : LocationLinks.Model
   , loginForm : LoginForm.Model
-  --, plots : List AnalysisForm.PlotConfig
   , registerForm : RegisterForm.Model
   , user : Router.User
   }

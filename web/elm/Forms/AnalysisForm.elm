@@ -246,8 +246,8 @@ updateDate model =
 loadPlotConfig : Model -> PlotConfig -> Model
 loadPlotConfig model p =
   let
-    --previous displayed plot
-    pc = convertElmModelToPlotConfig model
+    --previously displayed plot
+    pp = convertElmModelToPlotConfig model
   in
     { model |
       startDate = InputField.init p.startDate "Start Date" "date" False "*" "1900-01-01" p.endDate
@@ -259,7 +259,10 @@ loadPlotConfig model p =
     , plot_id = p.id
     , progressMsg = "Downloading Data..."
     --add to existing plots
-    , plots = p :: pc :: ( model.plots |> List.filter (\p' -> p'.id /= p.id && p'.id /= pc.id) )
+    , plots = p :: pp ::
+        ( model.plots
+          |> List.filter (\p' -> p'.id /= p.id && p'.id /= pp.id)
+        )
     }
 
 
