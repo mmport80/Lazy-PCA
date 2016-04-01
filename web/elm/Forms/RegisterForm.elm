@@ -79,6 +79,8 @@ update action model =
           { model |
             fullname = fullname
           , response =
+              --only shows one error at a time...
+              --doesn't store and show errors
               if String.length fullname.value > 20 then
                 "Greater than 20 characters : ("
               else

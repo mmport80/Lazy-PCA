@@ -58,20 +58,20 @@ frequencyOptions = [ Option "1" "Daily", Option "5" "Weekly", Option "21" "Month
 init : List PlotConfig -> (Model, Effects Action)
 init plots =
   let
-    initPlot = Maybe.withDefault defaultPlotConfig (List.head plots)
-    model =
-      { startDate = InputField.init initPlot.startDate "Start" "date" False "*" "1900-01-01" initPlot.endDate
-      , endDate = InputField.init initPlot.endDate "End" "date" False "*" initPlot.startDate "2100-01-01"
-      , ticker = InputField.init initPlot.ticker "Ticker" "text" False "*" "" ""
-      , yield = Checkbox.init initPlot.y
-      , newData =  [ defaultRow ]
-      , source = SelectInput.init initPlot.source sourceOptions False
-      , frequency = SelectInput.init (toString initPlot.frequency) frequencyOptions False
+    p = Maybe.withDefault defaultPlotConfig (List.head plots)
+    model = {
+        startDate = InputField.init p.startDate "Start Date" "date" False "*" "1900-01-01" p.endDate
+      , endDate = InputField.init p.endDate "End Date" "date" False "*" p.startDate "2100-01-01"
+      , ticker = InputField.init p.ticker "Ticker" "text" False "*" "" ""
+      , yield = Checkbox.init p.y
+      , source = SelectInput.init p.source sourceOptions False
+      , frequency = SelectInput.init (toString p.frequency) frequencyOptions False
+      , plot_id = p.id
       , progressMsg = "Downloading Data..."
-      , plot_id = initPlot.id
       , plots = plots
       , hoverId = 0
       , bold = False
+      , newData = [defaultRow]
       }
   in
     ( model
@@ -91,8 +91,9 @@ type Action
     | UpdateEndDate InputField.Action
     --request data from quandl
     | Request
-    --once we receive data then, send it to the scatter plot
+    --once we receive data, then send it to the scatter plot
     | NewData ( Maybe ( List (Row) ) )
+    | NewDataAndDates ( Maybe ( List (Row) ) )
     --get rid of this, superfluous
     | NoOp
     --load plot when from saved configurations
@@ -111,13 +112,6 @@ update action model =
       ( { model | source = SelectInput.update input model.source }
       , Effects.none
       )
-    UpdateFrequency input ->
-      let
-        model' = { model | frequency = SelectInput.update input model.frequency }
-      in
-        ( model'
-        , sendDataToPlot model'
-        )
     UpdateTicker input ->
       ( { model | ticker = InputField.update input model.ticker }
       , Effects.none
@@ -126,6 +120,13 @@ update action model =
       ( { model | yield = Checkbox.update input model.yield }
       , Effects.none
       )
+    UpdateFrequency input ->
+      let
+        model' = { model | frequency = SelectInput.update input model.frequency }
+      in
+        ( model'
+        , sendDataToPlot model'
+        )
     --only update dates if they are actually dates
     UpdateStartDate input ->
       let
@@ -143,6 +144,7 @@ update action model =
         , sendDataToPlot model'
         )
     --get data from quandl
+    --'pull' link
     Request ->
       ( {model |
           frequency = SelectInput.update SelectInput.Enable model.frequency
@@ -150,76 +152,46 @@ update action model =
         , endDate = InputField.update InputField.Enable model.endDate
         , progressMsg = "Downloading Data..."
         }
-      , getData model )
+      , getDataAndDates model )
     --remove this
     NoOp ->
       ( model, Effects.none )
-    LoadNewPlot p ->
-      let
-        model' = { model |
-          startDate = InputField.init p.startDate "Start" "date" False "*" "1900-01-01" p.endDate
-        , endDate = InputField.init p.endDate "End" "date" False "*" p.startDate "2100-01-01"
-        , ticker = InputField.init p.ticker "Ticker" "text" False "*" "" ""
-        , yield = Checkbox.init p.y
-        , source = SelectInput.init p.source sourceOptions False
-        , frequency = SelectInput.init (toString p.frequency) frequencyOptions False
-        , plot_id = p.id
-        , progressMsg = "Downloading Data..."
-        }
-      in
-        (model', getData model')
-    --Send data to JS
+    --Receive data and then end data onto JS
     NewData maybeList ->
       let
-        maybeToDate = (Maybe.withDefault (Date.fromTime 0)) >> (Date.Format.format "%Y-%m-%d" )
-        data = Maybe.withDefault model.newData maybeList
-
-        progressMsg =
-          if maybeList == Nothing then
-            "Could not find data"
-          else
-            ""
-
-        onlyDates = data |> List.map (\ (a,_) -> a )
-        newEndDate = onlyDates |> List.head |> maybeToDate
-        newStartDate = onlyDates |> List.reverse |> List.head |> maybeToDate
-        model' = { model |
-            newData = data
-          , startDate = InputField.update (InputField.Update newStartDate) model.startDate
-          , endDate = InputField.update (InputField.Update newEndDate) model.endDate
-          , progressMsg = progressMsg
-          }
+        model' = updateData model maybeList
       in
-        ( model'
-        , sendDataToPlot model'
-        )
+        ( model', sendDataToPlot model' )
+    --Receive data and then end data onto JS
+    NewDataAndDates maybeList ->
+      let
+        model' = updateData model maybeList
+          |> updateDate
+      in
+        ( model', sendDataToPlot model' )
     Hover id ->
       ( { model |
           hoverId = id
           }
         , Effects.none )
-    --send new plot request
+    --send new plot request, requested in Router
     RequestNewPlot ->
-      --plot's requested in Router
       ( model, Effects.none )
+    --load from saved plots
+    LoadNewPlot p ->
+      let
+        model' = loadPlotConfig model p
+      in
+        (model', getData model')
+    --receive plot from server
     --add new plot to top of array
     --v similar to load new plot
     --should make function from this
     ReceiveNewPlot p ->
       let
-        model' = { model |
-          startDate = InputField.init p.startDate "Start Date" "date" False "*" "1900-01-01" p.endDate
-        , endDate = InputField.init p.endDate "End Date" "date" False "*" p.startDate "2100-01-01"
-        , ticker = InputField.init p.ticker "Ticker" "text" False "*" "" ""
-        , yield = Checkbox.init p.y
-        , source = SelectInput.init p.source sourceOptions False
-        , frequency = SelectInput.init (toString p.frequency) frequencyOptions False
-        , plot_id = p.id
-        , progressMsg = "Downloading Data..."
-        , plots = p :: model.plots
-        }
+        model' = loadPlotConfig model p
       in
-        (model', getData model')
+        (model', getDataAndDates model')
     Delete p ->
       --done at 'router' level
       ( model
@@ -238,8 +210,50 @@ update action model =
         , Effects.none
         )
 
---on change send data to plot
---send data to server
+updateData : Model -> ( Maybe ( List (Row) ) ) -> Model
+updateData model maybeList =
+  let
+    data = Maybe.withDefault model.newData maybeList
+    progressMsg =
+      if maybeList == Nothing then
+        "Could not find data"
+      else
+        ""
+  in
+    { model |
+        newData = data
+      , progressMsg = progressMsg
+      }
+
+updateDate : Model -> Model
+updateDate model =
+  let
+    maybeToDate = (Maybe.withDefault (Date.fromTime 0)) >> (Date.Format.format "%Y-%m-%d" )
+    onlyDates = model.newData |> List.map (\ (a,_) -> a )
+    newEndDate = onlyDates |> List.head |> maybeToDate
+    newStartDate = onlyDates |> List.reverse |> List.head |> maybeToDate
+  in
+    { model |
+        startDate = InputField.update (InputField.Update newStartDate) model.startDate
+      , endDate = InputField.update (InputField.Update newEndDate) model.endDate
+      }
+
+--load plot config into form
+loadPlotConfig : Model -> PlotConfig -> Model
+loadPlotConfig model p =
+  { model |
+    startDate = InputField.init p.startDate "Start Date" "date" False "*" "1900-01-01" p.endDate
+  , endDate = InputField.init p.endDate "End Date" "date" False "*" p.startDate "2100-01-01"
+  , ticker = InputField.init p.ticker "Ticker" "text" False "*" "" ""
+  , yield = Checkbox.init p.y
+  , source = SelectInput.init p.source sourceOptions False
+  , frequency = SelectInput.init (toString p.frequency) frequencyOptions False
+  , plot_id = p.id
+  , progressMsg = "Downloading Data..."
+  --add to existing plots
+  --necessary? this is done at router level also...
+  , plots = p :: model.plots
+  }
 
 --********************************************************************************
 --********************************************************************************
@@ -374,8 +388,7 @@ generateSavedPlotConfigTable address model =
       ( List.filter ( \p -> p.id /= model.plot_id ) model.plots )
 
 
-
-
+--********************************************************************************
 --********************************************************************************
 --********************************************************************************
 -- EFFECTS
@@ -386,6 +399,17 @@ getData model =
     |> Task.toMaybe
     |> Task.map NewData
     |> Effects.task
+
+
+getDataAndDates : Model -> Effects Action
+getDataAndDates model =
+  Http.get decodeData (quandlUrl model)
+    |> Task.toMaybe
+    |> Task.map NewDataAndDates
+    |> Effects.task
+
+--don't like new operators that much
+(=>) = (,)
 
 --INCOMING DATA
 quandlUrl : Model -> String
@@ -407,19 +431,14 @@ sourceToColumn s =
 --^^^^^^^^^^^^^^^^^^^°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 --JSON decode
 
---don't like new operators that much
-(=>) = (,)
-
 --change name to something like 'decodeList'
 decodeData : Json.Decoder (List (Date.Date, Float))
-decodeData = Json.at ["data"] (Json.list csvRow)
+decodeData = Json.at ["data"] (Json.list dataRow)
 
---
-csvRow : Json.Decoder (Date.Date, Float)
-csvRow =
+dataRow : Json.Decoder (Date.Date, Float)
+dataRow =
   ( Json.tuple2 (,) Json.string Json.float )
     |> Json.map (\ (a,b) -> ( (toDate (Date.fromTime 0) a), b ) )
-
 
 --^^^^^^^^^^^^^^^^^^^°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 --OUTGOING DATA

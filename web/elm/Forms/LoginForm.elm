@@ -66,9 +66,19 @@ update : Action -> Model -> (Model, Effects Action)
 update action model =
   case action of
     UpdateUsername input ->
-      ( { model | username = InputField.update input model.username }
-      , Effects.none
-      )
+      let
+        username = InputField.update input model.username
+      in
+        ( { model |
+            username = username
+          , response =
+              if String.length username.value > 20 then
+                "Greater than 20 characters : ("
+              else
+                ""
+            }
+        , Effects.none
+        )
     UpdatePassword input ->
       let
         password = InputField.update input model.password

@@ -62,7 +62,6 @@ init =
 --********************************************************************************
 -- UPDATE
 --act like a router, sending to different forms based on actions
-
 type alias ExportData = {
     user : User
   , plot : AnalysisForm.PlotConfig
@@ -87,38 +86,25 @@ update action model =
         --extract plot config from current analysis form
         plot = AnalysisForm.convertElmModelToPlotConfig analysisForm
         --add current plot to top
-        plots = plot
-          ::
-          --filter out current plot from lower down in the array
-          ( model.plots |> List.filter (\p -> p.id /= plot.id) )
-        --only save user & plot config
-        sd = saveData (ExportData model.user plot)
-        --requestNewPlot
-        np = saveData (ExportData model.user AnalysisForm.defaultPlotConfig)
-
+        --filter out current plot from lower down in the array
+        plots = plot :: ( model.plots |> List.filter (\p -> p.id /= plot.id) )
         analysisForm' = { analysisForm | plots = plots }
-
         model' = { model | analysisForm = analysisForm', plots = plots }
+        noSave = ( model', Effects.map Analysis fx )
       in
-        --how to write one case to catch all 3?
-        --don't save when setting up initial request
-        --save when we get data backup
-        --or when frequency or dates have been changed
         case input of
-          AnalysisForm.UpdateSource i ->
-            ( model', Effects.map Analysis fx )
-          AnalysisForm.UpdateYield i ->
-            ( model', Effects.map Analysis fx )
-          AnalysisForm.UpdateTicker i ->
-            ( model', Effects.map Analysis fx )
-          AnalysisForm.Request ->
-            ( model', Effects.map Analysis fx )
-          AnalysisForm.Hover i ->
-            ( model', Effects.map Analysis fx )
-          AnalysisForm.Bold ->
-            ( model', Effects.map Analysis fx )
+          AnalysisForm.UpdateSource i -> noSave
+          AnalysisForm.UpdateYield i -> noSave
+          AnalysisForm.UpdateTicker i -> noSave
+          AnalysisForm.Request -> noSave
+          AnalysisForm.Hover i -> noSave
+          AnalysisForm.Bold -> noSave
+          --'new' link
           AnalysisForm.RequestNewPlot ->
-            ( model', Effects.batch [np, Effects.map Analysis fx] )
+            let
+              np = saveData (ExportData model.user AnalysisForm.defaultPlotConfig)
+            in
+              ( model', Effects.batch [np, Effects.map Analysis fx] )
           AnalysisForm.Delete plot ->
             ( { model | plots = plots |> List.filter (\p -> p.id /= plot.id) }
             , Effects.batch
@@ -126,8 +112,12 @@ update action model =
               , Effects.map Analysis fx
               ]
             )
+          --default action is to save down changes
           _ ->
-            ( model', Effects.batch [sd, Effects.map Analysis fx] )
+            let
+              sd = saveData (ExportData model.user plot)
+            in
+              ( model', Effects.batch [sd, Effects.map Analysis fx] )
     Register input ->
       let
         (newUser, fx) = RegisterForm.update input model.registerForm
@@ -144,7 +134,6 @@ update action model =
         (newUser, fx) = LoginForm.update input model.loginForm
         locationLinks = forwardOnLogin newUser.response model.locationLinks
         fxMap = Effects.map Login fx
-
       in
         case input of
           LoginForm.Response i ->
@@ -193,8 +182,6 @@ forwardOnLogin response currentLocation =
       LocationLinks.update LocationLinks.Analysis
     _ ->
       currentLocation
-
-
 
 --********************************************************************************
 --********************************************************************************
