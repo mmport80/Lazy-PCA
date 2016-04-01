@@ -83,13 +83,14 @@ update action model =
     Analysis input ->
       let
         (analysisForm, fx) = AnalysisForm.update input model.analysisForm
+        --sync - keep where this belong
         --extract plot config from current analysis form
         plot = AnalysisForm.convertElmModelToPlotConfig analysisForm
         --add current plot to top
         --filter out current plot from lower down in the array
         plots = plot :: ( model.plots |> List.filter (\p -> p.id /= plot.id) )
         analysisForm' = { analysisForm | plots = plots }
-        model' = { model | analysisForm = analysisForm', plots = plots }
+        model' = { model | analysisForm = analysisForm, plots = plots }
         noSave = ( model', Effects.map Analysis fx )
       in
         case input of
@@ -105,14 +106,28 @@ update action model =
               np = saveData (ExportData model.user AnalysisForm.defaultPlotConfig)
             in
               ( model', Effects.batch [np, Effects.map Analysis fx] )
+          --this can be done at form level?
           AnalysisForm.Delete plot ->
-            ( { model' | plots = plots |> List.filter (\p -> p.id /= plot.id) }
-            , Effects.batch
-              [ deleteData (ExportData model.user plot)
-              , Effects.map Analysis fx
-              ]
-            )
+            let
+              plots = plots |> List.filter (\p -> p.id /= plot.id)
+              analysisForm' = { analysisForm | plots = plots }
+            in
+              ( { model | analysisForm = analysisForm', plots = plots }
+              , Effects.batch
+                [ deleteData (ExportData model.user plot)
+                , Effects.map Analysis fx
+                ]
+              )
           --default action is to save down changes
+          AnalysisForm.LoadNewPlot p' ->
+            let
+              plots = p' :: ( model.plots |> List.filter (\p -> p.id /= p'.id) )
+              analysisForm' = { analysisForm | plots = plots }
+              model' = { model | analysisForm = analysisForm', plots = plots }
+              noSave = ( model', Effects.map Analysis fx )
+              sd = saveData (ExportData model.user p')
+            in
+              ( model', Effects.batch [sd, Effects.map Analysis fx] )
           _ ->
             let
               sd = saveData (ExportData model.user plot)

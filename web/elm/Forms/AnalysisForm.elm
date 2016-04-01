@@ -192,11 +192,13 @@ update action model =
         model' = loadPlotConfig model p
       in
         (model', getDataAndDates model')
-    Delete p ->
-      --done at 'router' level
-      ( model
-      , Effects.none
-      )
+    Delete plot ->
+      -- let
+      --   plots = model.plots |> List.filter (\p -> p.id /= plot.id)
+      --   model' = { model | plots = plots }
+      -- in
+        --done at 'router' level
+        ( model, Effects.none )
     Bold ->
       let
         bold =
