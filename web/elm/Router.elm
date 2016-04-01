@@ -106,7 +106,7 @@ update action model =
             in
               ( model', Effects.batch [np, Effects.map Analysis fx] )
           AnalysisForm.Delete plot ->
-            ( { model | plots = plots |> List.filter (\p -> p.id /= plot.id) }
+            ( { model' | plots = plots |> List.filter (\p -> p.id /= plot.id) }
             , Effects.batch
               [ deleteData (ExportData model.user plot)
               , Effects.map Analysis fx

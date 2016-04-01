@@ -174,15 +174,15 @@ update action model =
           hoverId = id
           }
         , Effects.none )
-    --send new plot request, requested in Router
-    RequestNewPlot ->
-      ( model, Effects.none )
     --load from saved plots
     LoadNewPlot p ->
       let
         model' = loadPlotConfig model p
       in
         (model', getData model')
+    --send new plot request, requested in Router
+    RequestNewPlot ->
+      ( model, Effects.none )
     --receive plot from server
     --add new plot to top of array
     --v similar to load new plot
@@ -252,7 +252,7 @@ loadPlotConfig model p =
   , progressMsg = "Downloading Data..."
   --add to existing plots
   --necessary? this is done at router level also...
-  , plots = p :: model.plots
+  , plots = p :: ( model.plots |> List.filter (\p' -> p'.id /= p.id) )
   }
 
 --********************************************************************************
