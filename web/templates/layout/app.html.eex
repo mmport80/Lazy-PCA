@@ -63,17 +63,16 @@
       .hover{
         font-weight: normal;
         cursor: pointer;
-        cursor: hand;
         }
       .delete{
         font-weight: normal;
         cursor: pointer;
-        cursor: hand;
         text-decoration: none;
         color: red;
+        text-align: center;
         }
-      .underline{
-        text-decoration: underline;
+      .selected{
+        background-color: lightgrey;
         }
       .normal{
         text-decoration: normal;
@@ -93,7 +92,7 @@
 
       .table {
         display:table;
-        width: 100%;
+        /*width: 100%;*/
         }
       .header {
         display:table-header-group;
@@ -107,11 +106,7 @@
         }
       .cell {
         display:table-cell;
-        width:20%;
-        }
-      .cell2 {
-        display:table-cell;
-        width:50%;
+        padding: 1em;
         }
 
 

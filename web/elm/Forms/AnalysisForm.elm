@@ -265,8 +265,6 @@ loadPlotConfig model p =
         )
     }
 
-
-
 --********************************************************************************
 --********************************************************************************
 -- VIEW
@@ -311,16 +309,16 @@ view address model =
       ]
     , div [ class "rowGroup" ] [
         div [ class "row" ] [
-            div [ class "cell2" ] [ text "Start"]
-          , div [ class "cell2" ] [
+            div [ class "cell" ] [ text "Start"]
+          , div [ class "cell" ] [
               InputField.view (Signal.forwardTo address UpdateStartDate) model.startDate
               ]
           ]
       ]
     , div [ class "rowGroup" ] [
         div [ class "row" ] [
-            div [ class "cell2" ] [ text "End"]
-          , div [ class "cell2" ] [
+            div [ class "cell" ] [ text "End"]
+          , div [ class "cell" ] [
               InputField.view (Signal.forwardTo address UpdateEndDate) model.endDate
               ]
           ]
@@ -344,22 +342,23 @@ generateSavedPlotConfigTable address model =
     load p = onClick address (LoadNewPlot p)
     underline id =
       if id == model.hoverId then
-        classList [("underline", True),("cell",True)]
+        ("selected", True)
       else
-        classList [("normal", True),("cell",True)]
+        ("selected", False)
     bold =
       if model.bold then
         class "bold"
       else
         class "normal"
-    default p = [underline p.id, onHover p.id, onMouseOut address (Hover -1), load p]
+    default p = [ onHover p.id, onMouseOut address (Hover -1), load p, classList [("cell",True)] ]
+    rowDefault p = [ classList [ ("row", True), ("hover",True), (underline p.id) ] ]
   in
     [ div [ class "header" ]
-        [   div [ cell ] [ text ""]
-          , div [ cell ] [ text ""]
-          , div [ cell ] [ text ""]
-          , div [ cell ] [ text "" ]
-          , div [ cell ] [ text "" ]
+        [   div [ cell ] [ text "Source"]
+          , div [ cell ] [ text "Ticker"]
+          , div [ cell ] [ text "Frequency"]
+          , div [ cell ] [ text "Date" ]
+          , div [ cell ] [ text "Delete" ]
           ]
     ]
     ++
@@ -372,7 +371,7 @@ generateSavedPlotConfigTable address model =
             ]
             --group everything but delete together
             --have only one LoadNewPlot reference
-            [ div [ classList [("row", True),("hover",True)] ] [
+            [ div (rowDefault p) [
                 div (default p) [ text (String.left 1 p.source) ]
               , div (default p) [ text p.ticker ]
               , div (default p)

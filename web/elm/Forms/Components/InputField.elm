@@ -1,13 +1,10 @@
 module Forms.Components.InputField where
 
 import Html exposing (Html, input)
-import Html.Attributes exposing (value, placeholder, type', disabled, required, pattern, min, max)
+import Html.Attributes exposing (value, placeholder, type', disabled, required, pattern, min, max, name)
 import Html.Events exposing (targetValue, on)
 
 import Signal exposing (Address)
-
-
-import Date
 
 -- MODEL
 --add disabled option
@@ -53,6 +50,7 @@ view address model =
     , on "input" targetValue ( Update >> Signal.message address )
     , disabled model.disabled
     , placeholder model.placeHolder
+    , name model.placeHolder
     , required True
     , Html.Attributes.min model.min
     , Html.Attributes.max model.max
