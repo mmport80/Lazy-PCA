@@ -15,15 +15,6 @@ defmodule Backend.Mixfile do
    ]
  end
 
-#            flags: ["-Wunmatched_returns","-Werror_handling","-Wrace_conditions", "-Wno_opaque"],
-# plt_apps: [:comeonin, :gettext, :postgrex, :cowboy],
-#             paths: [
-#			"_build/dev/lib/comeonin/ebin",
-#			"_build/dev/lib/gettext/ebin",
-#			"_build/dev/lib/postgrex/ebin",
-#			"_build/dev/lib/cowboy/ebin"
-#			]]
-
   # Configuration for the OTP application.
   #
   # Type `mix help compile.app` for more information.

@@ -13,7 +13,6 @@ socket.connect()
 
 let channel = socket.channel("rooms:lobby", {})
 
-
 channel.join()
   .receive("ok", resp => { console.log("Joined successfully", resp) })
   .receive("error", resp => { console.log("Unable to join", resp) })
@@ -67,9 +66,6 @@ channel.on("new_msg",
     }
   )
 
-
-
-
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -102,8 +98,7 @@ const app = Elm.embed(
 
 const registerCallback = msg => {
   //change fields, so that clientside and serverside match up
-  const {username: u, password: p, fullname: f} = msg;
-  const request = { action:"register", data: {username: u, password: p, fullname: f} }
+  const request = { action:"register", data: msg }
   channel.push("new_msg", {body: request})
   }
 

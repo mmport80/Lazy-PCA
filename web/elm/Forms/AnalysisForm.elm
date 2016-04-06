@@ -330,7 +330,10 @@ view address model =
         [
           a [ href "#", onClick address RequestNewPlot ] [ text "New" ]
         ]
-    , div [ class "table" ] ( generateSavedPlotConfigTable address model )
+    , if List.length model.plots > 1 then
+        div [ class "table" ] ( generateSavedPlotConfigTable address model )
+      else
+        div [] []
     ]
 
 --make this table a standalone component?

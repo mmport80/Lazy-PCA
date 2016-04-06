@@ -3,20 +3,32 @@ defmodule Backend.RoomChannel do
   alias Backend.User
   alias Backend.Plot
   alias Backend.Repo
-  alias Ecto.Date
 
+  alias Ecto.Date
   import Ecto.Query
 
   import Comeonin.Bcrypt, only: [checkpw: 2, dummy_checkpw: 0]
 
   use Phoenix.Channel
 
+  #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+
+  #incoming plotconfig from elm
+  @type plotConfig :: %{ source: char_list, ticker: char_list, frequency: integer, startDate: char_list, endDate: char_list, y: boolean, id: integer }
+  #json format to send to Elm, can remove deleted field
+  @type p :: %{ source: char_list, ticker: char_list, frequency: integer, startDate: char_list, endDate: char_list, y: boolean, deleted: boolean, user_id: integer, id: integer }
+
+  #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+
   intercept ["new_msg", "save_data", "delete_data"]
+
+  #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 
   #public room
   #can create rooms to group users in
   #everyone comes through here, which means if we 'broadcast!' intead of pushing below
   #we can send site wide messages to everybody
+  @spec join(String.t, map, Phoenix.Socket.t) :: {:ok, Phoenix.Socket.t}
   def join("rooms:lobby", _message, socket) do
     {:ok, socket}
   end
@@ -25,15 +37,30 @@ defmodule Backend.RoomChannel do
     {:error, %{reason: "unauthorized"}}
   end
 
+  #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+
   #Response struct to send back to client
   #token is the auth required to pull down data
   defmodule Response do
+    alias Backend.RoomChannel
+    @type t :: %{response_text: char_list, token: char_list, action: char_list, fullname: char_list, plots: list(RoomChannel.p), errors: list(char_list)}
     defstruct response_text: "", token: "", action: "", fullname: "", plots: [], errors: []
   end
 
   #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+  #incoming data
 
-  @spec handle_in(String.t, map, Phoenix.Socket.t) :: {:noreply, Phoenix.Socket.t}
+
+  @type user_details :: %{ username: char_list, password: char_list, fullname: char_list }
+  @type save_or_delete_request :: %{ user: user_details, plot: plotConfig }
+
+  @type login_details :: %{ username: char_list, password: char_list }
+  @type reg_details :: %{ username: char_list, password: char_list, fullname: char_list }
+  @type l_r_request :: %{ action: char_list, data: login_details | reg_details }
+
+  @type request :: %{ body: save_or_delete_request | l_r_request }
+
+  @spec handle_in(String.t, request, Phoenix.Socket.t) :: {:noreply, Phoenix.Socket.t}
   def handle_in("delete_data", %{"body" => params}, socket) do
     %{"plot" => plot, "user" => user} = params
     rr =
@@ -65,7 +92,7 @@ defmodule Backend.RoomChannel do
     {:noreply, socket}
   end
 
-  #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+  #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 
   def handle_in("save_data", %{"body" => params}, socket) do
     %{"plot" => plot, "user" => user} = params
@@ -93,7 +120,7 @@ defmodule Backend.RoomChannel do
     {:noreply, socket}
   end
 
-  #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+  #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 
   #login / reg / user auth actions
   def handle_in("new_msg", %{"body" => params}, socket) do
@@ -108,7 +135,6 @@ defmodule Backend.RoomChannel do
         "register" ->
           %{"fullname" => fullname, "username" => username, "password" => password} = data
           #changesets are fine-grained validation objects based on what's specified in the User model
-
           changeset = User.registration_changeset(%User{},data)
           #*reasons for problem
           case Repo.insert(changeset) do
@@ -137,10 +163,11 @@ defmodule Backend.RoomChannel do
   end
 
   #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+  #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+  #called by handle_in save_data
   #save plots which already exist in db
 
   #coming from elm
-  @type plotConfig :: %{ source: char_list, ticker: char_list, frequency: integer, startDate: char_list, endDate: char_list, y: boolean, id: integer }
   @spec save_existing_plot(%User{}, plotConfig) :: String.t
   def save_existing_plot(user, plot) do
     orig_Plot = Repo.get_by(Backend.Plot, id: plot["id"] )
@@ -166,8 +193,6 @@ defmodule Backend.RoomChannel do
   #insert plot always inserts default plot
   @spec insert_new_plot(%User{}) :: {:ok, %Plot{}} | {:error, Ecto.Changeset.t}
   def insert_new_plot(user) do
-    #{:ok, sd} = Ecto.Date.cast("1990-01-02")
-    #today = Date.utc()
     Repo.insert (user |> defaultPlot)
   end
 
@@ -184,7 +209,8 @@ defmodule Backend.RoomChannel do
   end
 
 #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
-
+#°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+  #called by handle_in new_msg, i.e. logging / registering
   #handles login auth
   @spec login_by_username_and_pass(Phoenix.Socket.t, char_list, char_list) :: %Response{}
   def login_by_username_and_pass( socket, username, password ) do
@@ -197,10 +223,7 @@ defmodule Backend.RoomChannel do
           |> order_by( [c], desc: c.updated_at )
           |> Backend.Repo.all
           #convert back into json-isable format
-          |> Enum.map(
-            fn(p) ->
-              convertPlotToJsonFormat(p)
-            end)
+          |> Enum.map( &convertPlotToJsonFormat/1 )
 
         token = Phoenix.Token.sign(socket, "user", user.id)
         #ok is magic word which brings user to login
@@ -212,15 +235,15 @@ defmodule Backend.RoomChannel do
   end
 
   #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+  #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
   #Utils
-  #json format to send to Elm, can remove deleted field
-  @type p :: %{ source: char_list, ticker: char_list, frequency: integer, startDate: char_list, endDate: char_list, y: boolean, deleted: boolean, user_id: integer, id: integer }
 
   @spec convertPlotToJsonFormat(%Plot{}) :: p
   def convertPlotToJsonFormat(p) do
     %{ source: p.source, ticker: p.ticker, frequency: p.frequency, startDate: p.startDate, endDate: p.endDate, y: p.y, deleted: p.deleted, user_id: p.user_id, id: p.id }
   end
 
+  #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
   #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
   #handles all broadcast events
   #not applicable right now, but necessary to include in any case - expected in all channels
