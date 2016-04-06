@@ -33,6 +33,7 @@ defmodule Backend.RoomChannel do
 
   #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 
+  @spec handle_in(String.t, map, Phoenix.Socket.t) :: {:noreply, Phoenix.Socket.t}
   def handle_in("delete_data", %{"body" => params}, socket) do
     %{"plot" => plot, "user" => user} = params
     rr =
@@ -82,8 +83,6 @@ defmodule Backend.RoomChannel do
               %Response{ action: "new", plots: [ p |> convertPlotToJsonFormat ] }
             #-----save existing plot
             True ->
-              IO.inspect testP(plot)
-              IO.inspect testU(user)
               %Response{ response_text: save_existing_plot(user, plot) }
             end
         _ ->
@@ -109,6 +108,7 @@ defmodule Backend.RoomChannel do
         "register" ->
           %{"fullname" => fullname, "username" => username, "password" => password} = data
           #changesets are fine-grained validation objects based on what's specified in the User model
+
           changeset = User.registration_changeset(%User{},data)
           #*reasons for problem
           case Repo.insert(changeset) do
@@ -137,22 +137,11 @@ defmodule Backend.RoomChannel do
   end
 
   #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
-
   #save plots which already exist in db
 
-  @spec testU( a ) :: a when a: %Backend.User{}
-  def testU(u) do
-    u
-  end
-
-  @type p :: %{ source: char_list, ticker: char_list, frequency: integer, startDate: char_list, endDate: char_list, y: boolean, deleted: boolean, user_id: integer, id: integer }
-  @spec testP( p ) :: String.t
-  def testP(p) do
-    "okok"
-  end
-
-
-  @spec save_existing_plot( %Backend.User{}, p ) :: char_list
+  #coming from elm
+  @type plotConfig :: %{ source: char_list, ticker: char_list, frequency: integer, startDate: char_list, endDate: char_list, y: boolean, id: integer }
+  @spec save_existing_plot(%User{}, plotConfig) :: String.t
   def save_existing_plot(user, plot) do
     orig_Plot = Repo.get_by(Backend.Plot, id: plot["id"] )
     #make sure owner owns plot
@@ -161,6 +150,7 @@ defmodule Backend.RoomChannel do
       {:ok, sd} = Ecto.Date.cast(plot["startDate"])
       {:ok, ed} = Ecto.Date.cast(plot["endDate"])
       p = %{source: plot["source"], ticker: plot["ticker"], frequency: plot["frequency"], startDate: sd, endDate: ed, y: plot["y"], deleted: false, user_id: user.id}
+
       #update plot, force update in order to save order of opened plots
       case Repo.update (Ecto.Changeset.change Repo.get!(Plot, plot["id"]), p), force: true do
         {:ok, _} ->
@@ -174,7 +164,7 @@ defmodule Backend.RoomChannel do
   end
 
   #insert plot always inserts default plot
-  @spec insert_new_plot(%User{}) :: {:ok, Ecto.Schema.t} | {:error, Ecto.Changeset.t}
+  @spec insert_new_plot(%User{}) :: {:ok, %Plot{}} | {:error, Ecto.Changeset.t}
   def insert_new_plot(user) do
     #{:ok, sd} = Ecto.Date.cast("1990-01-02")
     #today = Date.utc()
@@ -196,6 +186,7 @@ defmodule Backend.RoomChannel do
 #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 
   #handles login auth
+  @spec login_by_username_and_pass(Phoenix.Socket.t, char_list, char_list) :: %Response{}
   def login_by_username_and_pass( socket, username, password ) do
     user = Repo.get_by(Backend.User, username: username)
     cond do
@@ -222,7 +213,10 @@ defmodule Backend.RoomChannel do
 
   #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
   #Utils
-  @spec convertPlotToJsonFormat(%Plot{}) :: %{ source: char_list, ticker: char_list, frequency: integer, startDate: char_list, endDate: char_list, y: boolean, deleted: boolean, user_id: integer, id: integer }
+  #json format to send to Elm, can remove deleted field
+  @type p :: %{ source: char_list, ticker: char_list, frequency: integer, startDate: char_list, endDate: char_list, y: boolean, deleted: boolean, user_id: integer, id: integer }
+
+  @spec convertPlotToJsonFormat(%Plot{}) :: p
   def convertPlotToJsonFormat(p) do
     %{ source: p.source, ticker: p.ticker, frequency: p.frequency, startDate: p.startDate, endDate: p.endDate, y: p.y, deleted: p.deleted, user_id: p.user_id, id: p.id }
   end
@@ -231,6 +225,7 @@ defmodule Backend.RoomChannel do
   #handles all broadcast events
   #not applicable right now, but necessary to include in any case - expected in all channels
 
+  @spec handle_out(String.t, map, Phoenix.Socket.t) :: {:noreply, Phoenix.Socket.t}
   def handle_out("delete_data", payload, socket) do
     push socket, "delete_data", payload
     {:noreply, socket}

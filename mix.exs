@@ -11,7 +11,7 @@ defmodule Backend.Mixfile do
      start_permanent: Mix.env == :prod,
      aliases: aliases,
      deps: deps,
-     dialyzer: [ flags: ["-Woverspecs"] ]
+     dialyzer: [ flags: ["-Wunmatched_returns","-Werror_handling","-Wrace_conditions","-Wunderspecs","-Wunknown"] ]
    ]
  end
 
