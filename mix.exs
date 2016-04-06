@@ -10,27 +10,19 @@ defmodule Backend.Mixfile do
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
      aliases: aliases,
-     deps: deps
-#      dialyzer: [plt_apps: [:comeonin, :gettext, :postgrex, :cowboy],
+     deps: deps,
+     dialyzer: [ flags: ["-Woverspecs"] ]
+   ]
+ end
+
 #            flags: ["-Wunmatched_returns","-Werror_handling","-Wrace_conditions", "-Wno_opaque"],
-#             paths: [   
+# plt_apps: [:comeonin, :gettext, :postgrex, :cowboy],
+#             paths: [
 #			"_build/dev/lib/comeonin/ebin",
 #			"_build/dev/lib/gettext/ebin",
 #			"_build/dev/lib/postgrex/ebin",
-#			"_build/dev/lib/cowboy/ebin" 
-
-#			]]	
-	]
-#     dialyzer: [plt_apps: [:phoenix,:postgrex,:phoenix_ecto,:phoenix_html,:phoenix_live_reload,:gettext,:cowboy,:comeonin,:plug,:ecto],
-
-#			"_build/dev/lib/phoenix/ebin", 
-#			"_build/dev/lib/phoenix_ecto/ebin", 
-#			"_build/dev/lib/phoenix_html/ebin",
-#			"_build/dev/lib/phoenix_live_reload/ebin", 
-
-
-
-  end
+#			"_build/dev/lib/cowboy/ebin"
+#			]]
 
   # Configuration for the OTP application.
   #

@@ -32,8 +32,7 @@ defmodule Backend.RoomChannel do
   end
 
   #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
-  #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
-  #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
+
   def handle_in("delete_data", %{"body" => params}, socket) do
     %{"plot" => plot, "user" => user} = params
     rr =
@@ -83,7 +82,9 @@ defmodule Backend.RoomChannel do
               %Response{ action: "new", plots: [ p |> convertPlotToJsonFormat ] }
             #-----save existing plot
             True ->
-              %Response{ response_text: save_existing_plot(user, plot, user_id) }
+              IO.inspect testP(plot)
+              IO.inspect testU(user)
+              %Response{ response_text: save_existing_plot(user, plot) }
             end
         _ ->
           #don't save, return error
@@ -138,11 +139,25 @@ defmodule Backend.RoomChannel do
   #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
 
   #save plots which already exist in db
-  def save_existing_plot(user, plot, user_id) do
+
+  @spec testU( a ) :: a when a: %Backend.User{}
+  def testU(u) do
+    u
+  end
+
+  @type p :: %{ source: char_list, ticker: char_list, frequency: integer, startDate: char_list, endDate: char_list, y: boolean, deleted: boolean, user_id: integer, id: integer }
+  @spec testP( p ) :: String.t
+  def testP(p) do
+    "okok"
+  end
+
+
+  @spec save_existing_plot( %Backend.User{}, p ) :: char_list
+  def save_existing_plot(user, plot) do
     orig_Plot = Repo.get_by(Backend.Plot, id: plot["id"] )
     #make sure owner owns plot
     #orig plot owner id matches logged in user
-    if orig_Plot.user_id == user_id do
+    if orig_Plot.user_id == user.id do
       {:ok, sd} = Ecto.Date.cast(plot["startDate"])
       {:ok, ed} = Ecto.Date.cast(plot["endDate"])
       p = %{source: plot["source"], ticker: plot["ticker"], frequency: plot["frequency"], startDate: sd, endDate: ed, y: plot["y"], deleted: false, user_id: user.id}
@@ -159,13 +174,14 @@ defmodule Backend.RoomChannel do
   end
 
   #insert plot always inserts default plot
+  @spec insert_new_plot(%User{}) :: {:ok, Ecto.Schema.t} | {:error, Ecto.Changeset.t}
   def insert_new_plot(user) do
     #{:ok, sd} = Ecto.Date.cast("1990-01-02")
     #today = Date.utc()
     Repo.insert (user |> defaultPlot)
   end
 
-  #@spec defaultUser(%User{}) :: %User{}
+  @spec defaultPlot(%User{}) :: %Plot{}
   def defaultPlot(user) do
     {:ok, sd} = Ecto.Date.cast("1990-01-02")
     today = Date.utc()
@@ -206,7 +222,7 @@ defmodule Backend.RoomChannel do
 
   #°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°
   #Utils
-
+  @spec convertPlotToJsonFormat(%Plot{}) :: %{ source: char_list, ticker: char_list, frequency: integer, startDate: char_list, endDate: char_list, y: boolean, deleted: boolean, user_id: integer, id: integer }
   def convertPlotToJsonFormat(p) do
     %{ source: p.source, ticker: p.ticker, frequency: p.frequency, startDate: p.startDate, endDate: p.endDate, y: p.y, deleted: p.deleted, user_id: p.user_id, id: p.id }
   end
